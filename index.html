@@ -9,7 +9,7 @@ assumptions:
 - Формулы ТЗ: M = N / (КПД × K), K = Qт / 7000, V = M / ρ; по умолчанию КПД 0,7, Qт 1862, ρ 590
 - Таблицы приказа перенесены как в скане; «0,30» (лагерная на гнезде, 8 м/с, −15 °C) прочитано как 10,30
 - Расчёт имеет дату начала и срок: по ним строятся годовой расчёт, заявка и дневные строки журналов (7.00/13.00/21.00 и «фактически» остаются для ручного заполнения)
-- Сортировка списка: updatedAt по убыванию, затем id; счётчики сегментов до поиска; поправка C1 не применяется; округление: половина вверх
+- Сортировка списка: updatedAt по убыванию, затем id; счётчики сегментов до поиска; поправка C1 по примечанию к норме № 3 применяется при температуре внутри ≠ +18 °C; округление: половина вверх
 entity: Calc
 schemaVersion: 2
 fields:
@@ -23,6 +23,7 @@ fields:
 - days | int | req | 1..3660
 - kpdBp | int | req | 100..10000
 - density, qt | int | req | 100..2000 кг/м³; 500..7000 ккал/кг
+- tInC | int | opt | температура внутри, °C (по умолчанию 18, ≥ наружной, ≤ 30)
 - updatedAt | iso | req | toISOString
 migrations: 1→2 добавляет date из updatedAt
 storage: idb kv/root + localStorage fallback, boot is read-only; настройки печати отдельно в localStorage
@@ -501,7 +502,7 @@ const EPOCH = '1970-01-01T00:00:00.000Z';
 const QUT = 7000;
 const MAX_ITEMS = 5000;
 const MAX_MASS_G = 1000000000000000n;
-const KEYS = ['id', 'title', 'date', 'object', 'qty', 'tempC', 'windMs', 'days', 'kpdBp', 'density', 'qt', 'updatedAt'];
+const KEYS = ['id', 'title', 'date', 'object', 'qty', 'tempC', 'windMs', 'days', 'kpdBp', 'density', 'qt', 'tInC', 'updatedAt'];
 
 /* ================= таблицы норм (сотые доли кг у.т.) ================= */
 /* колонки: +15 +10 +5 0 −5 −10 −15 −20 −25 −30 −35 −40 −45 −50; строки: ветер 0,2,…,20 м/с */
@@ -818,7 +819,14 @@ function pScaled(s, dec) {
 }
 
 /* ================= предметная область ================= */
-function normRational(objKey, t, w, qty, days) {
+/* Примечание к приказу: при температуре внутри, отличной от +18 °C, норму умножают на C1 = (tвн − tн.ср) / (18 − tн.ср) */
+function withC1(r, t, tIn) {
+  const ti = tIn === undefined ? 18 : tIn;
+  if (ti === 18) return r;
+  if (!Number.isInteger(ti) || ti < t || ti > 30) return { error: 'Температура внутри: целое число от ' + fmtT(t) + ' до +30 °C.', field: 'tInC' };
+  return { n: r.n * (ti - t), d: r.d * (18 - t) };
+}
+function normRational(objKey, t, w, qty, days, tIn) {
   const o = objectOf(objKey);
   if (!o) return { error: 'Неизвестный объект.', field: 'object' };
   if (o.kind === 'tent') {
@@ -833,11 +841,11 @@ function normRational(objKey, t, w, qty, days) {
     const b = w - j0 * 2;
     const j1 = b === 0 ? j0 : j0 + 1;
     const num = (5 - a) * (2 - b) * rows[j0][i0] + a * (2 - b) * rows[j0][i1] + (5 - a) * b * rows[j1][i0] + a * b * rows[j1][i1];
-    return { n: num * qty * days, d: 10 };
+    return withC1({ n: num * qty * days, d: 10 }, t, tIn);
   }
   if (o.kind === 'dugout') {
     if (!Number.isInteger(t) || t > 8 || t < -50) return { error: 'Температура вне диапазона норм (от −50 до +8 °C).', field: 'tempC' };
-    return { n: DUGOUT[8 - t] * qty * days, d: 100 };
+    return withC1({ n: DUGOUT[8 - t] * qty * days, d: 100 }, t, tIn);
   }
   if (o.kind === 'bldg') {
     if (!Number.isInteger(t) || t > 8 || t < -30) return { error: 'Температура вне диапазона норм (от −30 до +8 °C).', field: 'tempC' };
@@ -845,7 +853,7 @@ function normRational(objKey, t, w, qty, days) {
     const i0 = Math.floor(pos / 2);
     const a = pos - i0 * 2;
     const i1 = a === 0 ? i0 : i0 + 1;
-    return { n: ((2 - a) * BLDG[i0] + a * BLDG[i1]) * qty * days, d: 2 };
+    return withC1({ n: ((2 - a) * BLDG[i0] + a * BLDG[i1]) * qty * days, d: 2 }, t, tIn);
   }
   return { n: (objKey === 'wash_h' ? 138 : 115) * qty * days, d: 10 };
 }
@@ -862,7 +870,7 @@ function coreCalc(n, d, kpdBp, qt, density) {
 }
 
 function calcRecord(rec) {
-  const nr = normRational(rec.object, rec.tempC, rec.windMs, rec.qty, rec.days);
+  const nr = normRational(rec.object, rec.tempC, rec.windMs, rec.qty, rec.days, rec.tInC);
   if (nr.error) return { ok: false, error: nr.error, field: nr.field };
   const core = coreCalc(nr.n, nr.d, rec.kpdBp, rec.qt, rec.density);
   if (!core || core.massG > MAX_MASS_G) return { ok: false, error: 'Слишком большое значение.', field: 'qty' };
@@ -896,6 +904,11 @@ function checkItem(raw) {
     windMs = raw.windMs;
     if (!Number.isInteger(windMs) || windMs < 0 || windMs > 20) errors.windMs = 'Целое число от 0 до 20 м/с.';
   }
+  let tInC = 18;
+  if (kind && kind.temp && raw.tInC !== undefined) {
+    tInC = raw.tInC;
+    if (!Number.isInteger(tInC) || tInC < tempC || tInC > 30) errors.tInC = 'Целое число от ' + fmtT(tempC) + ' до +30 °C (по умолчанию +18).';
+  }
   if (!Number.isInteger(raw.days) || raw.days < 1 || raw.days > 3660) errors.days = 'Целое число от 1 до 3660.';
   if (!Number.isInteger(raw.kpdBp) || raw.kpdBp < 100 || raw.kpdBp > 10000) errors.kpdBp = 'Коэффициент от 0,01 до 1 (например, 0,7).';
   if (!Number.isInteger(raw.density) || raw.density < 100 || raw.density > 2000) errors.density = 'Целое число от 100 до 2000 кг/м³.';
@@ -904,7 +917,7 @@ function checkItem(raw) {
   if (Object.keys(errors).length) return { item: null, errors: errors };
   const item = {
     id: id, title: title, date: raw.date, object: o.key, qty: raw.qty, tempC: tempC, windMs: windMs,
-    days: raw.days, kpdBp: raw.kpdBp, density: raw.density, qt: raw.qt, updatedAt: raw.updatedAt
+    days: raw.days, kpdBp: raw.kpdBp, density: raw.density, qt: raw.qt, tInC: tInC, updatedAt: raw.updatedAt
   };
   const c = calcRecord(item);
   if (!c.ok) return { item: null, errors: { [c.field || 'qty']: c.error } };
@@ -916,7 +929,7 @@ function catLabelMeta(it) {
   const o = objectOf(it.object);
   const k = KINDS[o.kind];
   let s = o.label + ' \u00B7 ' + it.qty + ' ' + k.unit + ' \u00B7 ' + it.days + ' ' + k.dUnit;
-  if (k.temp) s += ' \u00B7 ' + fmtT(it.tempC) + ' \u00B0C' + (k.wind ? ', ' + it.windMs + ' м/с' : '');
+  if (k.temp) s += ' \u00B7 ' + fmtT(it.tempC) + ' \u00B0C' + (k.wind ? ', ' + it.windMs + ' м/с' : '') + (it.tInC !== undefined && it.tInC !== 18 ? ', внутри ' + fmtT(it.tInC) + ' \u00B0C' : '');
   return s;
 }
 
@@ -1777,10 +1790,10 @@ function textInput(name, value, onInput, extra) {
 
 /* ================= редактор расчёта ================= */
 function defaultDraft() {
-  return { title: '', date: todayStr(), object: 'm10', qty: '1', tempC: '-10', windMs: '2', days: '1', kpdBp: '0,7', density: '590', qt: '1862' };
+  return { title: '', date: todayStr(), object: 'm10', qty: '1', tempC: '-10', windMs: '2', days: '1', kpdBp: '0,7', density: '590', qt: '1862', tInC: '18' };
 }
 function toDraft(r) {
-  return { title: r.title, date: r.date, object: r.object, qty: String(r.qty), tempC: String(r.tempC), windMs: String(r.windMs), days: String(r.days), kpdBp: fmtKpd(r.kpdBp), density: String(r.density), qt: String(r.qt) };
+  return { title: r.title, date: r.date, object: r.object, qty: String(r.qty), tempC: String(r.tempC), windMs: String(r.windMs), days: String(r.days), kpdBp: fmtKpd(r.kpdBp), density: String(r.density), qt: String(r.qt), tInC: String(r.tInC === undefined ? 18 : r.tInC) };
 }
 
 function openEditor(id) {
@@ -1803,13 +1816,14 @@ function openEditor(id) {
       makeField(refs, 'object', 'Объект отопления или помывки', objSel),
       makeField(refs, 'qty', KINDS.tent.qty, tin('qty', d.qty, { inputmode: 'numeric' })),
       makeField(refs, 'tempC', 'Средняя температура наружного воздуха, °C', tin('tempC', d.tempC)),
+      makeField(refs, 'tInC', 'Температура воздуха внутри, °C (+18 по норме; иначе применяется C1)', tin('tInC', d.tInC, { inputmode: 'numeric' })),
       makeField(refs, 'windMs', 'Средняя скорость ветра за сутки, м/с', tin('windMs', d.windMs, { inputmode: 'numeric' })),
       makeField(refs, 'days', KINDS.tent.days, tin('days', d.days, { inputmode: 'numeric' })),
       makeField(refs, 'kpdBp', 'КПД печи (0,7, если нет паспортных данных)', tin('kpdBp', d.kpdBp, { inputmode: 'decimal' })),
       makeField(refs, 'density', 'Плотность древесины ρ, кг/м³', tin('density', d.density, { inputmode: 'numeric' })),
       makeField(refs, 'qt', 'Низшая теплота сгорания дров Qт, ккал/кг', tin('qt', d.qt, { inputmode: 'numeric' }))
     ]);
-    for (const name of ['title', 'date', 'qty', 'tempC', 'windMs', 'days', 'kpdBp', 'density', 'qt']) {
+    for (const name of ['title', 'date', 'qty', 'tempC', 'tInC', 'windMs', 'days', 'kpdBp', 'density', 'qt']) {
       refs[name].input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) { e.preventDefault(); submit(); }
       });
@@ -1831,6 +1845,7 @@ function openEditor(id) {
         kpdBp: pKpd(v('kpdBp')),
         density: pInt(v('density')),
         qt: pInt(v('qt')),
+        tInC: k && k.temp ? pInt(v('tInC')) : 18,
         updatedAt: new Date().toISOString()
       };
     }
@@ -1844,6 +1859,7 @@ function openEditor(id) {
       refs.days.lab.textContent = k.days;
       refs.tempC.row.hidden = !k.temp;
       refs.windMs.row.hidden = !k.wind;
+      refs.tInC.row.hidden = !k.temp;
       const r = checkItem(readRaw());
       if (!r.item) {
         preview.replaceChildren(h('p', { class: 't-sub sec', text: 'Заполните поля, чтобы увидеть расчёт.' }));
@@ -1853,6 +1869,7 @@ function openEditor(id) {
       preview.replaceChildren(
         line('Период:', fmtDateRu(r.item.date) + ' — ' + fmtDateRu(addDays(r.item.date, r.item.days - 1))),
         line('Норма N (расход условного топлива):', fmtScaled(c.nMilli, 3) + ' кг у.т.'),
+        k.temp ? line('Поправка C1 (норма № 3):', r.item.tInC === 18 ? '1 (tвн = +18 °C)' : '(' + r.item.tInC + ' − (' + r.item.tempC + ')) / (18 − (' + r.item.tempC + '))') : '',
         line('K = Qт / Qут = ' + r.item.qt + ' / ' + QUT + ' =', fmtScaled(c.kMilli, 3)),
         line('M = N / (КПД × K) =', fmtScaled(c.massG, 3) + ' кг'),
         line('V = M / ρ =', fmtScaled(c.volL, 3) + ' м³')
@@ -2226,6 +2243,12 @@ function runSelfTest() {
     T('Предмет: 0,115 × 3 точно = 0,345 кг у.т. и 1,853 кг', wc.ok && wc.nMilli === 345n && wc.massG === 1853n);
     const dg = base(); dg.object = 'dugout'; dg.qty = 100; dg.tempC = -10;
     T('Предмет: землянка 100 м³, −10 °C → 7,900 кг у.т.', calcRecord(dg).nMilli === 7900n);
+    const c1 = base(); c1.tempC = -10; c1.tInC = 20;
+    T('Предмет: поправка C1 — М-10, −10 °C, внутри +20 °C → 5,88 × 30/28 = 6,300', calcRecord(c1).nMilli === 6300n);
+    const c2 = base(); c2.tempC = -10; c2.tInC = 18;
+    T('Предмет: tвн = +18 °C → C1 = 1, норма 5,880', calcRecord(c2).nMilli === 5880n);
+    const c3 = base(); c3.tempC = -10; c3.tInC = -20;
+    T('Предмет: tвн ниже наружной → ошибка', validateItem(c3) === null);
     const s1 = base(); s1.id = 'bbbbbbbb';
     const s2 = base(); s2.id = 'aaaaaaaa';
     const sorted = applyView([s1, s2], { seg: 'all', q: '' });
