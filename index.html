@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<!--
+TITANIUM6
+purpose: КРПД — перевод норм расхода дров (кг у.т.) в массу и объём по приказу Росгвардии № 270 от 14.07.2025 и печать форм приложений № 1–4 к Порядку
+lang: ru
+substitution: по заявке заменена визуальная система (палитра Field Olive вместо базовой); тени и радиусы переработаны, три темы сохранены
+assumptions:
+- Палатки: норма за 12 ч умножается на сутки; между узлами таблицы (5 °C и 2 м/с) значения линейно интерполируются
+- Формулы ТЗ: M = N / (КПД × K), K = Qт / 7000, V = M / ρ; по умолчанию КПД 0,7, Qт 1862, ρ 590
+- Таблицы приказа перенесены как в скане; «0,30» (лагерная на гнезде, 8 м/с, −15 °C) прочитано как 10,30
+- Расчёт имеет дату начала и срок: по ним строятся годовой расчёт, заявка и дневные строки журналов (7.00/13.00/21.00 и «фактически» остаются для ручного заполнения)
+- Сортировка списка: updatedAt по убыванию, затем id; счётчики сегментов до поиска; поправка C1 не применяется; округление: половина вверх
+entity: Calc
+schemaVersion: 2
+fields:
+- id | string | req | ^[A-Za-z0-9_-]{8,80}$
+- title | string | req | trim 1..120
+- date | date | req | YYYY-MM-DD, 2000..2100 (начало периода)
+- object | enum | req | 13 объектов норм №1–№4
+- qty | int | req | 1..1000000 (строение до 25)
+- tempC | int | req | по объекту, 0 для помывки
+- windMs | int | req | 0..20 (палатки)
+- days | int | req | 1..3660
+- kpdBp | int | req | 100..10000
+- density, qt | int | req | 100..2000 кг/м³; 500..7000 ккал/кг
+- updatedAt | iso | req | toISOString
+migrations: 1→2 добавляет date из updatedAt
+storage: idb kv/root + localStorage fallback, boot is read-only; настройки печати отдельно в localStorage
+selftest: sanitize, merge, validate-strip, domain, migrate, print-model
+-->
+<html lang="ru" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" id="tcLight" media="(prefers-color-scheme: light)" content="#EDEFEA">
+<meta name="theme-color" id="tcDark" media="(prefers-color-scheme: dark)" content="#0D110F">
+<title>КРПД — расчёт потребления дров</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg-primary: #EDEFEA;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F6F7F3;
+  --fill-primary: rgba(32, 48, 40, 0.16);
+  --fill-secondary: rgba(32, 48, 40, 0.11);
+  --fill-tertiary: rgba(32, 48, 40, 0.07);
+  --label-primary: #151A17;
+  --label-secondary: rgba(21, 26, 23, 0.68);
+  --label-tertiary: rgba(21, 26, 23, 0.36);
+  --system-accent: #2B5D4B;
+  --on-accent: #FFFFFF;
+  --accent-soft: rgba(43, 93, 75, 0.12);
+  --system-destructive: #B3261E;
+  --system-success: #1E7B4A;
+  --system-warning: #9A5A00;
+  --separator: rgba(21, 26, 23, 0.16);
+  --material: rgba(255, 255, 255, 0.9);
+  --blur: blur(20px) saturate(160%);
+  --shadow-sm: 0 1px 0 rgba(21, 26, 23, 0.04);
+  --shadow-md: 0 6px 20px rgba(21, 26, 23, 0.12);
+  --shadow-lg: 0 16px 40px rgba(21, 26, 23, 0.18);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  --font-doc: "Times New Roman", Times, "Liberation Serif", serif;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px;
+}
+:root[data-theme="dark"] { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] { color-scheme: dark; }
+}
+:root[data-theme="dark"] {
+  --bg-primary: #0D110F;
+  --bg-secondary: #161C19;
+  --bg-tertiary: #1F2723;
+  --fill-primary: rgba(220, 240, 230, 0.18);
+  --fill-secondary: rgba(220, 240, 230, 0.13);
+  --fill-tertiary: rgba(220, 240, 230, 0.08);
+  --label-primary: #EEF2EF;
+  --label-secondary: rgba(238, 242, 239, 0.7);
+  --label-tertiary: rgba(238, 242, 239, 0.36);
+  --system-accent: #7CCBA2;
+  --on-accent: #07150E;
+  --accent-soft: rgba(124, 203, 162, 0.16);
+  --system-destructive: #FF8A80;
+  --system-success: #5FD68F;
+  --system-warning: #F2B65C;
+  --separator: rgba(238, 242, 239, 0.16);
+  --material: rgba(22, 28, 25, 0.9);
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --bg-primary: #0D110F;
+    --bg-secondary: #161C19;
+    --bg-tertiary: #1F2723;
+    --fill-primary: rgba(220, 240, 230, 0.18);
+    --fill-secondary: rgba(220, 240, 230, 0.13);
+    --fill-tertiary: rgba(220, 240, 230, 0.08);
+    --label-primary: #EEF2EF;
+    --label-secondary: rgba(238, 242, 239, 0.7);
+    --label-tertiary: rgba(238, 242, 239, 0.36);
+    --system-accent: #7CCBA2;
+    --on-accent: #07150E;
+    --accent-soft: rgba(124, 203, 162, 0.16);
+    --system-destructive: #FF8A80;
+    --system-success: #5FD68F;
+    --system-warning: #F2B65C;
+    --separator: rgba(238, 242, 239, 0.16);
+    --material: rgba(22, 28, 25, 0.9);
+    --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none}
+.empty[hidden],.scrim[hidden],.group[hidden],.frow[hidden],.ferr[hidden]{display:none}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:env(safe-area-inset-top)}
+body{margin:0;background:var(--bg-primary);color:var(--label-primary);font-family:var(--font);font-size:17px;line-height:22px;font-weight:400;letter-spacing:-.41px}
+h1,h2,p,ul{margin:0;padding:0}
+ul{list-style:none}
+button,input,select{font:inherit;color:inherit;letter-spacing:inherit}
+button{-webkit-tap-highlight-color:transparent;cursor:pointer;transition:transform 120ms var(--spring),opacity 120ms var(--spring)}
+button:active:not(:disabled){transform:scale(.97);opacity:.85}
+button:disabled{opacity:.4;cursor:default}
+:focus-visible{outline:2px solid var(--system-accent);outline-offset:2px}
+path,line,circle,rect,polyline,polygon{vector-effect:non-scaling-stroke}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.t-large{font-size:34px;line-height:41px;font-weight:700;letter-spacing:.37px}
+.t-title{font-size:22px;line-height:28px;font-weight:700;letter-spacing:.35px}
+.t-headline{font-size:17px;line-height:22px;font-weight:600;letter-spacing:-.41px}
+.t-body{font-size:17px;line-height:22px;font-weight:400;letter-spacing:-.41px}
+.t-sub{font-size:15px;line-height:20px;font-weight:400;letter-spacing:-.24px}
+.t-foot{font-size:13px;line-height:18px;font-weight:400;letter-spacing:-.08px}
+.t-cap{font-size:12px;line-height:16px;font-weight:400;letter-spacing:0}
+.sec{color:var(--label-secondary)}
+.num{font-variant-numeric:tabular-nums}
+.blk{display:block;overflow-wrap:anywhere}
+.app{max-width:760px;margin:0 auto;padding:calc(var(--space-5) + env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) calc(120px + env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-5)}
+.brand{display:flex;align-items:center;gap:var(--space-3);min-width:0}
+.logo{width:48px;height:48px;border-radius:var(--radius-md);background:var(--system-accent);color:var(--on-accent);display:grid;place-items:center;flex:0 0 auto}
+.logo svg{width:28px;height:28px}
+.brand-text{min-width:0}
+.top-actions{display:flex;gap:var(--space-1);flex:0 0 auto}
+.group{background:var(--bg-secondary);border:1px solid var(--separator);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.group.sep>*{position:relative}
+.group.sep>*+*::before{content:"";position:absolute;top:0;left:var(--space-4);right:0;height:1px;background:var(--separator)}
+.icon-btn{width:44px;height:44px;border-radius:var(--radius-md);display:grid;place-items:center;background:transparent;border:0;color:var(--system-accent);flex:0 0 auto}
+.icon-btn.danger{color:var(--system-destructive)}
+.icon-btn svg,.row-btn svg,.fab svg{width:22px;height:22px;flex:0 0 auto}
+.btn{min-height:44px;min-width:44px;padding:0 var(--space-4);border:0;border-radius:var(--radius-md);background:transparent;color:var(--system-accent);font-weight:600}
+.btn.fill{background:var(--system-accent);color:var(--on-accent)}
+.btn.danger{color:var(--system-destructive)}
+.banner{padding:var(--space-4);margin-bottom:var(--space-4);border-left:4px solid var(--system-warning);display:grid;gap:var(--space-1)}
+.banner-actions{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2)}
+.banner .btn{background:var(--fill-tertiary)}
+.banner .btn.danger{color:var(--system-destructive)}
+.banner .btn.fill{background:var(--system-accent);color:var(--on-accent)}
+.totals{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)}
+.tile{background:var(--bg-secondary);border:1px solid var(--separator);border-left:4px solid var(--system-accent);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);min-width:0}
+.totals-note{grid-column:1 / -1}
+.tools{display:flex;gap:var(--space-2);margin-bottom:var(--space-3)}
+.tools input{flex:1;min-width:0}
+.tools input,.form input,.form select,.pform input,.pform select{width:100%;min-height:44px;padding:0 var(--space-3);border:1px solid transparent;border-radius:var(--radius-sm);background:var(--fill-tertiary);font-size:17px;line-height:22px;-webkit-appearance:none;appearance:none}
+.tools input:focus,.form input:focus,.pform input:focus{border-color:var(--system-accent)}
+.form select,.pform select{-webkit-appearance:menulist;appearance:menulist}
+.form input[type="date"]{-webkit-appearance:auto;appearance:auto}
+.seg{display:flex;gap:var(--space-1);margin-bottom:var(--space-4);overflow-x:auto;border-bottom:1px solid var(--separator)}
+.seg button{flex:0 0 auto;min-height:44px;padding:0 var(--space-3);border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;font-size:15px;line-height:20px;letter-spacing:-.24px;color:var(--label-secondary)}
+.seg button[aria-selected="true"]{border-bottom-color:var(--system-accent);color:var(--label-primary);font-weight:600}
+.item{display:flex;align-items:stretch}
+.item-main{flex:1;min-width:0;display:flex;justify-content:space-between;gap:var(--space-3);padding:var(--space-3) 0 var(--space-3) var(--space-4);min-height:64px;background:none;border:0;text-align:left}
+.item-text{min-width:0;display:block}
+.item-res{flex:0 0 auto;text-align:right;display:block}
+.item .icon-btn{align-self:center;margin:0 var(--space-1)}
+.chip{display:inline-block;padding:0 var(--space-2);margin-bottom:var(--space-1);border-radius:999px;background:var(--accent-soft);color:var(--system-accent);font-size:12px;line-height:18px;font-weight:600;letter-spacing:.2px;text-transform:uppercase}
+.empty{padding:var(--space-8) var(--space-4);text-align:center;background:var(--bg-secondary);border:1px dashed var(--separator);border-radius:var(--radius-lg);display:grid;gap:var(--space-3);justify-items:center}
+.section-title{margin:var(--space-6) var(--space-4) var(--space-2);text-transform:uppercase;letter-spacing:.6px}
+.row-btn{display:flex;align-items:center;gap:var(--space-3);width:100%;min-height:52px;padding:0 var(--space-4);background:none;border:0;text-align:left;color:var(--system-accent)}
+.row-btn.danger{color:var(--system-destructive)}
+.note{margin:var(--space-4) var(--space-4) 0}
+.fab{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:calc(20px + env(safe-area-inset-bottom));height:52px;padding:0 var(--space-5);border:0;border-radius:var(--radius-md);background:var(--system-accent);color:var(--on-accent);font-weight:600;display:flex;align-items:center;gap:var(--space-2);box-shadow:var(--shadow-md);z-index:20}
+.toasts{position:fixed;left:0;right:0;bottom:calc(88px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:var(--space-2);padding:0 var(--space-4);pointer-events:none;z-index:70}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:var(--space-2);max-width:520px;padding:var(--space-2) var(--space-2) var(--space-2) var(--space-4);background:var(--material);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--separator);border-radius:var(--radius-md);box-shadow:var(--shadow-md)}
+.scrim{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.sheet{width:100%;max-height:92%;display:flex;flex-direction:column;background:var(--bg-primary);border-radius:var(--radius-xl) var(--radius-xl) 0 0;box-shadow:var(--shadow-lg);padding-bottom:env(safe-area-inset-bottom);animation:sheetIn 280ms var(--spring)}
+.grabber{width:36px;height:5px;border-radius:3px;background:var(--fill-primary);margin:var(--space-2) auto 0}
+.sheet-head{padding:var(--space-3) var(--space-4) var(--space-2)}
+.sheet-body{overflow-y:auto;padding:0 var(--space-4) var(--space-2);display:grid;gap:var(--space-3);align-content:start}
+.sheet-foot{display:flex;flex-wrap:wrap;gap:var(--space-2);justify-content:flex-end;padding:var(--space-3) var(--space-4) var(--space-4)}
+.sheet-foot .btn{background:var(--fill-tertiary)}
+.sheet-foot .btn.fill{background:var(--system-accent);color:var(--on-accent)}
+@keyframes sheetIn{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (min-width:640px){
+  .scrim{align-items:center}
+  .sheet{width:560px;border-radius:var(--radius-xl);padding-bottom:0}
+  .sheet.wide{width:min(980px,94vw)}
+  .grabber{display:none}
+}
+.form,.pform{padding:var(--space-4);display:grid;gap:var(--space-4)}
+.flabel{display:block;color:var(--label-secondary);margin-bottom:var(--space-1)}
+.ferr{color:var(--system-destructive);margin-top:var(--space-1)}
+.preview{padding:var(--space-4);display:grid;gap:var(--space-1);border-left:4px solid var(--system-accent)}
+.paper-wrap{background:var(--fill-secondary);padding:var(--space-3);border-radius:var(--radius-md);overflow:auto;max-height:46vh}
+.print-grid{display:grid;gap:var(--space-3);min-width:0}
+.print-side{display:grid;gap:var(--space-3);align-content:start;min-width:0}
+@media (min-width:900px){
+  .print-grid{grid-template-columns:340px minmax(0,1fr)}
+  .paper-wrap{max-height:68vh}
+}
+.paper{min-width:980px;background:#fff;color:#000;padding:18px 20px;font-family:var(--font-doc);font-size:13px;line-height:1.25;letter-spacing:0}
+.paper p{margin:0}
+.paper .ph{margin-left:62%;font-size:12px;line-height:1.2}
+.paper .ph-note{margin:8px 0 10px;text-align:center;font-style:italic}
+.paper .pt{text-align:center;font-weight:700;font-size:15px;margin:6px 0 2px}
+.paper .pt-sub{text-align:center;font-weight:700;font-size:14px}
+.paper .uline{margin:6px auto 0;border-bottom:1px solid #000;min-height:18px;max-width:60%;text-align:center}
+.paper .ucap{text-align:center;font-size:11px;margin-bottom:8px}
+.paper .sec-h{font-weight:700;margin:10px 0 4px}
+.paper table{width:100%;border-collapse:collapse;margin-bottom:6px}
+.paper th,.paper td{border:1px solid #000;padding:3px 4px;text-align:center;vertical-align:middle;font-weight:400}
+.paper th{font-size:12px}
+.paper td.l{text-align:left}
+.paper td.b{font-weight:700;text-align:left}
+.paper .dense th,.paper .dense td{font-size:10px;padding:2px 3px}
+.paper .sg{margin-top:14px}
+.paper .sg-role{font-size:13px}
+.paper .sg-line{margin-top:16px;border-bottom:1px solid #000;max-width:48%;min-height:18px;text-align:right}
+.paper .sg-cap{font-size:11px;max-width:48%;text-align:center}
+.paper .pnote{font-size:11px;margin-top:4px}
+.paper .total-line{margin:8px 0 6px}
+#printRoot{display:none}
+@page{size:A4 landscape;margin:12mm 12mm 12mm 15mm}
+@media print{
+  body{background:#fff;color:#000}
+  html.printing #app,html.printing #scrim,html.printing #toasts{display:none}
+  html.printing #printRoot{display:block}
+  #printRoot .paper{min-width:0;padding:0;font-size:11pt}
+  #printRoot .paper th,#printRoot .paper td{font-size:10pt}
+  #printRoot .paper .dense th,#printRoot .paper .dense td{font-size:8pt}
+  #printRoot tr{break-inside:avoid}
+  #printRoot thead{display:table-header-group}
+}
+@media (hover:hover){
+  .item-main:hover,.row-btn:hover{background:var(--fill-tertiary)}
+  .icon-btn:hover{background:var(--fill-tertiary)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+/* ===== Liquid Glass + Landing ===== */
+:root{--glass-bg:rgba(255,255,255,.16);--glass-bg-strong:rgba(255,255,255,.26);--glass-border:rgba(255,255,255,.38);--glass-text:#fff;--glass-text-2:rgba(255,255,255,.78);
+--glass-shadow:0 8px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.12),inset 0 0 24px rgba(255,255,255,.07)}
+.glass{position:relative;background:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,.08) 55%,rgba(255,255,255,.18));-webkit-backdrop-filter:blur(22px) saturate(180%) brightness(1.08);backdrop-filter:blur(22px) saturate(180%) brightness(1.08);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);color:var(--glass-text);overflow:hidden}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 70% at 20% -10%,rgba(255,255,255,.5),transparent 55%);opacity:.55}
+.glass>*{position:relative}
+#landing{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;background:#0b0f0d;color:var(--glass-text);font-family:var(--font);transition:opacity .7s var(--spring),transform .7s var(--spring),visibility .7s}
+#landing.leave{opacity:0;transform:scale(1.06);visibility:hidden;pointer-events:none}
+#landing[hidden]{display:none}
+#landing{background:#0b0f0d url(assets/poster.jpg) center/cover}#landing video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#landing .shade{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.12),rgba(0,0,0,.5))}
+.l-nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:max(16px,env(safe-area-inset-top)) 16px 0;padding:8px 10px 8px 16px;border-radius:999px}
+.l-brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.04em;font-size:17px}
+.l-brand svg{width:22px;height:22px}
+.l-links{display:flex;gap:4px}
+.l-links button{font:inherit;font-size:14px;font-weight:600;color:var(--glass-text);background:transparent;border:0;border-radius:999px;padding:9px 16px;cursor:pointer;transition:background .25s,transform .25s var(--spring)}
+.l-links button:hover{background:rgba(255,255,255,.22)}
+.l-links button:active{transform:scale(.96)}
+.l-hero{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:flex-end;padding-bottom:max(9vh,40px)!important;flex-direction:column;gap:28px;text-align:center;padding:24px}
+.l-hero h2{margin:0;font-size:clamp(34px,7vw,76px);line-height:1.04;font-weight:800;letter-spacing:-.02em;text-shadow:0 4px 30px rgba(0,0,0,.45)}
+.l-hero p{margin:0;max-width:560px;font-size:clamp(15px,2.2vw,19px);color:var(--glass-text-2);text-shadow:0 2px 14px rgba(0,0,0,.5)}
+.l-cta{font:inherit;font-size:18px;font-weight:700;color:#fff;padding:18px 44px;border-radius:999px;cursor:pointer;transition:transform .35s var(--spring),box-shadow .35s}
+.l-cta:hover{transform:scale(1.06);box-shadow:0 12px 44px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.7),inset 0 0 30px rgba(255,255,255,.14)}
+.l-cta:active{transform:scale(.97)}
+.l-cta:focus-visible,.l-links button:focus-visible,.l-close:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.l-modal{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.25);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+.l-modal.open{opacity:1;visibility:visible}
+.l-card{width:min(560px,100%);max-height:80vh;overflow:auto;border-radius:28px;padding:28px;transform:translateY(16px) scale(.97);transition:transform .45s var(--spring)}
+.l-modal.open .l-card{transform:none}
+.l-card h3{margin:0 0 14px;font-size:24px}
+.l-card p,.l-card li{font-size:15px;line-height:1.55;color:var(--glass-text-2)}
+.l-card ul{margin:0;padding-left:20px}
+.l-card b{color:#fff}
+.l-close{position:absolute!important;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.2);color:#fff;font-size:18px;cursor:pointer;z-index:2}
+@media (max-width:560px){.l-links button{padding:8px 10px;font-size:13px}.l-brand span{display:none}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:rgba(30,40,35,.7)}}
+/* glass for the app itself */
+body{background:radial-gradient(60% 50% at 15% 0%,rgba(43,93,75,.35),transparent 70%),radial-gradient(50% 45% at 100% 20%,rgba(120,150,90,.28),transparent 70%),var(--bg-primary);background-attachment:fixed}
+.top,.tile,.group,.tools input,.seg,.sheet{background:var(--material)!important;-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.45);box-shadow:0 8px 28px rgba(21,26,23,.1),inset 0 1px 0 rgba(255,255,255,.7)}
+:root{--material:rgba(255,255,255,.55)}
+.top{padding:10px 14px;border-radius:var(--radius-xl)}
+:root[data-theme="dark"]{--material:rgba(40,52,46,.5)}
+@media (prefers-color-scheme:dark){:root[data-theme="system"]{--material:rgba(40,52,46,.5)}}
+:root[data-theme="dark"] .top,:root[data-theme="dark"] .tile,:root[data-theme="dark"] .group,:root[data-theme="dark"] .fab,:root[data-theme="dark"] .sheet{border-color:rgba(255,255,255,.14);box-shadow:0 8px 28px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18)}
+.brand{cursor:pointer}
+@media (prefers-reduced-motion:reduce){#landing video{display:none}}
+</style>
+<script>
+(function () {
+  'use strict';
+  var t = 'system';
+  try {
+    var v = localStorage.getItem('krpd-firewood.theme');
+    if (v === 'light' || v === 'dark' || v === 'system') t = v;
+  } catch (e) { t = 'system'; }
+  document.documentElement.setAttribute('data-theme', t);
+}());
+</script>
+</head>
+<body>
+<div id="landing">
+  <video id="lvid" poster="assets/poster.jpg" src="assets/hero.mp4" autoplay muted loop playsinline preload="auto"></video>
+  <div class="shade"></div>
+  <nav class="l-nav glass" aria-label="Главное меню">
+    <div class="l-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.2 1 2 1.8 2.3C11.5 8 11 5.5 12 3z"/></svg><span>КРПД</span></div>
+    <div class="l-links">
+      <button type="button" data-open="m-about">О программе</button>
+      <button type="button" data-open="m-req">Системные требования</button>
+      <button type="button" data-open="m-auth">Авторы</button>
+    </div>
+  </nav>
+  <main class="l-hero"><h1 class="sr">КРПД — расчёт потребления дров</h1>
+    <button type="button" id="startBtn" class="l-cta glass">Начать работу</button>
+  </main>
+  <div class="l-modal" id="m-about"><section class="l-card glass" role="dialog" aria-modal="true" aria-label="О программе"><button class="l-close" type="button" aria-label="Закрыть">✕</button><h3>О программе</h3><p><b>КРПД</b> переводит нормы расхода дров (кг у.т.) в массу и объём по приказу Росгвардии № 270 от 14.07.2025. Поддерживает 13 типов объектов, учитывает температуру и ветер для палаток, ведёт список расчётов и печатает формы приложений № 1–4 к Порядку.</p><p>Формулы: M = N / (КПД × K), K = Qт / 7000, V = M / ρ. Данные хранятся только в вашем браузере, работает без интернета.</p></section></div>
+  <div class="l-modal" id="m-req"><section class="l-card glass" role="dialog" aria-modal="true" aria-label="Системные требования"><button class="l-close" type="button" aria-label="Закрыть">✕</button><h3>Системные требования</h3><ul><li>Современный браузер: Chrome, Edge, Firefox, Safari (последние 2 версии)</li><li>Любая ОС: Windows, macOS, Linux, iOS, Android</li><li>Включённые JavaScript и локальное хранилище браузера</li><li>Принтер или «Печать в PDF» — для форм приложений</li><li>Установка и подключение к интернету не требуются</li></ul></section></div>
+  <div class="l-modal" id="m-auth"><section class="l-card glass" role="dialog" aria-modal="true" aria-label="Авторы"><button class="l-close" type="button" aria-label="Закрыть">✕</button><h3>Авторы</h3><p><b>Иван Куликов</b> — автор и разработчик проекта (GitHub: IvanKulikovst).</p></section></div>
+</div>
+<div id="app" class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" id="logo"></div>
+      <div class="brand-text">
+        <h1 class="t-title">КРПД</h1>
+        <p class="t-foot sec">Расчёт потребления дров · приказ № 270</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button type="button" id="printBtn" class="icon-btn" aria-label="Печать форм по приказу"></button>
+      <button type="button" id="themeBtn" class="icon-btn" aria-label="Тема"></button>
+    </div>
+  </header>
+  <div id="banners"></div>
+  <section class="totals" aria-label="Итоги по списку">
+    <div class="tile"><p class="t-foot sec">Объём дров</p><p class="t-title num" id="totV">0,000 м³</p></div>
+    <div class="tile"><p class="t-foot sec">Масса дров</p><p class="t-title num" id="totM">0,000 кг</p></div>
+    <p class="t-foot sec totals-note" id="totN"></p>
+  </section>
+  <div class="tools">
+    <label class="sr" for="search">Поиск по расчётам</label>
+    <input id="search" type="search" placeholder="Поиск по наименованию" autocomplete="off" enterkeyhint="search">
+  </div>
+  <div id="seg" class="seg" role="tablist" aria-label="Тип объекта"></div>
+  <div id="panel" role="tabpanel" aria-label="Расчёты">
+    <ul id="list" class="group sep"></ul>
+    <div id="empty" class="empty" hidden></div>
+  </div>
+  <h2 class="t-foot sec section-title">Данные и печать</h2>
+  <div class="group sep">
+    <button type="button" class="row-btn" id="btnPrint"><span id="icPrint"></span><span class="t-body">Печать форм (приложения № 1–4)</span></button>
+    <button type="button" class="row-btn" id="btnExport"><span id="icExport"></span><span class="t-body">Экспорт в файл</span></button>
+    <button type="button" class="row-btn" id="btnImport"><span id="icImport"></span><span class="t-body">Импорт из файла</span></button>
+    <button type="button" class="row-btn" id="undoBtn"><span id="icUndo"></span><span class="t-body">Отменить последнее действие</span></button>
+    <button type="button" class="row-btn danger" id="btnClear"><span id="icClear"></span><span class="t-body">Удалить все расчёты</span></button>
+  </div>
+  <p class="t-foot sec note">Расчёт: M = N / (КПД × K), K = Qт / Qут (Qут = 7000 ккал/кг), V = M / ρ. Данные хранятся в этом браузере; для переноса используйте экспорт.</p>
+  <button type="button" id="fab" class="fab" aria-label="Новый расчёт"><span id="icPlus"></span><span class="t-headline">Новый расчёт</span></button>
+</div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="scrim" class="scrim" hidden>
+  <div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="grabber"></div>
+    <div class="sheet-head"><h2 id="sheetTitle" class="t-title"></h2></div>
+    <div id="sheetBody" class="sheet-body"></div>
+    <div id="sheetFoot" class="sheet-foot"></div>
+  </div>
+</div>
+<div id="printRoot" aria-hidden="true"></div>
+<input type="file" id="file" accept="application/json,.json" hidden>
+<div id="icons" hidden>
+  <svg id="ic-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.2 2-4.2.4 1.2 1 1.8 2 2C11.4 7.8 11 5.5 12 3z"/><path d="M5 21h14"/></svg>
+  <svg id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  <svg id="ic-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/></svg>
+  <svg id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>
+  <svg id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+  <svg id="ic-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M12 8h3M12 12h5M12 16h3"/></svg>
+  <svg id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+  <svg id="ic-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>
+  <svg id="ic-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-4"/></svg>
+  <svg id="ic-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>
+</div>
+<script>
+(function () {
+'use strict';
+
+/* ================= константы ================= */
+const APP_ID = 'krpd-firewood';
+const SCHEMA = 2;
+const DB_NAME = APP_ID + '.db';
+const STORE = 'kv';
+const ROOT_KEY = 'root';
+const LS_KEY = APP_ID + '.root';
+const LS_THEME = APP_ID + '.theme';
+const LS_PRINT = APP_ID + '.print';
+const ID_RE = /^[A-Za-z0-9_-]{8,80}$/;
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+const EPOCH = '1970-01-01T00:00:00.000Z';
+const QUT = 7000;
+const MAX_ITEMS = 5000;
+const MAX_MASS_G = 1000000000000000n;
+const KEYS = ['id', 'title', 'date', 'object', 'qty', 'tempC', 'windMs', 'days', 'kpdBp', 'density', 'qt', 'updatedAt'];
+
+/* ================= таблицы норм (сотые доли кг у.т.) ================= */
+/* колонки: +15 +10 +5 0 −5 −10 −15 −20 −25 −30 −35 −40 −45 −50; строки: ветер 0,2,…,20 м/с */
+const TENT_DATA = {
+  m10: [
+    [63,167,274,378,483,588,694,799,904,1009,1115,1219,1325,1452],
+    [64,171,283,391,501,614,726,822,953,1068,1186,1303,1422,1564],
+    [67,182,300,415,532,651,772,893,1015,1139,1264,1391,1520,1672],
+    [73,198,327,453,582,703,847,982,1117,1255,1395,1538,1683,1852],
+    [82,222,367,510,656,791,957,1110,1266,1423,1586,1751,1919,2113],
+    [94,251,414,576,742,912,1084,1259,1440,1622,1810,2000,2196,2405],
+    [95,288,474,662,853,1029,1251,1455,1664,1879,2099,2324,2555,2814],
+    [124,333,548,767,990,1199,1455,1694,1941,2194,2453,2720,2995,3300],
+    [141,382,630,882,1140,1384,1675,1955,2243,2537,2840,3153,3476,3831],
+    [163,440,753,1016,1270,1608,1937,2262,2596,2939,3294,3660,4038,4451],
+    [186,501,827,1159,1502,1855,2217,2590,2973,3370,3780,4204,4641,5117]
+  ],
+  m30: [
+    [257,681,1116,1541,1971,2401,2831,3261,3689,4116,4549,4976,5406,5924],
+    [262,700,1154,1597,2046,2505,2965,3356,3889,4359,4839,5318,5804,6383],
+    [275,743,1223,1693,2172,2658,3149,3643,4143,4647,5160,5679,6202,6824],
+    [299,809,1333,1848,2377,2871,3456,4006,4559,5123,5695,6276,6870,7558],
+    [337,908,1496,2080,2679,3229,3905,4530,5165,5809,6474,7144,7834,8624],
+    [382,1026,1688,2350,3029,3721,4425,5139,5876,6618,7388,8162,8963,9815],
+    [389,1175,1934,2700,3483,4201,5107,5940,6792,7668,8565,9484,10427,11484],
+    [505,1359,2238,3130,4041,4893,5937,6915,7922,8953,10011,11100,12224,13469],
+    [577,1560,2569,3598,4653,5649,6834,7980,9153,10353,11592,12868,14185,15635],
+    [665,1795,3073,4145,5181,6562,7906,9231,10593,11992,13442,14935,16479,18165],
+    [759,2043,3376,4730,6130,7569,9046,10569,12134,13752,15427,17155,18942,20881]
+  ],
+  ust56: [
+    [96,255,418,577,738,899,1060,1221,1381,1541,1703,1863,2024,2218],
+    [98,262,432,598,766,938,1110,1238,1456,1632,1812,1991,2173,2390],
+    [103,278,458,634,813,995,1179,1364,1551,1740,1932,2126,2322,2555],
+    [112,303,499,692,890,1075,1294,1500,1707,1918,2132,2350,2572,2830],
+    [126,340,560,779,1003,1209,1462,1696,1934,2175,2424,2675,2933,3229],
+    [143,384,632,880,1134,1393,1657,1926,2200,2478,2766,3056,3356,3660],
+    [164,440,724,1011,1304,1573,1912,2224,2543,2871,3207,3551,3904,4300],
+    [189,509,838,1172,1513,1832,2223,2589,2966,3352,3748,4156,4577,5043],
+    [216,584,962,1347,1742,2115,2559,2988,3427,3876,4340,4818,5311,5854],
+    [249,672,1180,1552,1899,2457,2960,3456,3966,4490,5033,5592,6170,6801],
+    [284,765,1264,1771,2295,2834,3387,3957,4543,5149,5776,6423,7092,7818]
+  ],
+  usb56: [
+    [193,512,839,1158,1481,1804,2127,2450,2772,3093,3418,3739,4062,4451],
+    [197,526,867,1200,1537,1882,2228,2575,2922,3275,3636,3996,4361,4796],
+    [207,558,919,1272,1632,1997,2366,2737,3113,3492,3877,4267,4660,5128],
+    [225,608,1001,1389,1786,2157,2597,3010,3426,3849,4279,4716,5162,5679],
+    [253,682,1124,1563,2013,2426,2934,3404,3881,4365,4865,5368,5886,6480],
+    [267,771,1268,1766,2276,2796,3325,3856,4415,4973,5551,6133,6735,7417],
+    [289,883,1453,2029,2617,3157,3837,4463,5103,5762,6436,7126,7835,8629],
+    [379,1021,1682,2352,3036,3676,4461,5196,5952,6727,7522,8340,9185,10120],
+    [433,1172,1930,2703,3496,4244,5135,5996,6877,7779,8710,9669,10658,11748],
+    [500,1349,2224,3115,4011,4931,5940,6936,7959,9011,10100,11222,12382,13649],
+    [570,1535,2537,3554,4606,5687,6797,7941,9117,10333,11592,12890,14233,15690]
+  ],
+  exp2: [
+    [5,14,22,31,39,48,56,65,73,82,90,99,107,118],
+    [5,14,23,32,41,50,59,67,77,87,96,106,115,127],
+    [5,15,24,34,43,53,63,72,82,92,103,113,123,136],
+    [6,16,26,37,47,57,69,80,91,102,113,125,136,150],
+    [7,18,30,41,53,64,78,90,103,115,129,142,156,171],
+    [8,20,34,47,60,74,88,102,117,131,147,162,178,195],
+    [8,23,38,54,69,83,101,118,135,152,170,188,207,228],
+    [10,27,44,62,80,97,118,137,157,178,199,221,243,268],
+    [11,31,51,71,92,112,136,159,182,206,230,256,282,311],
+    [13,36,61,82,103,130,157,183,210,238,267,297,327,361],
+    [15,41,67,94,122,150,180,210,241,273,307,341,376,415]
+  ],
+  exp8: [
+    [15,41,67,92,117,143,169,194,220,245,271,297,322,353],
+    [16,42,69,95,122,149,177,200,232,260,288,317,346,380],
+    [16,44,73,101,129,158,188,217,247,277,308,338,370,407],
+    [18,48,79,110,142,171,206,239,272,305,339,374,409,450],
+    [20,54,89,124,160,192,233,270,308,346,386,426,467,514],
+    [23,61,101,140,181,222,264,306,350,394,440,486,534,585],
+    [23,70,115,161,208,250,304,354,405,457,511,565,621,685],
+    [30,81,133,187,241,292,354,412,472,534,597,662,729,803],
+    [34,93,153,214,277,337,407,476,546,617,691,767,845,932],
+    [40,107,183,247,309,391,471,550,631,715,801,890,982,1083],
+    [45,122,201,282,365,451,539,630,723,820,920,1022,1129,1245]
+  ],
+  lag0: [
+    [45,120,194,269,346,422,498,578,648,727,798,877,951,1026],
+    [46,123,200,278,357,463,516,596,677,759,841,925,1009,1094],
+    [48,130,212,294,378,462,546,632,718,806,859,984,1076,1167],
+    [52,141,230,321,412,504,598,692,788,886,984,1084,1186,1290],
+    [59,158,258,359,462,566,673,780,889,1000,1114,1229,1347,1467],
+    [66,177,289,404,520,639,760,882,1007,1135,1266,1399,1535,1675],
+    [75,202,331,462,596,733,872,1015,1160,1310,1462,1619,1778,1876],
+    [86,233,382,533,689,848,1010,1178,1348,1524,1703,1889,2079,2252],
+    [98,266,437,612,791,974,1162,1356,1554,1758,1967,2184,2406,2636],
+    [113,305,502,703,910,1121,1340,1563,1794,2031,2275,2528,2788,3058],
+    [129,347,517,801,1037,1280,1530,1786,2051,2324,2606,2898,3199,3510]
+  ],
+  lag1: [
+    [79,210,339,469,599,727,855,986,1106,1233,1351,1477,1597,1778],
+    [80,213,345,478,610,741,873,1004,1135,1265,1394,1525,1655,1786],
+    [82,220,357,494,631,767,903,1040,1176,1312,1443,1584,1722,1859],
+    [86,231,375,521,665,809,955,1100,1246,1392,1537,1684,1832,1982],
+    [93,248,403,559,715,871,1030,1188,1347,1506,1667,1829,1993,2159],
+    [100,267,434,604,773,944,1117,1290,1465,1641,1819,1999,2181,2367],
+    [109,292,476,662,849,1038,1229,1423,1618,1816,2015,2219,2424,2568],
+    [120,323,527,733,942,1153,1367,1586,1806,2030,2256,2489,2725,2944],
+    [132,356,582,812,1044,1279,1519,1764,2012,2264,2520,2784,3052,3328],
+    [147,395,647,903,1163,1426,1697,1971,2252,2537,2828,3128,3434,3750],
+    [163,437,716,1001,1290,1585,1887,2194,2509,2830,3159,3498,3845,4203]
+  ],
+  lag2: [
+    [21,57,93,129,165,201,237,273,308,344,380,416,452,492],
+    [22,60,98,136,176,214,254,294,336,376,419,462,504,549],
+    [24,65,106,149,192,234,278,323,368,414,461,508,557,606],
+    [27,74,121,170,218,268,319,370,422,476,531,587,644,702],
+    [32,87,143,200,258,316,377,439,501,566,632,700,770,841],
+    [38,102,168,235,303,373,445,519,594,671,751,833,917,1004],
+    [45,121,200,281,363,447,533,623,714,808,905,1005,1108,1214],
+    [54,146,239,336,436,538,642,750,861,975,1094,1216,1342,1473],
+    [64,172,282,398,515,636,760,890,1022,1158,1300,1447,1598,1756],
+    [75,202,333,470,608,752,899,1052,1210,1373,1541,1717,1898,2086],
+    [87,235,388,548,708,875,1048,1226,1411,1602,1800,2006,2219,2440]
+  ]
+};
+/* Норма № 2: землянки, кг у.т./сут на 100 м³; температура от +8 до −50 с шагом 1 °C */
+const DUGOUT = [282,310,339,367,395,423,451,480,508,536,564,593,621,649,677,705,734,762,790,818,847,875,903,931,959,988,1016,1044,1072,1100,1129,1157,1185,1213,1242,1270,1298,1326,1354,1383,1411,1439,1467,1496,1524,1552,1580,1608,1637,1665,1693,1721,1750,1778,1806,1834,1862,1891,1919];
+/* Норма № 3: строения до 25 м³, кг у.т./сут на 1 м³; от +8 до −30 с шагом 2 °C */
+const BLDG = [43,51,60,69,77,86,94,103,111,120,129,137,146,154,163,171,180,189,197,206];
+
+const KINDS = {
+  tent:   { qty: 'Количество палаток, шт.', days: 'Суток отопления (по 12 часов)', unit: 'шт.', dUnit: 'сут.', temp: [-50, 15], wind: true, tag: 'Палатка', hours: '12' },
+  dugout: { qty: 'Внутренний объём землянки, м³', days: 'Суток отопления', unit: 'м³', dUnit: 'сут.', temp: [-50, 8], wind: false, tag: 'Землянка', hours: '24' },
+  bldg:   { qty: 'Отапливаемый объём строения, м³ (до 25)', days: 'Суток отопления', unit: 'м³', dUnit: 'сут.', temp: [-30, 8], wind: false, tag: 'Строение', hours: '24' },
+  wash:   { qty: 'Численность личного состава, чел.', days: 'Помывок на человека, раз', unit: 'чел.', dUnit: 'пом.', temp: null, wind: false, tag: 'Помывка', hours: '' }
+};
+const OBJECTS = [
+  { key: 'm10', kind: 'tent', label: 'Палатка М-10' },
+  { key: 'm30', kind: 'tent', label: 'Палатка М-30' },
+  { key: 'ust56', kind: 'tent', label: 'Палатка УСТ-56, УСТ-56(О)' },
+  { key: 'usb56', kind: 'tent', label: 'Палатка УСБ-56, УСБ-56(О)' },
+  { key: 'exp2', kind: 'tent', label: 'Палатка экспедиционная двухместная' },
+  { key: 'exp8', kind: 'tent', label: 'Палатка экспедиционная восьмиместная' },
+  { key: 'lag0', kind: 'tent', label: 'Палатка лагерная солдатская без палаточного гнезда' },
+  { key: 'lag1', kind: 'tent', label: 'Палатка лагерная солдатская на палаточном гнезде' },
+  { key: 'lag2', kind: 'tent', label: 'Палатка лагерная солдатская на гнезде с настилом' },
+  { key: 'dugout', kind: 'dugout', label: 'Землянка (блиндаж), печное отопление' },
+  { key: 'bldg', kind: 'bldg', label: 'Отдельное строение до 25 м³' },
+  { key: 'wash_h', kind: 'wash', label: 'Помывка личного состава, отопительный период' },
+  { key: 'wash_s', kind: 'wash', label: 'Помывка личного состава, летний период' }
+];
+const SEGS = [
+  { key: 'all', label: 'Все' },
+  { key: 'tent', label: 'Палатки' },
+  { key: 'dugout', label: 'Землянки' },
+  { key: 'bldg', label: 'Строения' },
+  { key: 'wash', label: 'Помывка' }
+];
+const MONTHS = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+const PRINT_FORMS = [
+  { key: 'a1', label: 'Приложение № 1 — Расчёт потребности дров на год' },
+  { key: 'a2', label: 'Приложение № 2 — Заявка потребности для закупки дров' },
+  { key: 'a3', label: 'Приложение № 3 — Журнал учёта расхода дров на отопление' },
+  { key: 'a4', label: 'Приложение № 4 — Журнал учёта расхода дров на помывку' }
+];
+
+function objectOf(key) {
+  for (const o of OBJECTS) if (o.key === key) return o;
+  return null;
+}
+function catOf(key) {
+  const o = objectOf(key);
+  return o ? o.kind : null;
+}
+
+/* ================= утилиты ================= */
+function newId() {
+  const bytes = new Uint8Array(16);
+  if (globalThis.crypto && typeof crypto.getRandomValues === 'function') crypto.getRandomValues(bytes);
+  else for (let i = 0; i < 16; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
+}
+
+function h(tag, attrs, kids) {
+  const node = document.createElement(tag);
+  const src = attrs || {};
+  for (const key of Object.keys(src)) {
+    const val = src[key];
+    if (val == null || val === false) continue;
+    if (key === 'class') node.className = String(val);
+    else if (key === 'text') node.textContent = String(val);
+    else if (key === 'dataset' && val && typeof val === 'object') {
+      for (const d of Object.keys(val)) node.dataset[d] = String(val[d]);
+    } else if (key.startsWith('on')) {
+      if (typeof val === 'function') node.addEventListener(key.slice(2), val);
+    } else if (val === true) node.setAttribute(key, '');
+    else node.setAttribute(key, String(val));
+  }
+  const list = kids == null ? [] : (Array.isArray(kids) ? kids : [kids]);
+  for (const kid of list) {
+    if (kid == null || kid === false) continue;
+    node.appendChild(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  }
+  return node;
+}
+
+function mergePayload(localItems, incomingItems) {
+  const map = new Map();
+  for (const item of localItems) map.set(item.id, item);
+  for (const item of incomingItems) {
+    const prev = map.get(item.id);
+    if (!prev || String(item.updatedAt) >= String(prev.updatedAt)) map.set(item.id, item);
+  }
+  return Array.from(map.values());
+}
+
+function isPlain(v) {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return false;
+  const p = Object.getPrototypeOf(v);
+  return p === Object.prototype || p === null;
+}
+function clone(x) { return JSON.parse(JSON.stringify(x)); }
+function sameDoc(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+function $(id) { return document.getElementById(id); }
+
+function sanitizeTree(input) {
+  const FAIL = { ok: false };
+  function walk(v, depth) {
+    if (depth > 12) return FAIL;
+    if (v === null) return { ok: true, v: null };
+    const t = typeof v;
+    if (t === 'boolean') return { ok: true, v: v };
+    if (t === 'number') return Number.isFinite(v) ? { ok: true, v: v } : FAIL;
+    if (t === 'string') return v.length > 10000 ? FAIL : { ok: true, v: v };
+    if (Array.isArray(v)) {
+      if (v.length > 10000) return FAIL;
+      const arr = [];
+      for (let i = 0; i < v.length; i += 1) {
+        const r = walk(v[i], depth + 1);
+        if (!r.ok) return FAIL;
+        arr.push(r.v);
+      }
+      return { ok: true, v: arr };
+    }
+    if (t === 'object') {
+      const proto = Object.getPrototypeOf(v);
+      if (proto !== Object.prototype && proto !== null) return FAIL;
+      const out = {};
+      for (const k of Object.keys(v)) {
+        const norm = k.replace(/[\u200B-\u200D\uFEFF]/g, '').toLowerCase();
+        if (norm === '__proto__' || norm === 'constructor' || norm === 'prototype') continue;
+        const r = walk(v[k], depth + 1);
+        if (!r.ok) return FAIL;
+        out[k] = r.v;
+      }
+      return { ok: true, v: out };
+    }
+    return FAIL;
+  }
+  return walk(input, 0);
+}
+
+/* ================= даты ================= */
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function daysInMonth(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+function isDateStr(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const y = Number(s.slice(0, 4));
+  const m = Number(s.slice(5, 7));
+  const d = Number(s.slice(8, 10));
+  if (y < 2000 || y > 2100 || m < 1 || m > 12 || d < 1) return false;
+  return d <= daysInMonth(y, m);
+}
+function addDays(s, n) {
+  const t = Date.UTC(Number(s.slice(0, 4)), Number(s.slice(5, 7)) - 1, Number(s.slice(8, 10))) + n * 86400000;
+  const d = new Date(t);
+  return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate());
+}
+function fmtDateRu(s) { return s.slice(8, 10) + '.' + s.slice(5, 7) + '.' + s.slice(0, 4); }
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
+/* ================= форматирование и разбор ================= */
+function fmtScaled(v, dec) {
+  let s = BigInt(v).toString();
+  const neg = s[0] === '-';
+  if (neg) s = s.slice(1);
+  while (s.length <= dec) s = '0' + s;
+  let ip = s.slice(0, s.length - dec);
+  const fp = dec ? s.slice(s.length - dec) : '';
+  ip = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+  return (neg ? '\u2212' : '') + ip + (dec ? ',' + fp : '');
+}
+function fmtKpd(bp) { return fmtScaled(bp, 4).replace(/0+$/, '').replace(/,$/, ''); }
+function fmtT(t) { return String(t).replace('-', '\u2212'); }
+function normNum(s) {
+  return String(s).replace(/[\u2212\u2013\u2014]/g, '-').replace(/[\s\u00A0\u202F\u2009]/g, '').replace(',', '.');
+}
+function pInt(s) {
+  const t = normNum(s);
+  return /^-?\d{1,9}$/.test(t) ? Number(t) : null;
+}
+function pKpd(s) {
+  const m = /^(\d{1,3})(?:\.(\d{1,4}))?$/.exec(normNum(s));
+  if (!m) return null;
+  return Number(m[1]) * 10000 + Number((m[2] || '').padEnd(4, '0'));
+}
+function pScaled(s, dec) {
+  const m = /^(\d{1,9})(?:\.(\d{1,3}))?$/.exec(normNum(s));
+  if (!m || (m[2] && m[2].length > dec)) return null;
+  return Number(m[1]) * Math.pow(10, dec) + Number((m[2] || '').padEnd(dec, '0'));
+}
+
+/* ================= предметная область ================= */
+function normRational(objKey, t, w, qty, days) {
+  const o = objectOf(objKey);
+  if (!o) return { error: 'Неизвестный объект.', field: 'object' };
+  if (o.kind === 'tent') {
+    if (!Number.isInteger(t) || t > 15 || t < -50) return { error: 'Температура вне диапазона норм (от −50 до +15 °C).', field: 'tempC' };
+    if (!Number.isInteger(w) || w < 0 || w > 20) return { error: 'Скорость ветра вне диапазона норм (0–20 м/с).', field: 'windMs' };
+    const rows = TENT_DATA[objKey];
+    const pos = 15 - t;
+    const i0 = Math.floor(pos / 5);
+    const a = pos - i0 * 5;
+    const i1 = a === 0 ? i0 : i0 + 1;
+    const j0 = Math.floor(w / 2);
+    const b = w - j0 * 2;
+    const j1 = b === 0 ? j0 : j0 + 1;
+    const num = (5 - a) * (2 - b) * rows[j0][i0] + a * (2 - b) * rows[j0][i1] + (5 - a) * b * rows[j1][i0] + a * b * rows[j1][i1];
+    return { n: num * qty * days, d: 10 };
+  }
+  if (o.kind === 'dugout') {
+    if (!Number.isInteger(t) || t > 8 || t < -50) return { error: 'Температура вне диапазона норм (от −50 до +8 °C).', field: 'tempC' };
+    return { n: DUGOUT[8 - t] * qty * days, d: 100 };
+  }
+  if (o.kind === 'bldg') {
+    if (!Number.isInteger(t) || t > 8 || t < -30) return { error: 'Температура вне диапазона норм (от −30 до +8 °C).', field: 'tempC' };
+    const pos = 8 - t;
+    const i0 = Math.floor(pos / 2);
+    const a = pos - i0 * 2;
+    const i1 = a === 0 ? i0 : i0 + 1;
+    return { n: ((2 - a) * BLDG[i0] + a * BLDG[i1]) * qty * days, d: 2 };
+  }
+  return { n: (objKey === 'wash_h' ? 138 : 115) * qty * days, d: 10 };
+}
+
+function coreCalc(n, d, kpdBp, qt, density) {
+  if (!Number.isSafeInteger(n) || n < 0) return null;
+  const num = BigInt(n) * 700000000n;
+  const den = BigInt(d) * BigInt(kpdBp) * BigInt(qt);
+  if (den <= 0n || density <= 0) return null;
+  const massG = (2n * num + den) / (2n * den);
+  const vden = den * BigInt(density);
+  const volL = (2n * num + vden) / (2n * vden);
+  return { massG: massG, volL: volL };
+}
+
+function calcRecord(rec) {
+  const nr = normRational(rec.object, rec.tempC, rec.windMs, rec.qty, rec.days);
+  if (nr.error) return { ok: false, error: nr.error, field: nr.field };
+  const core = coreCalc(nr.n, nr.d, rec.kpdBp, rec.qt, rec.density);
+  if (!core || core.massG > MAX_MASS_G) return { ok: false, error: 'Слишком большое значение.', field: 'qty' };
+  const nMilli = (2n * BigInt(nr.n) * 10n + BigInt(nr.d)) / (2n * BigInt(nr.d));
+  const kMilli = (2n * BigInt(rec.qt) * 1000n + BigInt(QUT)) / (2n * BigInt(QUT));
+  return { ok: true, nMilli: nMilli, kMilli: kMilli, massG: core.massG, volL: core.volL };
+}
+
+function checkItem(raw) {
+  const errors = {};
+  if (!isPlain(raw)) return { item: null, errors: { _: 'Некорректная запись.' } };
+  const o = objectOf(raw.object);
+  const kind = o ? KINDS[o.kind] : null;
+  const id = (typeof raw.id === 'string' && ID_RE.test(raw.id)) ? raw.id : null;
+  if (!id) errors.id = 'Неверный идентификатор.';
+  const title = typeof raw.title === 'string' ? raw.title.trim() : '';
+  if (title.length < 1 || title.length > 120) errors.title = 'Введите наименование: от 1 до 120 символов.';
+  if (!isDateStr(raw.date)) errors.date = 'Укажите дату начала (ГГГГ-ММ-ДД, 2000–2100).';
+  if (!o) errors.object = 'Выберите объект.';
+  const qtyMax = o && o.kind === 'bldg' ? 25 : 1000000;
+  if (!Number.isInteger(raw.qty) || raw.qty < 1 || raw.qty > qtyMax) errors.qty = 'Целое число от 1 до ' + qtyMax + '.';
+  let tempC = 0;
+  if (kind && kind.temp) {
+    tempC = raw.tempC;
+    if (!Number.isInteger(tempC) || tempC < kind.temp[0] || tempC > kind.temp[1]) {
+      errors.tempC = 'Целое число от ' + fmtT(kind.temp[0]) + ' до ' + fmtT(kind.temp[1]) + ' °C.';
+    }
+  }
+  let windMs = 0;
+  if (kind && kind.wind) {
+    windMs = raw.windMs;
+    if (!Number.isInteger(windMs) || windMs < 0 || windMs > 20) errors.windMs = 'Целое число от 0 до 20 м/с.';
+  }
+  if (!Number.isInteger(raw.days) || raw.days < 1 || raw.days > 3660) errors.days = 'Целое число от 1 до 3660.';
+  if (!Number.isInteger(raw.kpdBp) || raw.kpdBp < 100 || raw.kpdBp > 10000) errors.kpdBp = 'Коэффициент от 0,01 до 1 (например, 0,7).';
+  if (!Number.isInteger(raw.density) || raw.density < 100 || raw.density > 2000) errors.density = 'Целое число от 100 до 2000 кг/м³.';
+  if (!Number.isInteger(raw.qt) || raw.qt < 500 || raw.qt > 7000) errors.qt = 'Целое число от 500 до 7000 ккал/кг.';
+  if (typeof raw.updatedAt !== 'string' || !ISO_RE.test(raw.updatedAt)) errors.updatedAt = 'Неверная метка времени.';
+  if (Object.keys(errors).length) return { item: null, errors: errors };
+  const item = {
+    id: id, title: title, date: raw.date, object: o.key, qty: raw.qty, tempC: tempC, windMs: windMs,
+    days: raw.days, kpdBp: raw.kpdBp, density: raw.density, qt: raw.qt, updatedAt: raw.updatedAt
+  };
+  const c = calcRecord(item);
+  if (!c.ok) return { item: null, errors: { [c.field || 'qty']: c.error } };
+  return { item: item, errors: {} };
+}
+function validateItem(raw) { return checkItem(raw).item; }
+
+function catLabelMeta(it) {
+  const o = objectOf(it.object);
+  const k = KINDS[o.kind];
+  let s = o.label + ' \u00B7 ' + it.qty + ' ' + k.unit + ' \u00B7 ' + it.days + ' ' + k.dUnit;
+  if (k.temp) s += ' \u00B7 ' + fmtT(it.tempC) + ' \u00B0C' + (k.wind ? ', ' + it.windMs + ' м/с' : '');
+  return s;
+}
+
+function searchText(it) {
+  const o = objectOf(it.object);
+  return (it.title + ' ' + (o ? o.label : '')).toLowerCase();
+}
+function applyView(items, view) {
+  const q = String(view.q || '').trim().toLowerCase();
+  const out = items.filter((it) => {
+    if (view.seg !== 'all' && catOf(it.object) !== view.seg) return false;
+    if (q && searchText(it).indexOf(q) === -1) return false;
+    return true;
+  });
+  out.sort((a, b) => {
+    if (a.updatedAt < b.updatedAt) return 1;
+    if (a.updatedAt > b.updatedAt) return -1;
+    if (a.id < b.id) return -1;
+    if (a.id > b.id) return 1;
+    return 0;
+  });
+  return out;
+}
+
+function repairRaw(row) {
+  if (!isPlain(row)) return null;
+  const o = {};
+  for (const k of Object.keys(row)) o[k] = row[k];
+  let fixed = false;
+  if (typeof o.id !== 'string' || !ID_RE.test(o.id)) { o.id = newId(); fixed = true; }
+  if (typeof o.updatedAt !== 'string' || !ISO_RE.test(o.updatedAt)) { o.updatedAt = EPOCH; fixed = true; }
+  return { o: o, fixed: fixed };
+}
+
+const MIGRATIONS = {
+  1: function (doc) {
+    const payload = doc.payload.map((row) => {
+      if (!isPlain(row)) return row;
+      const o = {};
+      for (const k of Object.keys(row)) o[k] = row[k];
+      if (o.date === undefined) {
+        const u = typeof o.updatedAt === 'string' ? o.updatedAt.slice(0, 10) : '';
+        o.date = isDateStr(u) ? u : '2026-01-01';
+      }
+      return o;
+    });
+    return {
+      _meta: { appId: doc._meta.appId, schemaVersion: 2, updatedAt: doc._meta.updatedAt },
+      payload: payload,
+      quarantine: Array.isArray(doc.quarantine) ? doc.quarantine : []
+    };
+  }
+};
+function migrate(doc) {
+  let d = doc;
+  while (d._meta.schemaVersion < SCHEMA) {
+    const step = MIGRATIONS[d._meta.schemaVersion];
+    if (!step) return null;
+    d = step(d);
+  }
+  return d._meta.schemaVersion === SCHEMA ? d : null;
+}
+
+function emptyDocument() {
+  return { _meta: { appId: APP_ID, schemaVersion: SCHEMA, updatedAt: EPOCH }, payload: [], quarantine: [] };
+}
+
+function validateRoot(doc) {
+  if (!isPlain(doc) || !isPlain(doc._meta)) return 'Нарушена структура документа.';
+  const m = doc._meta;
+  if (m.appId !== APP_ID || m.schemaVersion !== SCHEMA || typeof m.updatedAt !== 'string') return 'Нарушены служебные поля документа.';
+  if (!Array.isArray(doc.payload) || !Array.isArray(doc.quarantine)) return 'Нарушен состав документа.';
+  if (doc.payload.length > MAX_ITEMS || doc.quarantine.length > MAX_ITEMS) return 'Слишком много записей: допустимо не более ' + MAX_ITEMS + '.';
+  const seen = new Set();
+  for (const it of doc.payload) {
+    const r = checkItem(it);
+    if (!r.item || JSON.stringify(r.item) !== JSON.stringify(it) || seen.has(it.id)) return 'Запись не прошла проверку.';
+    seen.add(it.id);
+  }
+  return null;
+}
+
+function analyzeIncoming(doc) {
+  if (!isPlain(doc)) return { error: 'В файле нет объекта данных.' };
+  if (!Array.isArray(doc.payload)) return { error: 'В файле нет списка расчётов.' };
+  const meta = isPlain(doc._meta) ? doc._meta : {};
+  if (meta.appId !== undefined && meta.appId !== APP_ID) return { error: 'Файл создан другим приложением. Импорт отменён.' };
+  let sv = SCHEMA;
+  if (meta.schemaVersion !== undefined) {
+    if (!Number.isInteger(meta.schemaVersion) || meta.schemaVersion < 1) return { error: 'Неверная версия схемы в файле.' };
+    sv = meta.schemaVersion;
+  }
+  if (sv > SCHEMA) return { error: 'Файл создан более новой версией. Импорт отменён.' };
+  const migrated = migrate({ _meta: { appId: APP_ID, schemaVersion: sv, updatedAt: '' }, payload: doc.payload, quarantine: [] });
+  if (!migrated) return { error: 'Для версии схемы файла нет шага миграции.' };
+  const accepted = [];
+  const rejected = [];
+  let repaired = 0;
+  for (const row of migrated.payload) {
+    const rr = repairRaw(row);
+    if (!rr) { rejected.push(row); continue; }
+    const v = validateItem(rr.o);
+    if (!v) { rejected.push(row); continue; }
+    accepted.push(v);
+    if (rr.fixed) repaired += 1;
+  }
+  const uniq = mergePayload([], accepted);
+  if (uniq.length === 0) return { error: 'В файле нет ни одной корректной записи.' };
+  return { accepted: uniq, rejected: rejected, repaired: repaired };
+}
+
+function orderItem(it) {
+  const o = {};
+  for (const k of KEYS) o[k] = it[k];
+  return o;
+}
+function exportText(doc) {
+  const items = doc.payload.slice().sort((a, b) => (a.id < b.id ? -1 : (a.id > b.id ? 1 : 0))).map(orderItem);
+  const o = {
+    _meta: { appId: doc._meta.appId, schemaVersion: doc._meta.schemaVersion, updatedAt: doc._meta.updatedAt },
+    payload: items,
+    quarantine: doc.quarantine
+  };
+  return JSON.stringify(o, null, 2) + '\n';
+}
+
+/* ================= модели печатных форм (чистые функции) ================= */
+function cmpItem(a, b) {
+  if (a.date < b.date) return -1;
+  if (a.date > b.date) return 1;
+  return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+}
+function yearItems(items, year) {
+  return items.filter((it) => it.date.slice(0, 4) === String(year)).sort(cmpItem);
+}
+function tonnes(g) { return fmtScaled((g + 500n) / 1000n, 3); }
+function oneDay(it) {
+  const o = {};
+  for (const k of KEYS) o[k] = it[k];
+  o.days = 1;
+  return o;
+}
+
+function modelA1(items, p) {
+  const list = yearItems(items, p.year);
+  const heat = [];
+  const wash = [];
+  let hv = 0n;
+  let wv = 0n;
+  for (const it of list) {
+    const c = calcRecord(it);
+    if (!c.ok) continue;
+    const o = objectOf(it.object);
+    if (o.kind === 'wash') {
+      wv += c.volL;
+      wash.push([String(it.qty), it.object === 'wash_h' ? String(it.days) : '', it.object === 'wash_s' ? String(it.days) : '',
+        fmtScaled(c.nMilli, 3), fmtKpd(it.kpdBp), fmtScaled(c.kMilli, 3), String(it.density), fmtScaled(c.volL, 3)]);
+    } else {
+      hv += c.volL;
+      heat.push([String(heat.length + 1), o.label, o.kind === 'tent' ? String(it.qty) : '', o.kind === 'tent' ? '' : String(it.qty),
+        fmtScaled(c.nMilli, 3), fmtKpd(it.kpdBp), fmtScaled(c.kMilli, 3), String(it.density), fmtScaled(c.volL, 3)]);
+    }
+  }
+  return { form: 'a1', year: p.year, unit: p.unit, sign1: p.sign1, sign2: p.sign2, heat: heat, wash: wash,
+    heatVol: fmtScaled(hv, 3), washVol: fmtScaled(wv, 3), total: fmtScaled(hv + wv, 3) };
+}
+
+function modelA2(items, p) {
+  let need = 0n;
+  for (const it of yearItems(items, p.year)) {
+    const c = calcRecord(it);
+    if (c.ok) need += c.volL;
+  }
+  const rem = BigInt(p.remL);
+  const purch = need > rem ? need - rem : 0n;
+  const kop = (purch * BigInt(p.priceKop) + 500n) / 1000n;
+  return { form: 'a2', year: p.year, unit: p.unit, place: p.place, sign1: p.sign1, sign2: p.sign2,
+    rem: fmtScaled(rem, 3), need: fmtScaled(need, 3), purch: fmtScaled(purch, 3),
+    price: p.priceKop ? fmtScaled(p.priceKop, 2) : '', limit: p.priceKop ? fmtScaled(kop, 2) : '' };
+}
+
+function modelJournal(items, p, wash) {
+  const ym = p.year + '-' + pad2(p.month);
+  const out = [];
+  let g = 0n;
+  let v = 0n;
+  for (const it of items.slice().sort(cmpItem)) {
+    const o = objectOf(it.object);
+    if ((o.kind === 'wash') !== wash) continue;
+    const c = calcRecord(oneDay(it));
+    if (!c.ok) continue;
+    for (let i = 0; i < it.days; i += 1) {
+      const day = addDays(it.date, i);
+      if (day.slice(0, 7) !== ym) continue;
+      g += c.massG;
+      v += c.volL;
+      const cells = wash
+        ? [fmtDateRu(day), String(it.qty), fmtScaled(c.nMilli, 3), fmtScaled(c.kMilli, 3), fmtKpd(it.kpdBp), tonnes(c.massG), String(it.density), fmtScaled(c.volL, 3), '', it.title]
+        : [fmtDateRu(day), '', '', '', fmtT(it.tempC), KINDS[o.kind].wind ? String(it.windMs) : '\u2014', KINDS[o.kind].hours,
+          o.label, String(it.qty), fmtScaled(c.nMilli, 3), fmtScaled(c.kMilli, 3), fmtKpd(it.kpdBp), tonnes(c.massG), String(it.density), fmtScaled(c.volL, 3), '', it.title];
+      out.push({ day: day, cells: cells });
+    }
+  }
+  out.sort((a, b) => (a.day < b.day ? -1 : (a.day > b.day ? 1 : 0)));
+  return { form: wash ? 'a4' : 'a3', year: p.year, monthName: MONTHS[p.month - 1], unit: p.unit, sign1: p.sign1,
+    rows: out.map((r) => r.cells), tonnes: tonnes(g), vol: fmtScaled(v, 3) };
+}
+
+function buildModel(items, p) {
+  if (p.form === 'a1') return modelA1(items, p);
+  if (p.form === 'a2') return modelA2(items, p);
+  return modelJournal(items, p, p.form === 'a4');
+}
+
+function parsePrint(d) {
+  const errors = {};
+  const form = PRINT_FORMS.some((f) => f.key === d.form) ? d.form : 'a1';
+  const year = pInt(d.year);
+  if (year === null || year < 2000 || year > 2100) errors.year = 'Год: целое число от 2000 до 2100.';
+  const month = pInt(d.month);
+  if (month === null || month < 1 || month > 12) errors.month = 'Выберите месяц.';
+  const texts = {};
+  for (const k of ['unit', 'place', 'sign1', 'sign2']) {
+    texts[k] = String(d[k] === undefined ? '' : d[k]).trim();
+    if (texts[k].length > 200) errors[k] = 'Не более 200 символов.';
+  }
+  let remL = 0;
+  if (String(d.rem).trim() !== '') {
+    const r = pScaled(d.rem, 3);
+    if (r === null) errors.rem = 'Объём в м³, не более трёх знаков после запятой.';
+    else remL = r;
+  }
+  let priceKop = 0;
+  if (String(d.price).trim() !== '') {
+    const r = pScaled(d.price, 2);
+    if (r === null) errors.price = 'Сумма в рублях, не более двух знаков после запятой.';
+    else priceKop = r;
+  }
+  if (form !== 'a2') { delete errors.rem; delete errors.price; delete errors.place; }
+  if (form === 'a1' || form === 'a2') delete errors.month;
+  if (form === 'a3' || form === 'a4') delete errors.sign2;
+  return { p: { form: form, year: year, month: month, unit: texts.unit, place: texts.place, sign1: texts.sign1, sign2: texts.sign2, remL: remL, priceKop: priceKop }, errors: errors };
+}
+
+/* ================= отрисовка печатных форм ================= */
+function C(t, o) { return { t: t, rs: o && o.rs, cs: o && o.cs, cls: o && o.cls }; }
+function mkTable(head, body, foot, cls) {
+  const th = (c) => h('th', { text: c.t, rowspan: c.rs, colspan: c.cs, class: c.cls });
+  const parts = [h('thead', null, head.map((r) => h('tr', null, r.map(th))))];
+  parts.push(h('tbody', null, body.map((r) => h('tr', null, r.map((t) => h('td', { text: t }))))));
+  if (foot && foot.length) {
+    parts.push(h('tfoot', null, foot.map((r) => h('tr', null, r.map((c) => h('td', { text: c.t, colspan: c.cs, class: c.cls }))))));
+  }
+  return h('table', { class: cls || '' }, parts);
+}
+function padRows(rows, width, min) {
+  const out = rows.slice();
+  while (out.length < min) { const r = []; for (let i = 0; i < width; i += 1) r.push(''); out.push(r); }
+  return out;
+}
+function paperHead(n) {
+  return [
+    h('div', { class: 'ph' }, [
+      h('p', { text: 'Приложение № ' + n }),
+      h('p', { text: 'к Порядку обеспечения дровами в войсках национальной гвардии Российской Федерации, утвержденному приказом Федеральной службы войск национальной гвардии Российской Федерации от 14 июля 2025 г. № 270' })
+    ]),
+    h('p', { class: 'ph-note', text: 'Рекомендуемый образец' })
+  ];
+}
+function unitLine(unit) {
+  return [h('div', { class: 'uline', text: unit }), h('p', { class: 'ucap', text: '(наименование воинской части (организации))' })];
+}
+function signBlock(role, name) {
+  return h('div', { class: 'sg' }, [
+    h('p', { class: 'sg-role', text: role }),
+    h('div', { class: 'sg-line', text: name }),
+    h('p', { class: 'sg-cap', text: '(воинское (специальное) звание, подпись, инициалы и фамилия)' })
+  ]);
+}
+
+function renderPaper(m) {
+  const kids = paperHead(m.form.slice(1));
+  if (m.form === 'a1') {
+    kids.push(h('p', { class: 'pt', text: 'Расчет потребности дров на ' + m.year + ' год' }));
+    kids.push(...unitLine(m.unit));
+    kids.push(h('p', { class: 'sec-h', text: 'I. На отопление:' }));
+    kids.push(mkTable(
+      [[C('№ п/п', { rs: 2 }), C('Способ размещения (тип палатки, землянка (блиндаж), отдельное строение)', { rs: 2 }), C('Единица измерения', { cs: 2 }),
+        C('Норма расхода, кг у.т.', { rs: 2 }), C('КПД печи', { rs: 2 }), C('Калорийный эквивалент древесины', { rs: 2 }), C('Плотность древесины', { rs: 2 }), C('Потребность дров, м³', { rs: 2 })],
+       [C('шт.'), C('м³')]],
+      padRows(m.heat, 9, 3),
+      [[C('ИТОГО:', { cs: 8, cls: 'b' }), C(m.heatVol)]]
+    ));
+    kids.push(h('p', { class: 'sec-h', text: 'II. На помывку личного состава:' }));
+    kids.push(mkTable(
+      [[C('Количество, чел.', { rs: 2 }), C('Количество помывок', { cs: 2 }), C('Норма расхода, кг у.т.', { rs: 2 }), C('КПД печи', { rs: 2 }),
+        C('Калорийный эквивалент древесины', { rs: 2 }), C('Плотность древесины', { rs: 2 }), C('Потребность дров, м³', { rs: 2 })],
+       [C('в отопительный период'), C('в летний период')]],
+      padRows(m.wash, 8, 3),
+      [[C('ИТОГО:', { cs: 7, cls: 'b' }), C(m.washVol)]]
+    ));
+    kids.push(h('p', { class: 'pnote', text: 'Норма расхода указана суммарно на весь период: норма × количество × сутки (помывки). Всего потребность: ' + m.total + ' м³.' }));
+    kids.push(signBlock('Заместитель командира (начальника) воинской части (организации) по тылу – начальник тыла', m.sign1));
+    kids.push(signBlock('Начальник эксплуатационного подразделения', m.sign2));
+  } else if (m.form === 'a2') {
+    kids.push(h('p', { class: 'pt', text: 'ЗАЯВКА' }));
+    kids.push(h('p', { class: 'pt-sub', text: 'потребности в лимитах бюджетных обязательств для закупки дров на ' + m.year + ' год' }));
+    kids.push(...unitLine(m.unit));
+    kids.push(mkTable(
+      [[C('Наименование воинской части (организации), место дислокации'), C('Остаток дров после окончания отопительного периода, м³'), C('Потребность дров на год, м³'),
+        C('Закупаемый объем дров, м³'), C('Цена за единицу, руб.'), C('Потребность в лимитах бюджетных обязательств, руб.')]],
+      [],
+      [[C('ИТОГО за оперативно-территориальное объединение войск национальной гвардии Российской Федерации в том числе:', { cls: 'b' }), C(m.rem), C(m.need), C(m.purch), C(m.price), C(m.limit)],
+       [C([m.unit, m.place].filter((s) => s).join(', '), { cls: 'l' }), C(m.rem), C(m.need), C(m.purch), C(m.price), C(m.limit)]]
+    ));
+    kids.push(signBlock('Заместитель командующего округом по тылу – начальник тыла', m.sign1));
+    kids.push(signBlock('Начальник эксплуатационного подразделения', m.sign2));
+  } else if (m.form === 'a3') {
+    kids.push(h('p', { class: 'pt', text: 'Журнал учета расхода дров на отопление' }));
+    kids.push(...unitLine(m.unit));
+    kids.push(mkTable(
+      [[C('Дата', { rs: 2 }), C('Фактическая температура наружного воздуха, °C', { cs: 3 }), C('Фактическая средняя температура наружного воздуха, °C', { rs: 2 }),
+        C('Средняя скорость ветра, м/с', { rs: 2 }), C('Время топки, ч', { rs: 2 }), C('Количество палаток, землянок (блиндажей)', { cs: 2 }),
+        C('Норма расхода, кг у.т.', { rs: 2 }), C('Калорийный эквивалент древесины', { rs: 2 }), C('КПД печи', { rs: 2 }), C('Масса дров, т', { rs: 2 }),
+        C('Плотность древесины', { rs: 2 }), C('Объем израсходованных дров, м³', { cs: 2 }), C('Примечание', { rs: 2 })],
+       [C('7.00'), C('13.00'), C('21.00'), C('тип'), C('шт./м³'), C('по норме'), C('фактически')]],
+      padRows(m.rows, 17, 3),
+      [[C('ИТОГО:', { cs: 12, cls: 'b' }), C(m.tonnes), C(''), C(m.vol), C(''), C('')]],
+      'dense'
+    ));
+    kids.push(h('p', { class: 'total-line', text: 'Расход дров за ' + m.monthName + ' ' + m.year + ' г. составил ' + m.vol + ' м³.' }));
+    kids.push(signBlock('Ответственное лицо', m.sign1));
+  } else {
+    kids.push(h('p', { class: 'pt', text: 'Журнал учета расхода дров на помывку личного состава' }));
+    kids.push(...unitLine(m.unit));
+    kids.push(mkTable(
+      [[C('Дата', { rs: 2 }), C('Количество личного состава', { rs: 2 }), C('Норма расхода, кг у.т.', { rs: 2 }), C('Калорийный эквивалент древесины', { rs: 2 }),
+        C('КПД печи', { rs: 2 }), C('Масса дров, т', { rs: 2 }), C('Плотность древесины', { rs: 2 }), C('Объем израсходованных дров, м³', { cs: 2 }), C('Примечание', { rs: 2 })],
+       [C('по норме'), C('фактический')]],
+      padRows(m.rows, 10, 3),
+      [[C('ИТОГО:', { cs: 5, cls: 'b' }), C(m.tonnes), C(''), C(m.vol), C(''), C('')]]
+    ));
+    kids.push(h('p', { class: 'total-line', text: 'Расход дров за ' + m.monthName + ' ' + m.year + ' г. составил ' + m.vol + ' м³.' }));
+    kids.push(signBlock('Ответственное лицо', m.sign1));
+  }
+  return h('div', { class: 'paper' }, kids);
+}
+
+/* ================= состояние ================= */
+let state = emptyDocument();
+const undoStack = [];
+let queue = Promise.resolve();
+let mode = 'memory';
+let db = null;
+let lsOk = true;
+let ready = false;
+let unreadableRaw = null;
+let damageReason = '';
+let damageAck = false;
+const ui = { seg: 'all', q: '' };
+let curTheme = 'system';
+
+/* ================= хранилище ================= */
+function openDb() {
+  return new Promise((res) => {
+    if (!globalThis.indexedDB) { res(null); return; }
+    let done = false;
+    let timer = null;
+    const fin = (v) => { if (!done) { done = true; clearTimeout(timer); res(v); } };
+    timer = setTimeout(() => fin(null), 1500);
+    try {
+      const rq = indexedDB.open(DB_NAME, 1);
+      rq.onupgradeneeded = () => {
+        const d = rq.result;
+        if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE);
+      };
+      rq.onsuccess = () => {
+        if (done) { try { rq.result.close(); } catch (e) { /* закрытие позднего соединения */ } } else fin(rq.result);
+      };
+      rq.onerror = () => fin(null);
+      rq.onblocked = () => fin(null);
+    } catch (e) { fin(null); }
+  });
+}
+function idbGet() {
+  return new Promise((res, rej) => {
+    try {
+      const tx = db.transaction(STORE, 'readonly');
+      const rq = tx.objectStore(STORE).get(ROOT_KEY);
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = () => rej(rq.error || new Error('get'));
+      tx.onabort = () => rej(tx.error || new Error('abort'));
+    } catch (e) { rej(e); }
+  });
+}
+function idbPut(text) {
+  return new Promise((res, rej) => {
+    let timer = null;
+    try {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(text, ROOT_KEY);
+      timer = setTimeout(() => rej(new Error('timeout')), 4000);
+      tx.oncomplete = () => { clearTimeout(timer); res(); };
+      tx.onerror = () => { clearTimeout(timer); rej(tx.error || new Error('tx')); };
+      tx.onabort = () => { clearTimeout(timer); rej(tx.error || new Error('abort')); };
+    } catch (e) { clearTimeout(timer); rej(e); }
+  });
+}
+
+function parseStored(raw) {
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch (e) { return { ok: false, reason: 'Содержимое не является корректным JSON.' }; }
+  const s = sanitizeTree(parsed);
+  if (!s.ok) return { ok: false, reason: 'Структура данных недопустима.' };
+  const doc = s.v;
+  if (!isPlain(doc) || !isPlain(doc._meta)) return { ok: false, reason: 'Неизвестный формат данных.' };
+  if (doc._meta.appId !== APP_ID) return { ok: false, reason: 'Данные принадлежат другому приложению.' };
+  if (!Number.isInteger(doc._meta.schemaVersion) || doc._meta.schemaVersion < 1) return { ok: false, reason: 'Неверная версия схемы.' };
+  if (doc._meta.schemaVersion > SCHEMA) return { ok: false, reason: 'Данные созданы более новой версией приложения.' };
+  if (!Array.isArray(doc.payload)) return { ok: false, reason: 'В данных нет списка расчётов.' };
+  if (doc.quarantine !== undefined && !Array.isArray(doc.quarantine)) return { ok: false, reason: 'Неверный раздел карантина.' };
+  const mig = migrate(doc);
+  if (!mig) return { ok: false, reason: 'Нет шага миграции для этой версии данных.' };
+  return { ok: true, doc: mig };
+}
+
+function seeds() {
+  const t = '2026-01-01T00:00:00.000Z';
+  return [
+    { id: 'seed0001', title: 'Пример: 4 палатки УСТ-56, учения', date: '2026-01-12', object: 'ust56', qty: 4, tempC: -10, windMs: 4, days: 7, kpdBp: 7000, density: 590, qt: 1862, updatedAt: t },
+    { id: 'seed0002', title: 'Пример: землянка 120 м³, полевой выход', date: '2026-01-20', object: 'dugout', qty: 120, tempC: -15, windMs: 0, days: 10, kpdBp: 7000, density: 590, qt: 1862, updatedAt: t },
+    { id: 'seed0003', title: 'Пример: помывка 60 чел., отопительный период', date: '2026-01-05', object: 'wash_h', qty: 60, tempC: 0, windMs: 0, days: 3, kpdBp: 7000, density: 590, qt: 1862, updatedAt: t }
+  ];
+}
+
+async function loadState() {
+  let idbRaw = null;
+  let lsRaw = null;
+  if (db) {
+    try {
+      const v = await idbGet();
+      if (typeof v === 'string') idbRaw = v;
+      else if (v !== undefined && v !== null) { try { idbRaw = JSON.stringify(v); } catch (e) { idbRaw = String(v); } }
+    } catch (e) {
+      db = null;
+      toast('IndexedDB недоступна, используется localStorage.', { ms: 5000 });
+    }
+  }
+  try { lsRaw = localStorage.getItem(LS_KEY); } catch (e) { lsOk = false; }
+  mode = db ? 'idb' : (lsOk ? 'ls' : 'memory');
+  const readable = [];
+  let damaged = null;
+  const sources = [['idb', idbRaw], ['ls', lsRaw]];
+  for (const pair of sources) {
+    const raw = pair[1];
+    if (raw === null || raw === '') continue;
+    const res = parseStored(raw);
+    if (res.ok) readable.push({ name: pair[0], doc: res.doc });
+    else if (damaged === null) { damaged = raw; damageReason = res.reason; }
+  }
+  unreadableRaw = damaged;
+  let best = null;
+  for (const c of readable) {
+    const u = typeof c.doc._meta.updatedAt === 'string' ? c.doc._meta.updatedAt : '';
+    if (best === null || u > best.u) best = { c: c, u: u };
+  }
+  if (best) {
+    const doc = best.c.doc;
+    const good = [];
+    const bad = [];
+    for (const row of doc.payload) {
+      const v = validateItem(row);
+      if (v) good.push(v); else bad.push(row);
+    }
+    state = {
+      _meta: { appId: APP_ID, schemaVersion: SCHEMA, updatedAt: typeof doc._meta.updatedAt === 'string' ? doc._meta.updatedAt : EPOCH },
+      payload: mergePayload([], good),
+      quarantine: (Array.isArray(doc.quarantine) ? doc.quarantine : []).concat(bad)
+    };
+  } else {
+    state = emptyDocument();
+    if (damaged === null) {
+      state.payload = seeds();
+      state._meta.updatedAt = '2026-01-01T00:00:00.000Z';
+    }
+  }
+}
+
+async function writeBoth(doc) {
+  const text = JSON.stringify(doc);
+  if (mode === 'memory') return true;
+  if (mode === 'ls') {
+    try { localStorage.setItem(LS_KEY, text); return true; } catch (e) { return false; }
+  }
+  try { await idbPut(text); } catch (e) { return false; }
+  if (lsOk) {
+    try { localStorage.setItem(LS_KEY, text); } catch (e) { toastPersistent('Резервная копия в localStorage не записалась.'); }
+  }
+  return true;
+}
+
+function enqueue(fn) {
+  const job = queue.then(fn);
+  queue = job.then(() => undefined, () => undefined);
+  return job;
+}
+function commit(label, mutator) {
+  return enqueue(() => applyCommit(label, mutator));
+}
+async function applyCommit(label, mutator) {
+  const before = clone(state);
+  try {
+    mutator(state);
+  } catch (err) {
+    state = before;
+    render();
+    toastPersistent('Изменение не применено.');
+    return { ok: false };
+  }
+  if (sameDoc(before, state)) return { ok: true };
+  const problem = validateRoot(state);
+  if (problem) {
+    state = before;
+    render();
+    toastPersistent(problem);
+    return { ok: false };
+  }
+  state._meta.updatedAt = new Date().toISOString();
+  render();
+  const saved = await writeBoth(state);
+  if (!saved) {
+    state = before;
+    render();
+    toastPersistent('Не сохранено. Изменение отменено. Возможно, в хранилище браузера не хватает места.');
+    return { ok: false };
+  }
+  undoStack.push({ label: label, before: before });
+  if (undoStack.length > 20) undoStack.shift();
+  if (unreadableRaw !== null && damageAck) {
+    unreadableRaw = null;
+    setBanner('damage', null);
+  }
+  render();
+  return { ok: true };
+}
+function undo() {
+  return enqueue(async () => {
+    const entry = undoStack.pop();
+    if (!entry) { toast('Нечего отменять.'); return; }
+    const cur = state;
+    state = clone(entry.before);
+    state._meta.updatedAt = new Date().toISOString();
+    render();
+    const ok = await writeBoth(state);
+    if (!ok) {
+      state = cur;
+      render();
+      undoStack.push(entry);
+      toast('Не удалось отменить действие.');
+    } else {
+      toast('Действие отменено.');
+    }
+  });
+}
+
+/* ================= тема ================= */
+const THEMES = ['system', 'light', 'dark'];
+const THEME_LABEL = { system: 'Авто', light: 'Светлая', dark: 'Тёмная' };
+function readTheme() {
+  try {
+    const v = localStorage.getItem(LS_THEME);
+    if (THEMES.indexOf(v) >= 0) return v;
+  } catch (e) { return 'system'; }
+  return 'system';
+}
+function icon(name) {
+  const src = document.getElementById('ic-' + name);
+  const n = src.cloneNode(true);
+  n.removeAttribute('id');
+  return n;
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const lt = $('tcLight');
+  const dk = $('tcDark');
+  if (t === 'light') { lt.content = '#EDEFEA'; dk.content = '#EDEFEA'; }
+  else if (t === 'dark') { lt.content = '#0D110F'; dk.content = '#0D110F'; }
+  else { lt.content = '#EDEFEA'; dk.content = '#0D110F'; }
+  const btn = $('themeBtn');
+  btn.replaceChildren(icon(t === 'light' ? 'sun' : (t === 'dark' ? 'moon' : 'auto')));
+  btn.setAttribute('aria-label', 'Тема: ' + THEME_LABEL[t] + '. Нажмите, чтобы сменить');
+}
+
+/* ================= баннеры и тосты ================= */
+const bannerNodes = {};
+function setBanner(key, node) {
+  const old = bannerNodes[key];
+  if (old) old.remove();
+  delete bannerNodes[key];
+  if (node) { bannerNodes[key] = node; $('banners').appendChild(node); }
+}
+function bBtn(label, fn, cls) {
+  return h('button', { type: 'button', class: 'btn ' + (cls || ''), text: label, onclick: fn });
+}
+function mkBanner(title, text, btns) {
+  return h('div', { class: 'banner group', role: 'group', 'aria-label': title }, [
+    h('p', { class: 't-headline', text: title }),
+    h('p', { class: 't-sub sec', text: text }),
+    btns && btns.length ? h('div', { class: 'banner-actions' }, btns) : null
+  ]);
+}
+let quarShown = -1;
+function syncQuar() {
+  const n = state.quarantine.length;
+  if (n === quarShown) return;
+  quarShown = n;
+  if (!n) { setBanner('quar', null); return; }
+  setBanner('quar', mkBanner('Скрыто повреждённых записей: ' + n, 'Они не показаны в списке и не участвуют в расчётах.', [
+    bBtn('Скачать полный файл', exportFile),
+    bBtn('Удалить повреждённые', clearQuarantine, 'danger')
+  ]));
+}
+
+let toastNode = null;
+let toastTimer = null;
+function removeToast() {
+  clearTimeout(toastTimer);
+  if (toastNode) { toastNode.remove(); toastNode = null; }
+}
+function showToast(text, opts) {
+  const o = opts || {};
+  removeToast();
+  const kids = [h('span', { class: 't-sub', text: text })];
+  if (o.undo) kids.push(h('button', { type: 'button', class: 'btn', text: 'Отменить', onclick: () => { removeToast(); gate(() => { undo(); }); } }));
+  if (o.persist) kids.push(h('button', { type: 'button', class: 'btn', text: 'Закрыть', onclick: removeToast }));
+  const node = h('div', { class: 'toast', role: 'status' }, kids);
+  toastNode = node;
+  $('toasts').appendChild(node);
+  if (!o.persist) {
+    const ms = o.ms || 2400;
+    const start = () => { clearTimeout(toastTimer); toastTimer = setTimeout(() => { if (toastNode === node) removeToast(); }, ms); };
+    const stop = () => clearTimeout(toastTimer);
+    if (o.undo) {
+      node.addEventListener('pointerenter', stop);
+      node.addEventListener('pointerleave', start);
+      node.addEventListener('focusin', stop);
+      node.addEventListener('focusout', start);
+    }
+    start();
+  }
+}
+function toast(text, opts) { showToast(text, opts); }
+function toastPersistent(text) { showToast(text, { persist: true }); }
+
+/* ================= листы ================= */
+let sheetState = null;
+function focusables(root) {
+  const list = root.querySelectorAll('button,input,select,textarea,a[href],[tabindex]:not([tabindex="-1"])');
+  return Array.from(list).filter((el) => !el.disabled && el.closest('[hidden]') === null && el.getClientRects().length > 0);
+}
+function openSheet(cfg) {
+  if (sheetState) closeSheet();
+  const scrim = $('scrim');
+  sheetState = {
+    lastFocus: document.activeElement,
+    prevOverflow: document.documentElement.style.overflow,
+    submit: cfg.submit || null
+  };
+  $('sheet').className = 'sheet' + (cfg.wide ? ' wide' : '');
+  $('sheetTitle').textContent = cfg.title;
+  $('sheetBody').replaceChildren(cfg.body);
+  $('sheetFoot').replaceChildren(...cfg.buttons.map((b) => h('button', {
+    type: 'button',
+    class: 'btn ' + (b.kind || ''),
+    text: b.label,
+    onclick: () => {
+      if (!b.keep) closeSheet();
+      if (b.onClick) b.onClick();
+    }
+  })));
+  $('app').inert = true;
+  document.documentElement.style.overflow = 'hidden';
+  scrim.hidden = false;
+  $('sheetBody').scrollTop = 0;
+  const f = focusables($('sheetBody'));
+  const first = f.length ? f[0] : focusables($('sheetFoot'))[0];
+  if (first) first.focus();
+}
+function closeSheet() {
+  if (!sheetState) return;
+  const st = sheetState;
+  sheetState = null;
+  $('scrim').hidden = true;
+  $('app').inert = false;
+  document.documentElement.style.overflow = st.prevOverflow;
+  $('sheetBody').replaceChildren();
+  $('sheetFoot').replaceChildren();
+  const lf = st.lastFocus;
+  if (lf && document.contains(lf) && typeof lf.focus === 'function') lf.focus();
+  else $('fab').focus();
+}
+function askSheet(title, text, okLabel, danger, onOk) {
+  openSheet({
+    title: title,
+    body: h('p', { class: 't-body', text: text }),
+    buttons: [
+      { label: 'Отмена', kind: '' },
+      { label: okLabel, kind: danger ? 'danger' : 'fill', onClick: onOk }
+    ]
+  });
+}
+
+function gate(fn) {
+  if (unreadableRaw !== null && !damageAck) {
+    openSheet({
+      title: 'Хранилище не прочитано',
+      body: h('p', { class: 't-body', text: 'Новая запись затрёт файл. Сначала скачайте исходник. Причина: ' + damageReason }),
+      buttons: [
+        { label: 'Скачать исходник', kind: '', keep: true, onClick: downloadRaw },
+        { label: 'Отмена', kind: '' },
+        { label: 'Продолжить', kind: 'danger', onClick: () => { damageAck = true; fn(); } }
+      ]
+    });
+    return;
+  }
+  fn();
+}
+
+/* ================= скачивание ================= */
+function download(text, name) {
+  const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: name });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setBanner('dl', mkBanner('Файл готов: ' + name, 'Если загрузка не началась, нажмите кнопку ниже.', [
+    h('a', { class: 'btn fill', href: url, download: name, text: 'Сохранить файл', style: 'display:inline-flex;align-items:center;text-decoration:none' })
+  ]));
+  setTimeout(() => {
+    setBanner('dl', null);
+    URL.revokeObjectURL(url);
+  }, 30000);
+}
+function exportFile() {
+  download(exportText(state), APP_ID + '_' + new Date().toISOString().slice(0, 10) + '.json');
+}
+function downloadRaw() {
+  if (unreadableRaw !== null) download(String(unreadableRaw), APP_ID + '_source.json');
+}
+
+/* ================= действия ================= */
+function deleteItem(id) {
+  gate(() => {
+    const it = state.payload.find((x) => x.id === id);
+    if (!it) return;
+    commit('delete', (s) => { s.payload = s.payload.filter((x) => x.id !== id); }).then((r) => {
+      if (r.ok) showToast('Расчёт удалён.', { undo: true, ms: 5000 });
+    });
+  });
+}
+function clearAll() {
+  gate(() => {
+    const n = state.payload.length;
+    if (n === 0) { toast('Список уже пуст.'); return; }
+    askSheet('Удалить все расчёты?', 'Будет удалено расчётов: ' + n + '. Сразу после удаления действие можно отменить.', 'Удалить все', true, () => {
+      commit('clear', (s) => { s.payload = []; }).then((r) => {
+        if (r.ok) showToast('Все расчёты удалены.', { undo: true, ms: 5000 });
+      });
+    });
+  });
+}
+function clearQuarantine() {
+  gate(() => {
+    const n = state.quarantine.length;
+    if (!n) return;
+    askSheet('Удалить повреждённые записи?', 'Будет удалено записей из карантина: ' + n + '. Сначала можно скачать полный файл.', 'Удалить', true, () => {
+      commit('quarantine', (s) => { s.quarantine = []; }).then((r) => {
+        if (r.ok) showToast('Карантин очищен.', { undo: true, ms: 5000 });
+      });
+    });
+  });
+}
+
+function onFile() {
+  const input = $('file');
+  const f = input.files && input.files[0];
+  if (!f) return;
+  if (f.size > 2000000) { toast('Файл больше 2 МБ — загрузка отменена.', { ms: 4000 }); input.value = ''; return; }
+  const fr = new FileReader();
+  fr.onerror = () => toast('Не удалось прочитать файл.');
+  fr.onload = () => handleIncoming(String(fr.result));
+  fr.readAsText(f);
+  input.value = '';
+}
+function handleIncoming(text) {
+  let parsed;
+  try { parsed = JSON.parse(text); } catch (e) { toast('Файл не является корректным JSON.', { ms: 4000 }); return; }
+  const s = sanitizeTree(parsed);
+  if (!s.ok) { toast('Структура файла недопустима.', { ms: 4000 }); return; }
+  const a = analyzeIncoming(s.v);
+  if (a.error) { toast(a.error, { ms: 5000 }); return; }
+  const local = state.payload.length;
+  const body = h('div', { class: 'group', style: 'padding:16px;display:grid;gap:8px' }, [
+    h('p', { class: 't-body', text: 'В список встанет записей: ' + a.accepted.length + (a.repaired ? ' (исправлено: ' + a.repaired + ')' : '') + '.' }),
+    h('p', { class: 't-body', text: 'В карантин уйдёт записей: ' + a.rejected.length + '.' }),
+    h('p', { class: 't-sub sec', text: 'Сейчас в списке: ' + local + '. «Объединить» оставит более свежие версии одинаковых записей. «Заменить» удалит текущие расчёты.' })
+  ]);
+  openSheet({
+    title: 'Импорт файла',
+    body: body,
+    buttons: [
+      { label: 'Отмена', kind: '' },
+      { label: 'Заменить', kind: 'danger', onClick: () => gate(() => {
+        commit('replace', (s2) => { s2.payload = a.accepted.slice(); s2.quarantine = a.rejected.slice(); }).then((r) => { if (r.ok) showToast('Данные заменены.', { undo: true, ms: 5000 }); });
+      }) },
+      { label: 'Объединить', kind: 'fill', onClick: () => gate(() => {
+        commit('merge', (s2) => { s2.payload = mergePayload(s2.payload, a.accepted); s2.quarantine = s2.quarantine.concat(a.rejected); }).then((r) => { if (r.ok) showToast('Данные объединены.', { undo: true, ms: 5000 }); });
+      }) }
+    ]
+  });
+}
+
+/* ================= поля форм ================= */
+function makeField(refs, name, label, input) {
+  const err = h('p', { class: 'ferr t-foot', id: 'err-' + name, hidden: true });
+  const lab = h('label', { class: 't-foot flabel', for: 'f-' + name, text: label });
+  const row = h('div', { class: 'frow' }, [lab, input, err]);
+  refs[name] = { row: row, input: input, err: err, lab: lab };
+  return row;
+}
+function clearFieldError(r) {
+  r.err.textContent = '';
+  r.err.hidden = true;
+  r.input.removeAttribute('aria-invalid');
+  r.input.removeAttribute('aria-describedby');
+}
+function showFieldErrors(refs, errors) {
+  let firstBad = null;
+  for (const name of Object.keys(refs)) {
+    const r = refs[name];
+    const msg = errors[name];
+    if (msg && !r.row.hidden) {
+      r.err.textContent = msg;
+      r.err.hidden = false;
+      r.input.setAttribute('aria-invalid', 'true');
+      r.input.setAttribute('aria-describedby', 'err-' + name);
+      if (!firstBad) firstBad = r.input;
+    } else clearFieldError(r);
+  }
+  return firstBad;
+}
+function textInput(name, value, onInput, extra) {
+  const attrs = { type: 'text', id: 'f-' + name, value: value, autocomplete: 'off', oninput: () => onInput(name) };
+  for (const k of Object.keys(extra || {})) attrs[k] = extra[k];
+  return h('input', attrs);
+}
+
+/* ================= редактор расчёта ================= */
+function defaultDraft() {
+  return { title: '', date: todayStr(), object: 'm10', qty: '1', tempC: '-10', windMs: '2', days: '1', kpdBp: '0,7', density: '590', qt: '1862' };
+}
+function toDraft(r) {
+  return { title: r.title, date: r.date, object: r.object, qty: String(r.qty), tempC: String(r.tempC), windMs: String(r.windMs), days: String(r.days), kpdBp: fmtKpd(r.kpdBp), density: String(r.density), qt: String(r.qt) };
+}
+
+function openEditor(id) {
+  if (!ready) { toast('Данные ещё загружаются.'); return; }
+  gate(() => {
+    const rec = id ? state.payload.find((x) => x.id === id) : null;
+    if (id && !rec) return;
+    const recId = rec ? rec.id : newId();
+    const d = rec ? toDraft(rec) : defaultDraft();
+    const refs = {};
+    let busy = false;
+    const tin = (name, value, extra) => textInput(name, value, onInput, extra);
+    const objSel = h('select', { id: 'f-object', onchange: () => onInput('object') }, OBJECTS.map((o) => h('option', { value: o.key, text: o.label })));
+    objSel.value = d.object;
+    const preview = h('div', { class: 'group preview num', 'aria-label': 'Результат расчёта' });
+
+    const form = h('div', { class: 'group form' }, [
+      makeField(refs, 'title', 'Наименование и основание (приказ, учения, место)', tin('title', d.title, { maxlength: '120', spellcheck: 'false' })),
+      makeField(refs, 'date', 'Дата начала периода', tin('date', d.date, { type: 'date', min: '2000-01-01', max: '2100-12-31' })),
+      makeField(refs, 'object', 'Объект отопления или помывки', objSel),
+      makeField(refs, 'qty', KINDS.tent.qty, tin('qty', d.qty, { inputmode: 'numeric' })),
+      makeField(refs, 'tempC', 'Средняя температура наружного воздуха, °C', tin('tempC', d.tempC)),
+      makeField(refs, 'windMs', 'Средняя скорость ветра за сутки, м/с', tin('windMs', d.windMs, { inputmode: 'numeric' })),
+      makeField(refs, 'days', KINDS.tent.days, tin('days', d.days, { inputmode: 'numeric' })),
+      makeField(refs, 'kpdBp', 'КПД печи (0,7, если нет паспортных данных)', tin('kpdBp', d.kpdBp, { inputmode: 'decimal' })),
+      makeField(refs, 'density', 'Плотность древесины ρ, кг/м³', tin('density', d.density, { inputmode: 'numeric' })),
+      makeField(refs, 'qt', 'Низшая теплота сгорания дров Qт, ккал/кг', tin('qt', d.qt, { inputmode: 'numeric' }))
+    ]);
+    for (const name of ['title', 'date', 'qty', 'tempC', 'windMs', 'days', 'kpdBp', 'density', 'qt']) {
+      refs[name].input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) { e.preventDefault(); submit(); }
+      });
+    }
+
+    function readRaw() {
+      const o = objectOf(refs.object.input.value);
+      const k = o ? KINDS[o.kind] : null;
+      const v = (n) => refs[n].input.value;
+      return {
+        id: recId,
+        title: v('title'),
+        date: v('date'),
+        object: o ? o.key : null,
+        qty: pInt(v('qty')),
+        tempC: k && k.temp ? pInt(v('tempC')) : 0,
+        windMs: k && k.wind ? pInt(v('windMs')) : 0,
+        days: pInt(v('days')),
+        kpdBp: pKpd(v('kpdBp')),
+        density: pInt(v('density')),
+        qt: pInt(v('qt')),
+        updatedAt: new Date().toISOString()
+      };
+    }
+    function line(label, value) {
+      return h('p', { class: 't-sub' }, [h('span', { class: 'sec', text: label + ' ' }), h('strong', { text: value })]);
+    }
+    function refresh() {
+      const o = objectOf(refs.object.input.value) || OBJECTS[0];
+      const k = KINDS[o.kind];
+      refs.qty.lab.textContent = k.qty;
+      refs.days.lab.textContent = k.days;
+      refs.tempC.row.hidden = !k.temp;
+      refs.windMs.row.hidden = !k.wind;
+      const r = checkItem(readRaw());
+      if (!r.item) {
+        preview.replaceChildren(h('p', { class: 't-sub sec', text: 'Заполните поля, чтобы увидеть расчёт.' }));
+        return;
+      }
+      const c = calcRecord(r.item);
+      preview.replaceChildren(
+        line('Период:', fmtDateRu(r.item.date) + ' — ' + fmtDateRu(addDays(r.item.date, r.item.days - 1))),
+        line('Норма N (расход условного топлива):', fmtScaled(c.nMilli, 3) + ' кг у.т.'),
+        line('K = Qт / Qут = ' + r.item.qt + ' / ' + QUT + ' =', fmtScaled(c.kMilli, 3)),
+        line('M = N / (КПД × K) =', fmtScaled(c.massG, 3) + ' кг'),
+        line('V = M / ρ =', fmtScaled(c.volL, 3) + ' м³')
+      );
+    }
+    function onInput(name) {
+      const r = refs[name];
+      if (r && !r.err.hidden) clearFieldError(r);
+      refresh();
+    }
+    function submit() {
+      if (busy) return;
+      const r = checkItem(readRaw());
+      const bad = showFieldErrors(refs, r.errors);
+      if (!r.item) { if (bad) bad.focus(); return; }
+      const item = r.item;
+      busy = true;
+      commit(rec ? 'edit' : 'add', (s) => {
+        const i = s.payload.findIndex((x) => x.id === item.id);
+        if (i >= 0) s.payload[i] = item; else s.payload.push(item);
+      }).then((res) => {
+        busy = false;
+        if (res.ok) closeSheet();
+      });
+    }
+
+    openSheet({
+      title: rec ? 'Расчёт' : 'Новый расчёт',
+      body: h('div', { style: 'display:grid;gap:12px' }, [form, preview]),
+      submit: submit,
+      buttons: [
+        { label: 'Отмена', kind: '' },
+        { label: 'Готово', kind: 'fill', keep: true, onClick: submit }
+      ]
+    });
+    refresh();
+  });
+}
+
+/* ================= печать ================= */
+function loadPrintPrefs() {
+  try {
+    const raw = localStorage.getItem(LS_PRINT);
+    if (!raw) return {};
+    const s = sanitizeTree(JSON.parse(raw));
+    if (!s.ok || !isPlain(s.v)) return {};
+    const o = {};
+    for (const k of ['unit', 'place', 'price', 'sign1', 'sign2']) {
+      if (typeof s.v[k] === 'string' && s.v[k].length <= 200) o[k] = s.v[k];
+    }
+    return o;
+  } catch (e) { return {}; }
+}
+function savePrintPrefs(d) {
+  try {
+    localStorage.setItem(LS_PRINT, JSON.stringify({ unit: d.unit, place: d.place, price: d.price, sign1: d.sign1, sign2: d.sign2 }));
+  } catch (e) { toast('Настройки печати не удалось запомнить.'); }
+}
+
+function openPrint() {
+  if (!ready) { toast('Данные ещё загружаются.'); return; }
+  const pref = loadPrintPrefs();
+  const now = new Date();
+  const refs = {};
+  const tin = (name, value, extra) => textInput(name, value, onInput, extra);
+  const formSel = h('select', { id: 'f-form', onchange: () => onInput('form') }, PRINT_FORMS.map((f) => h('option', { value: f.key, text: f.label })));
+  const monthSel = h('select', { id: 'f-month', onchange: () => onInput('month') }, MONTHS.map((m, i) => h('option', { value: String(i + 1), text: m })));
+  monthSel.value = String(now.getMonth() + 1);
+  const paperBox = h('div', { class: 'paper-wrap', tabindex: '0', role: 'group', 'aria-label': 'Предварительный просмотр формы' });
+
+  const form = h('div', { class: 'group pform' }, [
+    makeField(refs, 'form', 'Печатная форма', formSel),
+    makeField(refs, 'year', 'Год', tin('year', String(now.getFullYear()), { inputmode: 'numeric', maxlength: '4' })),
+    makeField(refs, 'month', 'Месяц журнала', monthSel),
+    makeField(refs, 'unit', 'Воинская часть (организация)', tin('unit', pref.unit || '', { maxlength: '200' })),
+    makeField(refs, 'place', 'Место дислокации', tin('place', pref.place || '', { maxlength: '200' })),
+    makeField(refs, 'rem', 'Остаток дров после окончания отопительного периода, м³', tin('rem', '0', { inputmode: 'decimal' })),
+    makeField(refs, 'price', 'Цена за 1 м³, руб.', tin('price', pref.price || '', { inputmode: 'decimal' })),
+    makeField(refs, 'sign1', 'Звание и фамилия', tin('sign1', pref.sign1 || '', { maxlength: '200' })),
+    makeField(refs, 'sign2', 'Начальник эксплуатационного подразделения: звание и фамилия', tin('sign2', pref.sign2 || '', { maxlength: '200' }))
+  ]);
+  for (const name of ['year', 'unit', 'place', 'rem', 'price', 'sign1', 'sign2']) {
+    refs[name].input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) { e.preventDefault(); doPrint(); }
+    });
+  }
+
+  function readDraft() {
+    const v = (n) => refs[n].input.value;
+    return { form: v('form'), year: v('year'), month: v('month'), unit: v('unit'), place: v('place'), rem: v('rem'), price: v('price'), sign1: v('sign1'), sign2: v('sign2') };
+  }
+  function layout(formKey) {
+    const a1 = formKey === 'a1';
+    const a2 = formKey === 'a2';
+    const jr = formKey === 'a3' || formKey === 'a4';
+    refs.month.row.hidden = !jr;
+    refs.place.row.hidden = !a2;
+    refs.rem.row.hidden = !a2;
+    refs.price.row.hidden = !a2;
+    refs.sign2.row.hidden = !(a1 || a2);
+    refs.sign1.lab.textContent = jr ? 'Ответственное лицо: звание и фамилия'
+      : (a2 ? 'Заместитель командующего округом по тылу: звание и фамилия' : 'Заместитель командира (начальника) по тылу: звание и фамилия');
+  }
+  function refresh() {
+    const d = readDraft();
+    layout(d.form);
+    const r = parsePrint(d);
+    const bad = Object.keys(r.errors).length > 0;
+    showFieldErrors(refs, r.errors);
+    if (bad) {
+      paperBox.replaceChildren(h('p', { class: 't-sub sec', text: 'Исправьте поля, чтобы увидеть форму.' }));
+      return;
+    }
+    paperBox.replaceChildren(renderPaper(buildModel(state.payload, r.p)));
+  }
+  function onInput(name) {
+    const r = refs[name];
+    if (r && !r.err.hidden) clearFieldError(r);
+    refresh();
+  }
+  function doPrint() {
+    const d = readDraft();
+    layout(d.form);
+    const r = parsePrint(d);
+    const bad = showFieldErrors(refs, r.errors);
+    if (Object.keys(r.errors).length) { if (bad) bad.focus(); return; }
+    savePrintPrefs(d);
+    $('printRoot').replaceChildren(renderPaper(buildModel(state.payload, r.p)));
+    document.documentElement.classList.add('printing');
+    try { window.print(); } catch (e) {
+      document.documentElement.classList.remove('printing');
+      $('printRoot').replaceChildren();
+      toast('Печать недоступна в этом браузере.');
+    }
+  }
+
+  openSheet({
+    title: 'Печать форм по приказу № 270',
+    wide: true,
+    body: h('div', { class: 'print-grid' }, [
+      h('div', { class: 'print-side' }, [
+        form,
+        h('p', { class: 't-foot sec', text: 'Печатаются расчёты с датой начала в выбранном году (журналы — в выбранном месяце). Чтобы получить PDF, выберите «Сохранить как PDF» в окне печати. Формат листа: A4, альбомная ориентация.' })
+      ]),
+      paperBox
+    ]),
+    submit: doPrint,
+    buttons: [
+      { label: 'Закрыть', kind: '' },
+      { label: 'Печать', kind: 'fill', keep: true, onClick: doPrint }
+    ]
+  });
+  refresh();
+}
+
+/* ================= отрисовка ================= */
+const segRefs = {};
+function selectSeg(key, focus) {
+  ui.seg = key;
+  for (const s of SEGS) {
+    const b = segRefs[s.key].btn;
+    b.setAttribute('aria-selected', s.key === key ? 'true' : 'false');
+    b.setAttribute('tabindex', s.key === key ? '0' : '-1');
+  }
+  if (focus) segRefs[key].btn.focus();
+  render();
+}
+function buildSeg() {
+  const box = $('seg');
+  SEGS.forEach((s, idx) => {
+    const count = h('span', { text: '0' });
+    const btn = h('button', {
+      type: 'button', role: 'tab', id: 'tab-' + s.key,
+      'aria-selected': s.key === ui.seg ? 'true' : 'false',
+      'aria-controls': 'panel',
+      tabindex: s.key === ui.seg ? '0' : '-1',
+      onclick: () => selectSeg(s.key, false),
+      onkeydown: (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); selectSeg(SEGS[(idx + 1) % SEGS.length].key, true); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); selectSeg(SEGS[(idx + SEGS.length - 1) % SEGS.length].key, true); }
+      }
+    }, [s.label + ' ', count]);
+    segRefs[s.key] = { btn: btn, count: count };
+    box.appendChild(btn);
+  });
+}
+
+function rowNode(it, c) {
+  const o = objectOf(it.object);
+  const res = c.ok
+    ? [h('span', { class: 't-headline num blk', text: fmtScaled(c.volL, 3) + ' м³' }), h('span', { class: 't-foot sec num blk', text: fmtScaled(c.massG, 3) + ' кг' })]
+    : [h('span', { class: 't-foot blk', text: 'Ошибка расчёта' })];
+  const main = h('button', { type: 'button', class: 'item-main', onclick: () => openEditor(it.id) }, [
+    h('span', { class: 'item-text' }, [
+      h('span', { class: 'chip', text: KINDS[o.kind].tag }),
+      h('span', { class: 't-headline blk', text: it.title }),
+      h('span', { class: 't-foot sec blk', text: catLabelMeta(it) }),
+      h('span', { class: 't-cap sec blk', text: 'Период: ' + fmtDateRu(it.date) + ' — ' + fmtDateRu(addDays(it.date, it.days - 1)) })
+    ]),
+    h('span', { class: 'item-res' }, res)
+  ]);
+  const del = h('button', { type: 'button', class: 'icon-btn danger', 'aria-label': 'Удалить: ' + it.title, onclick: () => deleteItem(it.id) }, [icon('trash')]);
+  return h('li', { class: 'item', dataset: { id: it.id } }, [main, del]);
+}
+
+function emptyNodes(total) {
+  if (!ready) return [h('p', { class: 't-body sec', text: 'Загрузка данных…' })];
+  if (total === 0) {
+    return [
+      h('p', { class: 't-headline', text: 'Расчётов пока нет' }),
+      h('p', { class: 't-sub sec', text: 'Создайте первый расчёт: выберите объект, погоду и срок отопления.' }),
+      h('button', { type: 'button', class: 'btn fill', text: 'Создать расчёт', onclick: () => openEditor(null) })
+    ];
+  }
+  if (ui.q.trim()) return [h('p', { class: 't-headline', text: 'По запросу ничего не найдено' }), h('p', { class: 't-sub sec', text: 'Измените текст поиска.' })];
+  return [h('p', { class: 't-headline', text: 'В этом разделе расчётов нет' }), h('p', { class: 't-sub sec', text: 'Выберите другой раздел или создайте расчёт.' })];
+}
+
+function render() {
+  const all = state.payload;
+  const items = applyView(all, ui);
+  const counts = { all: all.length, tent: 0, dugout: 0, bldg: 0, wash: 0 };
+  for (const it of all) { const c = catOf(it.object); if (c) counts[c] += 1; }
+  for (const s of SEGS) segRefs[s.key].count.textContent = String(counts[s.key]);
+  let sumV = 0n;
+  let sumM = 0n;
+  const frag = document.createDocumentFragment();
+  for (const it of items) {
+    const c = calcRecord(it);
+    if (c.ok) { sumV += c.volL; sumM += c.massG; }
+    frag.appendChild(rowNode(it, c));
+  }
+  $('totV').textContent = fmtScaled(sumV, 3) + ' м³';
+  $('totM').textContent = fmtScaled(sumM, 3) + ' кг';
+  $('totN').textContent = 'Показано расчётов: ' + items.length + ' из ' + all.length;
+  const list = $('list');
+  const empty = $('empty');
+  if (!ready || items.length === 0) {
+    list.replaceChildren();
+    list.hidden = true;
+    empty.replaceChildren(...emptyNodes(all.length));
+    empty.hidden = false;
+  } else {
+    empty.hidden = true;
+    list.hidden = false;
+    list.replaceChildren(frag);
+  }
+  $('undoBtn').disabled = undoStack.length === 0;
+  syncQuar();
+}
+
+/* ================= самопроверка ================= */
+function runSelfTest() {
+  const out = [];
+  const T = (name, ok, detail) => out.push({ name: name, ok: !!ok, detail: detail || '' });
+  const base = () => ({ id: 'aaaaaaaa', title: 'Тест', date: '2026-01-10', object: 'm10', qty: 1, tempC: 0, windMs: 0, days: 1, kpdBp: 7000, density: 590, qt: 1862, updatedAt: '2026-01-01T00:00:00.000Z' });
+  try {
+    delete Object.prototype.polluted;
+    const parsed = JSON.parse('{"__proto__":{"polluted":true},"payload":[{"id":"aaaaaaaa","title":"t"}]}');
+    const r = sanitizeTree(parsed);
+    T('Санитайзер: прототип не загрязнён', r.ok && Object.prototype.polluted === undefined && !Object.prototype.hasOwnProperty.call(r.v, '__proto__') && r.v.payload.length === 1 && r.v.payload[0].id === 'aaaaaaaa');
+    const z = sanitizeTree(JSON.parse('{"__pro\\u200Bto__":{"polluted":true},"ok":1}'));
+    T('Санитайзер: скрытый символ в ключе', z.ok && Object.prototype.polluted === undefined && z.v.ok === 1 && Object.keys(z.v).length === 1);
+    delete Object.prototype.polluted;
+  } catch (e) { T('Санитайзер', false, String(e)); }
+  try {
+    const m = mergePayload(
+      [{ id: 'aaaaaaaa', title: 'local', updatedAt: '2026-02-02T00:00:00.000Z' }, { id: 'bbbbbbbb', title: 'b', updatedAt: '2026-01-01T00:00:00.000Z' }],
+      [{ id: 'aaaaaaaa', title: 'old', updatedAt: '2026-01-01T00:00:00.000Z' }, { id: 'cccccccc', title: 'c', updatedAt: '2026-03-03T00:00:00.000Z' }]
+    );
+    const by = {};
+    for (const x of m) by[x.id] = x;
+    T('Слияние: три записи, побеждает свежая', m.length === 3 && by.aaaaaaaa.title === 'local' && by.cccccccc.title === 'c' && !!by.bbbbbbbb);
+  } catch (e) { T('Слияние', false, String(e)); }
+  try {
+    T('Валидатор: не объект → null', validateItem(5) === null && validateItem(null) === null);
+    const e1 = base(); e1.title = '   ';
+    T('Валидатор: пустое обязательное поле → null', validateItem(e1) === null);
+    const e2 = base(); e2.title = 'x'.repeat(121);
+    T('Валидатор: превышен лимит строки → null', validateItem(e2) === null);
+    const e3 = base(); e3.evil = 'x';
+    const v3 = validateItem(e3);
+    T('Валидатор: лишний ключ отброшен, вход цел', v3 !== null && !('evil' in v3) && e3.evil === 'x' && Object.keys(e3).length === 13);
+    const e4 = base(); e4.date = '2026-02-30';
+    T('Валидатор: несуществующая дата → null', validateItem(e4) === null);
+  } catch (e) { T('Валидатор', false, String(e)); }
+  try {
+    const a = coreCalc(2597, 1, 4400, 1862, 590);
+    T('Предмет: пример ТЗ (N = 25,97; КПД 0,44) → 221,890 кг и 0,376 м³', a && a.massG === 221890n && a.volL === 376n, a ? String(a.massG) + '/' + String(a.volL) : 'null');
+    const z = coreCalc(0, 10, 7000, 1862, 590);
+    T('Предмет: ноль', z && z.massG === 0n && z.volL === 0n);
+    const f = coreCalc(1, 1, 7000, 1862, 590);
+    T('Предмет: неудобная дробь (54 г и 0 л)', f && f.massG === 54n && f.volL === 0n);
+    const t = calcRecord(base());
+    T('Предмет: таблица М-10, 0 °C, 0 м/с → N = 3,780; 20,301 кг; 0,034 м³', t.ok && t.nMilli === 3780n && t.massG === 20301n && t.volL === 34n);
+    const ip = normRational('m10', -2, 1, 1, 1);
+    T('Предмет: интерполяция по температуре и ветру → 4,275', ip.n === 4275 && ip.d === 10);
+    const w = base(); w.object = 'wash_s'; w.qty = 3; w.tempC = 0; w.windMs = 0;
+    const wc = calcRecord(w);
+    T('Предмет: 0,115 × 3 точно = 0,345 кг у.т. и 1,853 кг', wc.ok && wc.nMilli === 345n && wc.massG === 1853n);
+    const dg = base(); dg.object = 'dugout'; dg.qty = 100; dg.tempC = -10;
+    T('Предмет: землянка 100 м³, −10 °C → 7,900 кг у.т.', calcRecord(dg).nMilli === 7900n);
+    const s1 = base(); s1.id = 'bbbbbbbb';
+    const s2 = base(); s2.id = 'aaaaaaaa';
+    const sorted = applyView([s1, s2], { seg: 'all', q: '' });
+    T('Сортировка: равные метки → порядок по id', sorted[0].id === 'aaaaaaaa' && sorted[1].id === 'bbbbbbbb');
+  } catch (e) { T('Предметная область', false, String(e)); }
+  try {
+    const old = { _meta: { appId: APP_ID, schemaVersion: 1, updatedAt: '2026-01-05T00:00:00.000Z' }, payload: [{ id: 'aaaaaaaa', updatedAt: '2026-03-04T10:00:00.000Z' }], quarantine: [] };
+    const mg = migrate(old);
+    T('Миграция 1→2: дата берётся из updatedAt, вход цел', mg && mg._meta.schemaVersion === 2 && mg.payload[0].date === '2026-03-04' && old.payload[0].date === undefined && old._meta.schemaVersion === 1);
+    T('Даты: 30.01 + 3 суток = 02.02; 30.02 не существует', addDays('2026-01-30', 3) === '2026-02-02' && !isDateStr('2026-02-30') && isDateStr('2028-02-29'));
+  } catch (e) { T('Миграция и даты', false, String(e)); }
+  try {
+    const dg = base(); dg.object = 'dugout'; dg.qty = 100; dg.tempC = -10; dg.date = '2026-01-30'; dg.days = 3;
+    const pr = { form: 'a2', year: 2026, month: 1, unit: '', place: '', sign1: '', sign2: '', remL: 0, priceKop: 0 };
+    const m0 = modelA2([dg], pr);
+    T('Печать № 2: потребность 3 суток землянки 100 м³ → 0,216 м³', m0.need === '0,216', m0.need);
+    const one = base(); one.object = 'dugout'; one.qty = 100; one.tempC = -10;
+    pr.remL = 22; pr.priceKop = 350050;
+    const m1 = modelA2([one], pr);
+    T('Печать № 2: остаток 0,022 → закупка 0,050 м³ × 3500,50 = 175,03 руб.', m1.purch === '0,050' && m1.limit === '175,03', m1.purch + ' / ' + m1.limit);
+    pr.remL = 999999;
+    T('Печать № 2: остаток больше потребности → закупка 0', modelA2([one], pr).purch === '0,000');
+    const jp = { form: 'a3', year: 2026, month: 1, unit: '', place: '', sign1: '', sign2: '', remL: 0, priceKop: 0 };
+    const j1 = modelJournal([dg], jp, false);
+    jp.month = 2;
+    const j2 = modelJournal([dg], jp, false);
+    T('Печать № 3: период 30.01–01.02 даёт 2 строки в январе и 1 в феврале', j1.rows.length === 2 && j2.rows.length === 1 && j2.rows[0][0] === '01.02.2026');
+    const wsh = base(); wsh.object = 'wash_s'; wsh.qty = 3; wsh.date = '2026-07-01'; wsh.days = 2;
+    jp.form = 'a4'; jp.month = 7;
+    T('Печать № 4: две помывки → две строки, норма 0,345 кг у.т.', modelJournal([wsh], jp, true).rows.length === 2 && modelJournal([wsh], jp, true).rows[0][2] === '0,345');
+    const pp = parsePrint({ form: 'a2', year: '2026', month: '1', unit: '', place: '', rem: '1,2345', price: '', sign1: '', sign2: '' });
+    T('Печать: лишний знак в объёме остатка → ошибка поля', !!pp.errors.rem);
+  } catch (e) { T('Печатные формы', false, String(e)); }
+  return out;
+}
+function showSelfTest() {
+  const res = runSelfTest();
+  const bad = res.filter((r) => !r.ok);
+  if (!bad.length) {
+    setBanner('selftest', mkBanner('Самопроверка пройдена: ' + res.length, 'Все проверки выполнены без обращения к хранилищу.', []));
+  } else {
+    setBanner('selftest', mkBanner('Самопроверка: провалено ' + bad.length + ' из ' + res.length, bad.map((r) => r.name + (r.detail ? ' (' + r.detail + ')' : '')).join('; '), []));
+  }
+}
+
+/* ================= клавиатура ================= */
+function onKey(e) {
+  const tag = e.target && e.target.tagName;
+  const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  if (e.key === 'Escape') {
+    if (sheetState) { e.preventDefault(); closeSheet(); }
+    return;
+  }
+  if (sheetState && e.key === 'Tab') {
+    const sheet = $('sheet');
+    const f = focusables(sheet);
+    if (!f.length) { e.preventDefault(); return; }
+    const first = f[0];
+    const last = f[f.length - 1];
+    const a = document.activeElement;
+    if (e.shiftKey && (a === first || !sheet.contains(a))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (a === last || !sheet.contains(a))) { e.preventDefault(); first.focus(); }
+    return;
+  }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    if (sheetState && sheetState.submit) { e.preventDefault(); sheetState.submit(); }
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.code === 'KeyZ' || String(e.key).toLowerCase() === 'z')) {
+    if (!inField && !sheetState) { e.preventDefault(); gate(() => { undo(); }); }
+    return;
+  }
+  if (e.key === '/' && !inField && !sheetState && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    $('search').focus();
+  }
+}
+
+/* ================= запуск ================= */
+function bindShell() {
+  $('logo').appendChild(icon('logo'));
+  $('printBtn').appendChild(icon('print'));
+  $('icPrint').appendChild(icon('print'));
+  $('icPlus').appendChild(icon('plus'));
+  $('icExport').appendChild(icon('download'));
+  $('icImport').appendChild(icon('upload'));
+  $('icUndo').appendChild(icon('undo'));
+  $('icClear').appendChild(icon('trash'));
+  $('themeBtn').addEventListener('click', () => {
+    curTheme = THEMES[(THEMES.indexOf(curTheme) + 1) % THEMES.length];
+    applyTheme(curTheme);
+    try { localStorage.setItem(LS_THEME, curTheme); } catch (e) { toast('Тему не удалось запомнить.'); }
+  });
+  $('search').addEventListener('input', () => { ui.q = $('search').value; render(); });
+  buildSeg();
+  $('fab').addEventListener('click', () => openEditor(null));
+  $('printBtn').addEventListener('click', openPrint);
+  $('btnPrint').addEventListener('click', openPrint);
+  $('btnExport').addEventListener('click', exportFile);
+  $('btnImport').addEventListener('click', () => $('file').click());
+  $('undoBtn').addEventListener('click', () => gate(() => { undo(); }));
+  $('btnClear').addEventListener('click', clearAll);
+  $('file').addEventListener('change', onFile);
+  $('scrim').addEventListener('click', (e) => { if (e.target === $('scrim')) closeSheet(); });
+  document.addEventListener('keydown', onKey);
+  window.addEventListener('afterprint', () => {
+    document.documentElement.classList.remove('printing');
+    $('printRoot').replaceChildren();
+  });
+  window.addEventListener('error', () => {
+    setBanner('crash', mkBanner('Сбой интерфейса', 'Сохранённые данные не изменялись. Перезагрузите страницу.', []));
+  });
+  window.addEventListener('unhandledrejection', () => {
+    setBanner('crash', mkBanner('Сбой интерфейса', 'Сохранённые данные не изменялись. Перезагрузите страницу.', []));
+  });
+}
+
+async function start() {
+  curTheme = readTheme();
+  applyTheme(curTheme);
+  bindShell();
+  render();
+  db = await openDb();
+  await loadState();
+  ready = true;
+  render();
+  if (mode === 'memory') {
+    setBanner('mem', mkBanner('Хранилище браузера недоступно', 'После закрытия вкладки данные пропадут. Используйте экспорт в файл.', [bBtn('Экспорт в файл', exportFile)]));
+  }
+  if (unreadableRaw !== null) {
+    setBanner('damage', mkBanner('Хранилище не прочитано', damageReason + ' Данные не будут перезаписаны без вашего подтверждения.', [bBtn('Скачать исходник', downloadRaw)]));
+  }
+  if (location.hash === '#selftest') showSelfTest();
+}
+start();
+}());
+</script>
+<script>
+(function(){
+  var L=document.getElementById('landing'),v=document.getElementById('lvid');
+  function show(){L.hidden=false;L.classList.remove('leave');document.body.style.overflow='hidden';try{v.play()}catch(e){}}
+  function hide(){L.classList.add('leave');document.body.style.overflow='';setTimeout(function(){if(L.classList.contains('leave')){L.hidden=true;try{v.pause()}catch(e){}}},750)}
+  document.body.style.overflow='hidden';
+  v.play&&v.play().catch(function(){});
+  document.getElementById('startBtn').addEventListener('click',hide);
+  L.querySelectorAll('[data-open]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.getAttribute('data-open')).classList.add('open')})});
+  L.querySelectorAll('.l-modal').forEach(function(m){
+    m.addEventListener('click',function(e){if(e.target===m||e.target.classList.contains('l-close'))m.classList.remove('open')});
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')L.querySelectorAll('.l-modal.open').forEach(function(m){m.classList.remove('open')})});
+  var br=document.querySelector('.brand');if(br)br.addEventListener('click',show);
+}());
+</script>
+</body>
+</html>
