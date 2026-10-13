@@ -219,3 +219,13 @@ mark.hit.cur{background:#ff9f43;outline:2px solid #ff9f43}
 .pgrid .xcard{align-content:start}
 .pg-h{margin:22px 4px 10px;font-size:18px;font-weight:700}
 .xcard.gcard{background:var(--g-bg);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--g-shadow);border-radius:var(--r-lg);padding:16px 18px}
+.crumb{display:flex;gap:8px;align-items:center;font-size:13px;line-height:18px;letter-spacing:0;color:var(--label-secondary);margin:4px 6px 6px}
+.crumb b{color:var(--label-primary);font-weight:700}.crumb i{opacity:.5;font-style:normal}
+.side-item.on{background:var(--accent-soft);color:var(--system-accent)}
+.side-item.on small{color:inherit;opacity:.8}
+.dtab{padding:6px 12px}
+.pg-sec{margin-bottom:6px}
+.span2{grid-column:span 2}
+@media (max-width:700px){.span2{grid-column:auto}}
+#dyn{min-height:40vh}
+#dyn .hero-line{margin-bottom:14px}

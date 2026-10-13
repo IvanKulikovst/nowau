@@ -91,78 +91,6 @@
     try { window.close(); } catch (e) { }
     setTimeout(function () { toast('Браузер не позволяет закрыть вкладку программой. Закройте вкладку вручную (Ctrl+W).'); }, 200);
   }
-  function openHistory() {
-    var items = K.getItems().slice().sort(function (a, b) { return a.updatedAt < b.updatedAt ? 1 : -1; });
-    var q = E('input', { type: 'search', class: 'xin', placeholder: 'Поиск по наименованию' });
-    var tb = E('tbody');
-    var w;
-    function draw() {
-      var s = q.value.trim().toLowerCase(); tb.replaceChildren();
-      var n = 0;
-      items.forEach(function (it) {
-        if (s && it.title.toLowerCase().indexOf(s) < 0) return;
-        var c = K.calcRecord(it), o = K.objectOf(it.object); n++;
-        tb.appendChild(E('tr', null, [E('td', { text: fmtIso(it.updatedAt) }), E('td', { text: it.title }), E('td', { text: o ? o.label : '' }), E('td', { text: c.ok ? K.fmtScaled(c.volL, 3) + ' м³' : '—' }),
-          E('td', null, [E('button', { type: 'button', class: 'xbtn sm', text: 'Открыть', onclick: function () { w.close(); K.openEditor(it.id); } })])]));
-      });
-      if (!n) tb.appendChild(E('tr', null, [E('td', { colspan: '5', class: 'xempty', text: items.length ? 'Ничего не найдено.' : 'Архив пуст. Создайте первый расчёт.' })]));
-    }
-    q.addEventListener('input', draw);
-    var tbl = E('table', { class: 'xtable' }, [E('thead', null, [E('tr', null, ['Изменён', 'Наименование', 'Объект', 'Объём', ''].map(function (t) { return E('th', { text: t }); }))]), tb]);
-    w = xwin({ title: 'История расчётов', width: 'min(960px,100%)', body: E('div', { style: 'display:grid;gap:10px' }, [q, tbl]), footer: [{ label: 'Закрыть', kind: 'fill' }] });
-    draw();
-  }
-  var TEMPLATE_HINT = { tent: 'Таблица Нормы № 1 · учёт ветра и часов топки', dugout: 'Норма № 2 · на 100 м³', bldg: 'Норма № 3 · до 25 м³', wash: 'Норма № 4 · на человека' };
-  function openTemplates() {
-    var w = xwin({ title: 'Шаблоны расчётов', width: 'min(900px,100%)', body: E('div', null, [E('p', { class: 'xnote', text: 'Готовая форма расчёта по типу объекта: тип и наименование заполнены, остальные параметры — по умолчанию (КПД и константы берутся из «Настройки → Параметры расчёта»).' }),
-      E('div', { class: 'xgrid3', style: 'margin-top:10px' }, K.OBJECTS.map(function (o) {
-        return E('button', { type: 'button', class: 'xcard', onclick: function () { w.close(); K.openEditor(null, { object: o.key, title: o.label, tempC: o.kind === 'wash' ? '0' : (o.kind === 'bldg' ? '-10' : '-10'), qty: o.kind === 'bldg' ? '20' : (o.kind === 'dugout' ? '100' : '1') }); } }, [E('b', { text: o.label }), E('small', { text: TEMPLATE_HINT[o.kind] })]);
-      }))]), footer: [{ label: 'Закрыть' }] });
-  }
-  function openOrders() {
-    var w = xwin({ title: 'Приказы', body: E('div', { style: 'display:grid;gap:10px' }, [
-      E('div', { class: 'xcard' }, [E('b', { text: 'Приказ Росгвардии от 14.07.2025 № 270' }), E('small', { text: 'Об утверждении Порядка обеспечения дровами и Норм расхода дров в войсках национальной гвардии Российской Федерации. Основание — ч. 1 ст. 31 Федерального закона № 226-ФЗ.' }),
-        E('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px' }, [
-          E('button', { type: 'button', class: 'xbtn sm fill', text: 'Полный текст', onclick: function () { w.close(); openRef('s1'); } }),
-          E('button', { type: 'button', class: 'xbtn sm', text: 'Порядок (прил. № 1)', onclick: function () { w.close(); openRef('s1', 'ref-p1'); } }),
-          E('button', { type: 'button', class: 'xbtn sm', text: 'Нормы (прил. № 2)', onclick: function () { w.close(); openRef('s3'); } })])]),
-      E('p', { class: 'xnote', text: 'В программе загружен один приказ. Остальные приказы можно добавить в будущих версиях.' })]), footer: [{ label: 'Закрыть' }] });
-  }
-  function openAmend() {
-    var w = xwin({ title: 'Дополнения', body: E('div', null, [E('div', { class: 'xempty', text: 'К приказу № 270 дополнений нет.' }), E('p', { class: 'xnote', text: 'В материалах, загруженных в программу, нет приказов о внесении изменений. Если дополнения будут утверждены, они появятся здесь и в разделе «Основания расчёта» справочника.' })]), footer: [{ label: 'Справочные данные', onClick: function () { openRef('s1'); } }, { label: 'Закрыть', kind: 'fill' }] });
-  }
-  function openDocTemplates() {
-    var w = xwin({ title: 'Шаблоны документов', width: 'min(820px,100%)', body: E('div', { class: 'xgrid3' }, ['a1', 'a2', 'a3', 'a4'].map(function (f) {
-      return E('button', { type: 'button', class: 'xcard', onclick: function () { w.close(); openPrintWin({ form: f }); } }, [E('b', { text: FORM_NAME[f] }), E('small', { text: 'Рекомендуемый образец формы — открыть в окне предпросмотра' })]);
-    })), footer: [{ label: 'Закрыть' }] });
-  }
-  function openPrintLog() {
-    var l = lsGet('printlog', []);
-    var tb = E('tbody');
-    l.forEach(function (r) { tb.appendChild(E('tr', null, [E('td', { text: fmtIso(r.t) }), E('td', { text: FORM_NAME[r.form] || r.form }), E('td', { text: ACT[r.action] || r.action }), E('td', { text: r.detail })])); });
-    if (!l.length) tb.appendChild(E('tr', null, [E('td', { colspan: '4', class: 'xempty', text: 'Печать ещё не выполнялась.' })]));
-    xwin({ title: 'История печати', width: 'min(860px,100%)', body: E('table', { class: 'xtable' }, [E('thead', null, [E('tr', null, ['Дата', 'Форма', 'Действие', 'Параметры'].map(function (t) { return E('th', { text: t }); }))]), tb]),
-      footer: [{ label: 'Очистить журнал', onClick: function () { lsSet('printlog', []); renderRecent(); toast('Журнал очищен.'); } }, { label: 'Закрыть', kind: 'fill' }] });
-  }
-  function settingsWin(kind) {
-    var s = getS(), fields = [], title, groupKey;
-    if (kind === 'user') { title = 'Пользователь'; groupKey = 'user'; fields = [['rank', 'Воинское звание'], ['name', 'Фамилия и инициалы'], ['position', 'Должность (подставляется в подписи форм)']]; }
-    if (kind === 'org') { title = 'Организация'; groupKey = 'org'; fields = [['unit', 'Воинская часть (организация)'], ['place', 'Место дислокации']]; }
-    if (kind === 'calc') { title = 'Параметры расчёта'; groupKey = 'calc'; fields = [['kpd', 'КПД печи по умолчанию (0,7 — п. 13 Порядка)'], ['qt', 'Калорийный эквивалент Qт по умолчанию, ккал/кг'], ['density', 'Плотность древесины ρ по умолчанию, кг/м³']]; }
-    var inputs = {};
-    var form = E('div', { style: 'display:grid;gap:10px' }, fields.map(function (f) {
-      var inp = E('input', { type: 'text', value: s[groupKey][f[0]] || '', maxlength: '200', placeholder: kind === 'calc' ? ({ kpd: '0,7', qt: '1862', density: '590' })[f[0]] : '' }); inputs[f[0]] = inp;
-      return E('label', { class: 'xfield' }, [E('span', { text: f[1] }), inp]);
-    }));
-    var kids = [form];
-    if (kind === 'calc') kids.push(E('div', { class: 'ref-table-wrap' }, [E('h4', { text: 'Константы приказа (не изменяются)' }), E('ul', null, [
-      E('li', { text: 'Qут = 7000 ккал/кг — условное топливо' }), E('li', { text: 'Температура внутри по умолчанию: +18 °C (примечание к Норме № 3)' }), E('li', { text: 'Время топки палатки по умолчанию: 12 ч (Норма № 1)' }), E('li', { text: 'Запас: 0,125 м³/сут на печь на 3 суток (п. 14)' }), E('li', { text: 'Помывка: 0,115 (лето), 0,138 (отопительный период) кг у.т. на человека' })])]));
-    xwin({ title: title, body: E('div', { style: 'display:grid;gap:12px' }, kids), footer: [{ label: 'Отмена' }, { label: 'Сохранить', kind: 'fill', onClick: function () {
-      var cur = getS(); cur[groupKey] = {};
-      fields.forEach(function (f) { cur[groupKey][f[0]] = inputs[f[0]].value.trim(); });
-      if (setS(cur)) toast('Настройки сохранены.');
-    } }] });
-  }
   function guideWin() {
     xwin({ title: 'Руководство пользователя', width: 'min(760px,100%)', body: E('div', { class: 'ref-sec', style: 'margin:0' }, [
       E('h3', { text: '1. Создайте расчёт' }), E('p', { text: 'Расчёт → Новый расчёт (Ctrl+N). Выберите объект, введите количество, температуру, ветер (для палаток), время топки, число суток, КПД, плотность и Qт. Результат виден сразу.' }),
@@ -176,68 +104,260 @@
   }
   function aboutWin() { var b = document.querySelector('.brand'); if (b) b.click(); }
 
-  /* ---------- разделы ---------- */
+  /* ---------- разделы и подразделы ---------- */
   var PATH = {
-    home: 'M3 11 12 4l9 7v9H3z', calc: 'M5 3h14v18H5zM8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M8 18h2M12 18h4',
+    home: 'M3 11 12 4l9 7v9H3z', calc: 'M5 3h14v18H5zM8 7h8M8 11h2M12 11h2M8 15h2M12 15h2M8 18h2M12 18h4',
     docs: 'M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6', print: 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7z', set: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12l2-1-2-4-2 1a7 7 0 0 0-2-1l-.5-2h-5L9 7a7 7 0 0 0-2 1l-2-1-2 4 2 1v2l-2 1 2 4 2-1a7 7 0 0 0 2 1l.5 2h5l.5-2a7 7 0 0 0 2-1l2 1 2-4-2-1z'
   };
   var SECTIONS = [
-    { id: 'home', label: 'Главная', icon: PATH.home, items: [
-      { t: 'Обзор', h: 'Потребление: итоги и графики', run: function () { showSection('home'); } },
-      { t: 'Графики', h: 'Структура, крупнейшие расчёты, динамика', run: function () { showSection('home'); var c = document.querySelector('.charts'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }] },
-    { id: 'calc', label: 'Расчёт', icon: PATH.calc, items: [
-      { t: 'Новый расчёт', h: 'Создание расчёта', run: function () { newCalc(); } },
-      { t: 'Загрузить расчёт', h: 'Импорт из файла', run: importCalc },
-      { t: 'История расчётов', h: 'Архив всех расчётов', run: openHistory },
-      { t: 'Шаблоны расчётов', h: 'Готовые формы по типам объектов', run: openTemplates }] },
-    { id: 'docs', label: 'Документы', icon: PATH.docs, items: [
-      { t: 'Приказы', h: 'Список приказов', run: openOrders },
-      { t: 'Дополнения', h: 'Список дополнений', run: openAmend },
-      { t: 'Шаблоны документов', h: 'Формы приложений № 1–4', run: openDocTemplates }] },
-    { id: 'print', label: 'Печать', icon: PATH.print, items: [
-      { t: 'Предпросмотр', h: 'Просмотр перед печатью', run: function () { openPrintWin(); } },
-      { t: 'Настройки печати', h: 'Параметры страницы', run: function () { openPrintWin({ focus: 'settings' }); } },
-      { t: 'История печати', h: 'Журнал печати и экспорта', run: openPrintLog }] },
-    { id: 'set', label: 'Настройки', icon: PATH.set, items: [
-      { t: 'Пользователь', h: 'Профиль', run: function () { settingsWin('user'); } },
-      { t: 'Организация', h: 'Данные организации', run: function () { settingsWin('org'); } },
-      { t: 'Параметры расчёта', h: 'Константы и значения по умолчанию', run: function () { settingsWin('calc'); } }] }
+    { id: 'home', label: 'Главная', icon: PATH.home, subs: [
+      { id: 'overview', t: 'Обзор потребления', h: 'Показатели и графики' },
+      { id: 'stats', t: 'Статистика', h: 'Итоги по типам объектов и месяцам' }] },
+    { id: 'calc', label: 'Расчёт', icon: PATH.calc, subs: [
+      { id: 'list', t: 'Мои расчёты', h: 'Список, поиск, разделы' },
+      { id: 'new', t: 'Новый расчёт', h: 'Выбор типа объекта' },
+      { id: 'io', t: 'Загрузка и сохранение', h: 'Импорт и экспорт файла' },
+      { id: 'history', t: 'История изменений', h: 'Архив и отмена действий' }] },
+    { id: 'docs', label: 'Документы', icon: PATH.docs, subs: [
+      { id: 'orders', t: 'Приказы', h: 'Приказ № 270 и его приложения' },
+      { id: 'amend', t: 'Дополнения', h: 'Изменения к приказам' },
+      { id: 'forms', t: 'Формы приложений', h: 'Образцы № 1–4' },
+      { id: 'ref', t: 'Справочные данные', h: 'Формулы, таблицы, примеры (F1)', run: function () { openRef(); } }] },
+    { id: 'print', label: 'Печать', icon: PATH.print, subs: [
+      { id: 'preview', t: 'Предпросмотр', h: 'Выбор формы и периода' },
+      { id: 'params', t: 'Параметры печати', h: 'Бумага, поля, копии' },
+      { id: 'log', t: 'Журнал печати', h: 'Печать и экспорт файлов' }] },
+    { id: 'set', label: 'Настройки', icon: PATH.set, subs: [
+      { id: 'user', t: 'Пользователь', h: 'Звание, фамилия, должность' },
+      { id: 'org', t: 'Организация', h: 'Часть и место дислокации' },
+      { id: 'calc', t: 'Параметры расчёта', h: 'КПД, Qт, плотность, константы' },
+      { id: 'view', t: 'Внешний вид', h: 'Панели, масштаб, тема' },
+      { id: 'data', t: 'Данные', h: 'Экспорт, импорт, очистка' }] }
   ];
-  var curSec = 'home';
-  var VIEW_OF = { home: 'home', calc: 'calc', docs: 'docs', print: 'print', set: 'set' };
-  var curView = 'home';
-  function setViewName(name, fromHash) {
-    curView = name;
-    var app = $('app'); if (!app) return;
-    app.setAttribute('data-cur', name);
-    document.querySelectorAll('#app [data-view]').forEach(function (n) { n.classList.toggle('vhide', n.getAttribute('data-view').split(' ').indexOf(name) < 0); });
-    if (!fromHash && location.hash !== '#/' + name && location.hash !== '#selftest') { try { history.pushState(null, '', '#/' + name); } catch (e) { location.hash = '#/' + name; } }
+  var curSec = 'home', curSub = 'overview', curKey = 'home/overview';
+  var PAGES = {};
+  function secOf(id) { return SECTIONS.filter(function (s) { return s.id === id; })[0] || SECTIONS[0]; }
+  function navigate(secId, subId, silent) {
+    var sec = secOf(secId), sub = sec.subs.filter(function (x) { return x.id === subId; })[0] || (subId ? null : sec.subs[0]);
+    if (!sub) sub = sec.subs[0];
+    if (sub.run) { sub.run(); return; }
+    curSec = sec.id; curSub = sub.id; curKey = sec.id + '/' + sub.id;
+    document.querySelectorAll('.side-sec').forEach(function (el) {
+      var on = el.getAttribute('data-sec') === curSec;
+      el.classList.toggle('on', on);
+      el.querySelector('.side-sec-btn').setAttribute('aria-expanded', on ? 'true' : 'false');
+      el.querySelectorAll('.side-item').forEach(function (i) { i.tabIndex = on ? 0 : -1; i.classList.toggle('on', i.getAttribute('data-key') === curKey); });
+    });
+    document.querySelectorAll('.tabbar button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sec') === curSec); });
+    renderPage();
+    if (!silent) { var h = '#/' + curSec + '/' + curSub; if (location.hash !== h && location.hash !== '#selftest') { try { history.pushState(null, '', h); } catch (e) { location.hash = h; } } }
     window.scrollTo({ top: 0 });
   }
-  function showSection(id) { activate(id); }
-  window.addEventListener('popstate', function () { var m = /^#\/(\w+)/.exec(location.hash); var id = m && VIEW_OF[m[1]] ? m[1] : 'home'; activate(id, true); });
-  function activate(id, silent) {
-    curSec = id; setViewName(VIEW_OF[id] || 'home', !!silent);
-    document.querySelectorAll('.side-sec').forEach(function (el) {
-      var on = el.getAttribute('data-sec') === id;
-      el.classList.toggle('on', on);
-      var b = el.querySelector('.side-sec-btn'); b.setAttribute('aria-expanded', on ? 'true' : 'false');
-      el.querySelectorAll('.side-item').forEach(function (i) { i.tabIndex = on ? 0 : -1; });
-    });
-    document.querySelectorAll('.tabbar button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sec') === id); });
+  function activate(id, silent) { navigate(id, undefined, silent); }
+  function renderPage() {
+    var app = $('app'); if (!app) return;
+    app.setAttribute('data-cur', curSec);
+    document.querySelectorAll('#app [data-view]').forEach(function (n) { n.classList.toggle('vhide', n.getAttribute('data-view') !== curKey); });
+    var sec = secOf(curSec), sub = sec.subs.filter(function (x) { return x.id === curSub; })[0];
+    var cr = $('crumb'); if (cr) cr.replaceChildren(E('span', { text: sec.label }), E('i', { text: '›' }), E('b', { text: sub.t }));
+    var dyn = $('dyn'); if (!dyn) return;
+    dyn.replaceChildren();
+    if (PAGES[curKey]) { dyn.classList.remove('vhide'); PAGES[curKey](dyn); dyn.style.animation = 'none'; void dyn.offsetWidth; dyn.style.animation = ''; }
+    else dyn.classList.add('vhide');
   }
+  function refreshDyn() { var d = $('dyn'); if (!d || d.classList.contains('vhide')) return; if (d.contains(document.activeElement) && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return; if (xwOpen()) return; renderPage(); }
+  function xwOpen() { return stack.length > 0; }
+  window.addEventListener('popstate', function () { var m = /^#\/(\w+)(?:\/(\w+))?/.exec(location.hash); navigate(m ? m[1] : 'home', m ? m[2] : undefined, true); });
+  /* совместимость с прежними вызовами */
+  function openHistory() { navigate('calc', 'history'); }
+  function openTemplates() { navigate('calc', 'new'); }
+  function openOrders() { navigate('docs', 'orders'); }
+  function openAmend() { navigate('docs', 'amend'); }
+  function openDocTemplates() { navigate('docs', 'forms'); }
+  function openPrintLog() { navigate('print', 'log'); }
+  function settingsWin(kind) { navigate('set', kind); }
+  function renderRecent() { if (curKey === 'print/log') refreshDyn(); }
+
+  /* ---------- вспомогательные элементы страниц ---------- */
+  function pageHead(title, sub) { return E('div', { class: 'hero-line' }, [E('h2', { text: title }), sub ? E('p', { class: 't-sub sec', text: sub }) : null]); }
+  function actCard(title, text, btns, cls) { return E('div', { class: 'xcard gcard ' + (cls || '') }, [E('b', { text: title }), text ? E('small', { text: text }) : null, btns && btns.length ? E('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px' }, btns.map(function (b) { return E('button', { type: 'button', class: 'xbtn sm' + (b[2] ? ' fill' : ''), text: b[0], onclick: b[1] }); })) : null]); }
+  function group(title, hint, nodes) { return E('section', { class: 'pg-sec' }, [E('h3', { class: 'pg-h', text: title }), hint ? E('p', { class: 'xnote', style: 'margin:-4px 4px 10px', text: hint }) : null, nodes]); }
+  function grid(nodes) { return E('div', { class: 'xgrid3 pgrid' }, nodes); }
+  function dtable(heads, rows, empty) {
+    var tb = E('tbody');
+    rows.forEach(function (r) { tb.appendChild(E('tr', null, r.map(function (c) { return c && c.nodeType ? E('td', null, [c]) : E('td', { text: c == null ? '' : String(c) }); }))); });
+    if (!rows.length) tb.appendChild(E('tr', null, [E('td', { colspan: String(heads.length), class: 'xempty', text: empty || 'Нет данных.' })]));
+    return E('div', { class: 'gcard dtab' }, [E('div', { class: 'ref-scroll' }, [E('table', { class: 'xtable' }, [E('thead', null, [E('tr', null, heads.map(function (t) { return E('th', { text: t }); }))]), tb])])]);
+  }
+  function fmtN(n, d) { return n.toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  var KIND_NAME = { tent: 'Палатки', dugout: 'Землянки (блиндажи)', bldg: 'Отдельные строения', wash: 'Помывка личного состава' };
+  function calcRows() {
+    return K.getItems().map(function (it) { var c = K.calcRecord(it), o = K.objectOf(it.object); return { it: it, c: c, o: o, v: c.ok ? Number(c.volL) / 1000 : 0, m: c.ok ? Number(c.massG) / 1000 : 0 }; });
+  }
+
+  /* ---------- страницы ---------- */
+  PAGES['home/stats'] = function (r) {
+    r.appendChild(pageHead('Статистика', 'Итоги по типам объектов и по месяцам начала расчётов'));
+    var rows = calcRows(), tv = rows.reduce(function (a, x) { return a + x.v; }, 0), tm = rows.reduce(function (a, x) { return a + x.m; }, 0);
+    var by = {}, mon = {};
+    rows.forEach(function (x) { var k = x.o.kind; by[k] = by[k] || { n: 0, v: 0, m: 0 }; by[k].n++; by[k].v += x.v; by[k].m += x.m; var ym = x.it.date.slice(0, 7); mon[ym] = mon[ym] || { n: 0, v: 0 }; mon[ym].n++; mon[ym].v += x.v; });
+    var kr = Object.keys(KIND_NAME).filter(function (k) { return by[k]; }).map(function (k) { return [KIND_NAME[k], by[k].n, fmtN(by[k].v, 3), fmtN(by[k].m, 1), tv ? fmtN(by[k].v / tv * 100, 1) + ' %' : '—']; });
+    if (kr.length) kr.push([E('b', { text: 'Итого' }), rows.length, fmtN(tv, 3), fmtN(tm, 1), '100 %']);
+    r.appendChild(group('По типам объектов', 'Объём — м³ дров, масса — кг (по расчётам из списка).', dtable(['Тип объекта', 'Расчётов', 'Объём, м³', 'Масса, кг', 'Доля'], kr, 'Расчётов пока нет.')));
+    var mr = Object.keys(mon).sort().map(function (ym) { return [K.MONTHS[parseInt(ym.slice(5), 10) - 1] + ' ' + ym.slice(0, 4), mon[ym].n, fmtN(mon[ym].v, 3)]; });
+    r.appendChild(group('По месяцам начала', 'Расчёт относится к месяцу даты начала периода.', dtable(['Месяц', 'Расчётов', 'Объём, м³'], mr, 'Расчётов пока нет.')));
+  };
+  var TPL_HINT = { tent: 'Норма № 1: температура, ветер, время топки', dugout: 'Норма № 2: на 100 м³ объёма', bldg: 'Норма № 3: объём до 25 м³', wash: 'Норма № 4: на человека, лето или отопительный период' };
+  PAGES['calc/new'] = function (r) {
+    r.appendChild(pageHead('Новый расчёт', 'Выберите тип объекта — форма откроется с готовыми значениями; КПД, Qт и плотность берутся из «Настроек»'));
+    Object.keys(KIND_NAME).forEach(function (kind) {
+      var cards = K.OBJECTS.filter(function (o) { return o.kind === kind; }).map(function (o) {
+        return E('button', { type: 'button', class: 'xcard gcard', onclick: function () { K.openEditor(null, { object: o.key, title: o.label, tempC: '-10', qty: kind === 'bldg' ? '20' : (kind === 'dugout' ? '100' : '1') }); } }, [E('b', { text: o.label }), E('small', { text: TPL_HINT[kind] })]);
+      });
+      r.appendChild(group(KIND_NAME[kind], null, grid(cards)));
+    });
+    r.appendChild(E('p', null, [E('button', { type: 'button', class: 'xbtn', text: 'Пустой расчёт', onclick: function () { newCalc(); } })]));
+  };
+  PAGES['calc/io'] = function (r) {
+    var n = K.getItems().length;
+    r.appendChild(pageHead('Загрузка и сохранение', 'Расчёты хранятся в этом браузере; файл нужен для переноса на другое устройство и резервной копии'));
+    r.appendChild(grid([
+      actCard('Загрузить расчёты из файла', 'Файл JSON, сохранённый этой программой. Расчёты из файла объединяются с текущими; повреждённые записи программа отклоняет и сообщает.', [['Выбрать файл…', importCalc, 1]]),
+      actCard('Сохранить расчёты в файл', 'Сейчас в списке расчётов: ' + n + '. Файл можно открыть на другом компьютере или телефоне.', [['Сохранить файл', exportCalc, n > 0]])]));
+    r.appendChild(group('Рекомендации', null, E('ul', { class: 'xnote' , style: 'padding-left:18px;list-style:disc;display:grid;gap:4px' }, ['Сохраняйте файл перед очисткой списка и после крупных изменений.', 'Данные не передаются в интернет — файл остаётся только у вас.', 'Для печати форм файл не нужен: используйте раздел «Печать».'].map(function (t) { return E('li', { text: t }); }))));
+  };
+  PAGES['calc/history'] = function (r) {
+    r.appendChild(pageHead('История изменений', 'Все расчёты по дате последнего изменения; последнее действие можно отменить'));
+    var q = E('input', { type: 'search', class: 'xin', placeholder: 'Поиск по наименованию', style: 'flex:1;min-width:200px' });
+    var slot = E('div');
+    var un = E('button', { type: 'button', class: 'xbtn', text: 'Отменить последнее действие (Ctrl+Z)', onclick: function () { K.undo(); setTimeout(function () { un.disabled = !K.canUndo(); renderPage(); }, 250); } }); un.disabled = !K.canUndo();
+    r.appendChild(E('div', { style: 'display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px' }, [q, un]));
+    r.appendChild(slot);
+    var rows = calcRows().sort(function (a, b) { return a.it.updatedAt < b.it.updatedAt ? 1 : -1; });
+    function draw() {
+      var s = q.value.trim().toLowerCase();
+      slot.replaceChildren(dtable(['Изменён', 'Наименование', 'Объект', 'Период', 'Объём', ''], rows.filter(function (x) { return !s || x.it.title.toLowerCase().indexOf(s) >= 0; }).map(function (x) {
+        return [fmtIso(x.it.updatedAt), x.it.title, x.o.label, K.fmtDateRu(x.it.date) + ' — ' + K.fmtDateRu(addDaysIso(x.it.date, x.it.days - 1)), x.c.ok ? fmtN(x.v, 3) + ' м³' : '—', E('button', { type: 'button', class: 'xbtn sm', text: 'Открыть', onclick: function () { K.openEditor(x.it.id); } })];
+      }), rows.length ? 'Ничего не найдено.' : 'Архив пуст. Создайте первый расчёт.'));
+    }
+    q.addEventListener('input', draw); draw();
+  };
+  function addDaysIso(iso, n) { var d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) + n * 86400000); return d.toISOString().slice(0, 10); }
+  PAGES['docs/orders'] = function (r) {
+    r.appendChild(pageHead('Приказы', 'Нормативная основа расчёта'));
+    r.appendChild(grid([actCard('Приказ Росгвардии от 14.07.2025 № 270', 'Об утверждении Порядка обеспечения дровами и Норм расхода дров в войсках национальной гвардии Российской Федерации. Принят на основании ч. 1 ст. 31 Федерального закона от 03.07.2016 № 226-ФЗ.', [['Полный текст', function () { openRef('s1'); }, 1], ['Справочные данные', function () { openRef(); }]], 'span2')]));
+    r.appendChild(group('Состав приказа', null, dtable(['Приложение', 'Содержание', 'Где применяется в программе', ''], [
+      ['№ 1', 'Порядок обеспечения дровами (п. 1–17) и образцы форм № 1–4', 'Печатные формы, сроки, исходные данные', E('button', { type: 'button', class: 'xbtn sm', text: 'Открыть', onclick: function () { openRef('s1', 'ref-p1'); } })],
+      ['№ 2', 'Нормы расхода дров № 1–4 (палатки, землянки, строения, помывка)', 'Расчёт нормы N', E('button', { type: 'button', class: 'xbtn sm', text: 'Таблицы', onclick: function () { openRef('s3'); } })]])));
+  };
+  PAGES['docs/amend'] = function (r) {
+    r.appendChild(pageHead('Дополнения', 'Приказы о внесении изменений'));
+    r.appendChild(E('div', { class: 'gcard', style: 'padding:28px;text-align:center' }, [E('b', { text: 'К приказу № 270 дополнений нет', style: 'font-size:17px' }), E('p', { class: 'xnote', style: 'margin-top:8px', text: 'В материалах, загруженных в программу, нет приказов о внесении изменений. Все расчёты выполняются по тексту приказа от 14.07.2025.' }), E('p', null, [E('button', { type: 'button', class: 'xbtn', text: 'Основания расчёта в справочнике', onclick: function () { openRef('s1'); } })])]));
+  };
+  var FORM_DESC = {
+    a1: 'Расчёт потребности дров на год. Часть I — отопление (тип размещения, норма, КПД, калорийный эквивалент, плотность, потребность, м³); часть II — помывка личного состава.',
+    a2: 'Заявка потребности в лимитах бюджетных обязательств для закупки дров: остаток, потребность, закупаемый объём, цена, сумма.',
+    a3: 'Журнал учёта расхода дров на отопление: по дням — температуры, ветер, время топки, норма, КПД, масса, объём по норме и фактически.',
+    a4: 'Журнал учёта расхода дров на помывку личного состава: по дням — численность, норма, КПД, масса, объём по норме и фактический.'
+  };
+  PAGES['docs/forms'] = function (r) {
+    r.appendChild(pageHead('Формы приложений', 'Образцы № 1–4 к Порядку (приказ № 270)'));
+    function c(f) { return actCard(FORM_NAME[f], FORM_DESC[f], [['Открыть образец', function () { openPrintWin({ form: f }); }, 1]]); }
+    r.appendChild(group('Расчёт и заявка', 'Составляются ежегодно: расчёт и заявка — к 15 марта (п. 6 Порядка).', grid([c('a1'), c('a2')])));
+    r.appendChild(group('Журналы учёта расхода', 'Ведутся ежемесячно (п. 17 Порядка).', grid([c('a3'), c('a4')])));
+  };
+  PAGES['print/preview'] = function (r) {
+    r.appendChild(pageHead('Предпросмотр', 'Выберите форму и период — откроется окно просмотра с масштабом, страницами и печатью'));
+    var now = new Date();
+    var form = E('select', { class: 'xin' }, ['a1', 'a2', 'a3', 'a4'].map(function (f) { return E('option', { value: f, text: FORM_NAME[f] }); }));
+    var year = E('input', { type: 'text', class: 'xin', value: String(now.getFullYear()), inputmode: 'numeric', maxlength: '4' });
+    var month = E('select', { class: 'xin' }, K.MONTHS.map(function (m, i) { return E('option', { value: String(i + 1), text: m }); })); month.value = String(now.getMonth() + 1);
+    var info = E('p', { class: 'xnote' });
+    function upd() {
+      var y = year.value.trim(), f = form.value, n = K.getItems().filter(function (it) { return it.date.slice(0, 4) === y; }).length;
+      month.parentNode.hidden = !(f === 'a3' || f === 'a4');
+      info.textContent = 'Расчётов с датой начала в ' + y + ' году: ' + n + (n ? '' : '. Форма будет пустой.');
+    }
+    form.addEventListener('change', upd); year.addEventListener('input', upd);
+    var fl = function (t, n) { return E('label', { class: 'xfield' }, [E('span', { text: t }), n]); };
+    r.appendChild(E('div', { class: 'gcard', style: 'padding:18px;display:grid;gap:12px;max-width:640px' }, [fl('Печатная форма', form), E('div', { class: 'xgrid2' }, [fl('Год', year), fl('Месяц журнала', month)]), info,
+      E('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [E('button', { type: 'button', class: 'xbtn fill', text: 'Открыть предпросмотр', onclick: function () { openPrintWin({ form: form.value, year: year.value.trim(), month: month.value }); } }), E('button', { type: 'button', class: 'xbtn', text: 'Параметры печати', onclick: function () { navigate('print', 'params'); } })])]));
+    upd();
+  };
+  PAGES['print/params'] = function (r) {
+    r.appendChild(pageHead('Параметры печати', 'Значения по умолчанию для окна печати; в самом окне их можно менять для конкретной печати'));
+    var px = Object.assign(defaultPx(), lsGet('printx', {}));
+    var f = {};
+    function sel(key, opts) { var s = E('select', { class: 'xin' }, opts.map(function (o) { return E('option', { value: o[0], text: o[1] }); })); s.value = String(px[key]); f[key] = s; return s; }
+    function num(key, min, max) { var i = E('input', { type: 'number', class: 'xin', min: String(min), max: String(max), value: String(px[key]) }); f[key] = i; return i; }
+    function chk(key, label) { var c = E('input', { type: 'checkbox' }); c.checked = !!px[key]; f[key] = c; return E('label', { class: 'chk', style: 'display:flex;gap:8px;align-items:center;font-size:14px' }, [c, label]); }
+    var fl = function (t, n) { return E('label', { class: 'xfield' }, [E('span', { text: t }), n]); };
+    r.appendChild(group('Страница', null, E('div', { class: 'gcard', style: 'padding:18px;display:grid;gap:12px;max-width:640px' }, [
+      E('div', { class: 'xgrid2' }, [fl('Размер бумаги', sel('paper', Object.keys(PAPERS).map(function (k) { return [k, k]; }))), fl('Ориентация', sel('orient', [['landscape', 'Альбомная (как в образцах приказа)'], ['portrait', 'Книжная']]))]),
+      E('div', { class: 'xgrid2' }, [fl('Поле сверху, мм', num('mt', 0, 60)), fl('Поле справа, мм', num('mr', 0, 60)), fl('Поле снизу, мм', num('mb', 0, 60)), fl('Поле слева, мм', num('ml', 0, 60))])])));
+    r.appendChild(group('Печать', null, E('div', { class: 'gcard', style: 'padding:18px;display:grid;gap:12px;max-width:640px' }, [
+      E('div', { class: 'xgrid2' }, [fl('Копий', num('copies', 1, 99)), fl('Цвет', sel('color', [['color', 'Цветная'], ['bw', 'Чёрно-белая']]))]),
+      chk('duplex', 'Двусторонняя печать (каждая копия с нового листа)'), chk('header', 'Колонтитул (часть и дата)'), chk('pageno', 'Номера страниц')])));
+    r.appendChild(E('div', { style: 'display:flex;gap:8px;margin-top:6px' }, [
+      E('button', { type: 'button', class: 'xbtn fill', text: 'Сохранить', onclick: function () {
+        var o = Object.assign(defaultPx(), lsGet('printx', {}));
+        ['paper', 'orient', 'color'].forEach(function (k) { o[k] = f[k].value; });
+        ['mt', 'mr', 'mb', 'ml', 'copies'].forEach(function (k) { var v = parseFloat(f[k].value); o[k] = isNaN(v) ? px[k] : v; });
+        ['duplex', 'header', 'pageno'].forEach(function (k) { o[k] = f[k].checked; });
+        if (lsSet('printx', o)) toast('Параметры печати сохранены.');
+      } }),
+      E('button', { type: 'button', class: 'xbtn', text: 'Сбросить', onclick: function () { var o = defaultPx(); o.presets = (lsGet('printx', {}).presets) || []; lsSet('printx', o); renderPage(); toast('Параметры сброшены.'); } })]));
+  };
+  PAGES['print/log'] = function (r) {
+    r.appendChild(pageHead('Журнал печати', 'Печать, PDF и экспорт файлов из программы'));
+    var l = lsGet('printlog', []);
+    r.appendChild(E('div', { style: 'margin-bottom:12px' }, [E('button', { type: 'button', class: 'xbtn', text: 'Очистить журнал', disabled: l.length ? null : true, onclick: function () { lsSet('printlog', []); renderPage(); toast('Журнал очищен.'); } })]));
+    r.appendChild(dtable(['Дата', 'Форма', 'Действие', 'Параметры'], l.map(function (x) { return [fmtIso(x.t), FORM_NAME[x.form] || x.form, ACT[x.action] || x.action, x.detail]; }), 'Печать ещё не выполнялась.'));
+  };
+  function settingsPage(kind) {
+    var cfg = {
+      user: ['Пользователь', 'Подставляется в подписи печатных форм', 'user', [['rank', 'Воинское звание'], ['name', 'Фамилия и инициалы'], ['position', 'Должность (первая подпись форм)']]],
+      org: ['Организация', 'Подставляется в шапку печатных форм', 'org', [['unit', 'Воинская часть (организация)'], ['place', 'Место дислокации']]],
+      calc: ['Параметры расчёта', 'Значения по умолчанию для новых расчётов', 'calc', [['kpd', 'КПД печи (0,7 — п. 13 Порядка)'], ['qt', 'Калорийный эквивалент Qт, ккал/кг'], ['density', 'Плотность древесины ρ, кг/м³']]]
+    }[kind];
+    return function (r) {
+      var s = getS(), inputs = {};
+      r.appendChild(pageHead(cfg[0], cfg[1]));
+      var form = E('div', { class: 'gcard', style: 'padding:18px;display:grid;gap:12px;max-width:640px' }, cfg[3].map(function (fd) {
+        var inp = E('input', { type: 'text', maxlength: '200', value: s[cfg[2]][fd[0]] || '', placeholder: kind === 'calc' ? ({ kpd: '0,7', qt: '1862', density: '590' })[fd[0]] : '' }); inputs[fd[0]] = inp;
+        return E('label', { class: 'xfield' }, [E('span', { text: fd[1] }), inp]);
+      }));
+      form.appendChild(E('div', { style: 'display:flex;gap:8px' }, [E('button', { type: 'button', class: 'xbtn fill', text: 'Сохранить', onclick: function () { var cur = getS(); cur[cfg[2]] = {}; cfg[3].forEach(function (fd) { cur[cfg[2]][fd[0]] = inputs[fd[0]].value.trim(); }); if (setS(cur)) toast('Сохранено.'); } })]));
+      r.appendChild(form);
+      if (kind === 'calc') r.appendChild(group('Константы приказа (не изменяются)', 'Источник — приказ № 270; подробности в справочных данных.', E('div', { class: 'gcard', style: 'padding:16px 20px' }, [E('ul', { style: 'padding-left:18px;list-style:disc;display:grid;gap:4px;font-size:14px' }, [
+        'Qут = 7000 ккал/кг — условное топливо', 'Температура внутри по умолчанию +18 °C — примечание к Норме № 3', 'Время топки палатки по умолчанию 12 ч — Норма № 1', 'Запас дров: 0,125 м³/сут на печь на 3 суток — п. 14', 'Помывка: 0,115 (лето) и 0,138 (отопительный период) кг у.т. на человека — Норма № 4'].map(function (t) { return E('li', { text: t }); })),
+        E('p', null, [E('button', { type: 'button', class: 'xbtn sm', text: 'Открыть коэффициенты в справочнике', onclick: function () { openRef('s4'); } })])])));
+    };
+  }
+  PAGES['set/user'] = settingsPage('user'); PAGES['set/org'] = settingsPage('org'); PAGES['set/calc'] = settingsPage('calc');
+  PAGES['set/view'] = function (r) {
+    r.appendChild(pageHead('Внешний вид', 'Панели, масштаб и тема оформления'));
+    function ck(label, key) { var c = E('input', { type: 'checkbox' }); c.checked = !!view[key]; c.addEventListener('change', function () { setView(key, c.checked); }); return E('label', { style: 'display:flex;gap:10px;align-items:center;font-size:14px' }, [c, label]); }
+    var zs = E('select', { class: 'xin' }, [80, 90, 100, 110, 125, 150].map(function (z) { return E('option', { value: String(z), text: z + ' %' }); })); zs.value = String(view.zoom); zs.addEventListener('change', function () { setView('zoom', parseInt(zs.value, 10)); });
+    var th = E('select', { class: 'xin' }, [['light', 'Светлая'], ['system', 'Авто (как в системе)'], ['dark', 'Тёмная']].map(function (o) { return E('option', { value: o[0], text: o[1] }); })); th.value = document.documentElement.getAttribute('data-theme') || 'system';
+    th.addEventListener('change', function () { var b = document.querySelector('.theme-switch button[data-t="' + th.value + '"]'); if (b) b.click(); });
+    r.appendChild(E('div', { class: 'gcard', style: 'padding:18px;display:grid;gap:14px;max-width:640px' }, [ck('Панель быстрых действий (в разделе «Расчёт»)', 'toolbar'), ck('Строка состояния внизу окна', 'status'), ck('Боковая панель с разделами', 'side'),
+      E('label', { class: 'xfield' }, [E('span', { text: 'Масштаб интерфейса' }), zs]), E('label', { class: 'xfield' }, [E('span', { text: 'Тема оформления' }), th])]));
+  };
+  PAGES['set/data'] = null;
+
+  /* ---------- сборка каркаса ---------- */
   function buildSide() {
     var nav = $('sideNav'); if (!nav) return;
     nav.replaceChildren(E('p', { class: 'side-label', text: 'Разделы' }));
     SECTIONS.forEach(function (s, i) {
-      var sub = E('div', { class: 'side-sub', role: 'menu', 'aria-label': s.label }, [E('div', null, s.items.map(function (it) {
-        return E('button', { type: 'button', class: 'side-item', role: 'menuitem', tabindex: '-1', onclick: function () { if (curSec !== s.id || curView !== VIEW_OF[s.id]) activate(s.id); it.run(); } }, [it.t, E('small', { text: it.h })]);
+      var sub = E('div', { class: 'side-sub', role: 'menu', 'aria-label': s.label }, [E('div', null, s.subs.map(function (it) {
+        return E('button', { type: 'button', class: 'side-item', role: 'menuitem', tabindex: '-1', 'data-key': s.id + '/' + it.id, onclick: function () { navigate(s.id, it.id); } }, [it.t, E('small', { text: it.h })]);
       }))]);
       var chev = E('span'); chev.innerHTML = '<svg class="chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
-      var btn = E('button', { type: 'button', class: 'side-sec-btn', 'aria-expanded': 'false', title: s.label + ' (Alt+' + (i + 1) + ')', onclick: function () { activate(s.id); } }, [svg(s.icon), E('span', { text: s.label }), E('span', { class: 'kbd', text: 'Alt ' + (i + 1) }), chev.firstChild]);
+      var btn = E('button', { type: 'button', class: 'side-sec-btn', 'aria-expanded': 'false', title: s.label + ' (Alt+' + (i + 1) + ')', onclick: function () { navigate(s.id); } }, [svg(s.icon), E('span', { text: s.label }), E('span', { class: 'kbd', text: 'Alt ' + (i + 1) }), chev.firstChild]);
       nav.appendChild(E('div', { class: 'side-sec', 'data-sec': s.id }, [btn, sub]));
     });
-    activate('home');
   }
   function buildTabbar() {
     var tb = $('tabbar'); if (!tb) return;
@@ -249,8 +369,8 @@
         var open = !pop.hidden && pop.getAttribute('data-sec') === s.id;
         if (open) { pop.hidden = true; return; }
         pop.replaceChildren(E('h4', { text: s.label }));
-        s.items.forEach(function (it) { pop.appendChild(E('button', { type: 'button', class: 'side-item', onclick: function () { pop.hidden = true; activate(s.id); it.run(); } }, [it.t, E('small', { text: it.h })])); });
-        pop.setAttribute('data-sec', s.id); pop.hidden = false; activate(s.id);
+        s.subs.forEach(function (it) { pop.appendChild(E('button', { type: 'button', class: 'side-item' + (curKey === s.id + '/' + it.id ? ' on' : ''), onclick: function () { pop.hidden = true; navigate(s.id, it.id); } }, [it.t, E('small', { text: it.h })])); });
+        pop.setAttribute('data-sec', s.id); pop.hidden = false;
       } }, [svg(s.icon), s.label]);
       tb.appendChild(b);
     });
@@ -258,60 +378,26 @@
   }
   function buildQuick() {
     var kp = document.querySelector('.kpis'); if (!kp || $('quick')) return;
-    var q = E('div', { class: 'quick', id: 'quick', 'data-view': 'calc', role: 'toolbar', 'aria-label': 'Быстрые действия' }, [
+    var q = E('div', { class: 'quick', id: 'quick', 'data-view': 'calc/list', role: 'toolbar', 'aria-label': 'Быстрые действия' }, [
       E('button', { type: 'button', onclick: function () { newCalc(); } }, [svg('M12 5v14M5 12h14'), 'Новый расчёт']),
       E('button', { type: 'button', onclick: importCalc }, [svg('M12 16V5M7 9l5-5 5 5M5 20h14'), 'Загрузить']),
       E('button', { type: 'button', onclick: function () { openPrintWin(); } }, [svg(PATH.print), 'Печать форм']),
-      E('button', { type: 'button', onclick: function () { openRef(); } }, [svg('M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM9 7h6'), 'Справочные данные']),
-      E('button', { type: 'button', onclick: function () { if (curView !== 'calc') activate('calc'); var s = $('search'); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.focus({ preventScroll: true }); } }, [svg('M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.5-3.5'), 'Поиск'])]);
+      E('button', { type: 'button', onclick: function () { openRef(); } }, [svg('M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM9 7h6'), 'Справочные данные'])]);
     kp.parentNode.insertBefore(q, kp);
   }
-  function pageHead(title, sub) { return E('div', { class: 'hero-line' }, [E('h2', { text: title }), E('p', { class: 't-sub sec', text: sub })]); }
-  function actCard(title, text, btns) { return E('div', { class: 'xcard gcard' }, [E('b', { text: title }), E('small', { text: text }), E('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px' }, btns.map(function (b) { return E('button', { type: 'button', class: 'xbtn sm' + (b[2] ? ' fill' : ''), text: b[0], onclick: b[1] }); }))]); }
   function buildPages() {
-    var app = $('app'), fab = $('fab'); if (!app || $('viewDocs')) return;
-    function ins(n) { app.insertBefore(n, fab); }
-    /* расчёты: заголовок и быстрые действия */
-    var sl = $('secList');
-    if (sl) { var hd = pageHead('Расчёты', 'Список расчётов, поиск и разделы по типам объектов'); hd.setAttribute('data-view', 'calc'); sl.parentNode.insertBefore(hd, sl); sl.remove(); var qq = $('quick'); if (qq) hd.after(qq); }
-    /* документы */
-    var d = E('div', { id: 'viewDocs', 'data-view': 'docs' }, [pageHead('Документы', 'Приказ, дополнения и формы приложений'),
-      E('div', { class: 'xgrid3 pgrid' }, [
-        actCard('Приказ Росгвардии от 14.07.2025 № 270', 'Об утверждении Порядка обеспечения дровами и Норм расхода дров в войсках национальной гвардии.', [['Полный текст', function () { openRef('s1'); }, 1], ['Порядок', function () { openRef('s1', 'ref-p1'); }], ['Нормы', function () { openRef('s3'); }]]),
-        actCard('Дополнения', 'К приказу № 270 дополнений в программе нет.', [['Открыть список', openAmend]]),
-        actCard('Справочные данные', 'Формулы, таблицы, примеры и пояснения по приказу.', [['Открыть (F1)', function () { openRef(); }, 1]])]),
-      E('h3', { class: 'pg-h', text: 'Шаблоны документов' }),
-      E('div', { class: 'xgrid3 pgrid' }, ['a1', 'a2', 'a3', 'a4'].map(function (f) { return actCard(FORM_NAME[f], 'Рекомендуемый образец формы', [['Открыть предпросмотр', function () { openPrintWin({ form: f }); }, 1]]); }))]);
-    ins(d);
-    /* печать */
-    var pr = E('div', { id: 'viewPrint', 'data-view': 'print' }, [pageHead('Печать', 'Предпросмотр, параметры страницы и журнал'),
-      E('div', { class: 'xgrid3 pgrid' }, [
-        actCard('Предпросмотр', 'Просмотр формы перед печатью, масштаб, страницы.', [['Открыть', function () { openPrintWin(); }, 1]]),
-        actCard('Настройки печати', 'Бумага, ориентация, поля, копии, колонтитулы.', [['Параметры страницы', function () { openPrintWin({ focus: 'settings' }); }]]),
-        actCard('История печати', 'Журнал печати и экспорта.', [['Открыть журнал', openPrintLog]])]),
-      E('h3', { class: 'pg-h', text: 'Последние документы' }),
-      E('div', { class: 'gcard', style: 'padding:16px 20px' }, [E('ul', { class: 'recent-list', id: 'recentList' })])]);
-    ins(pr); renderRecent();
-    /* настройки */
-    var st = E('div', { id: 'viewSet', 'data-view': 'set' }, [pageHead('Настройки', 'Пользователь, организация, параметры расчёта и данные'),
-      E('div', { class: 'xgrid3 pgrid' }, [
-        actCard('Пользователь', 'Звание, фамилия и должность — подставляются в подписи форм.', [['Изменить', function () { settingsWin('user'); }, 1]]),
-        actCard('Организация', 'Воинская часть и место дислокации.', [['Изменить', function () { settingsWin('org'); }, 1]]),
-        actCard('Параметры расчёта', 'КПД, Qт и плотность по умолчанию; константы приказа.', [['Изменить', function () { settingsWin('calc'); }, 1]])])]);
-    ins(st);
-    /* пометки существующих блоков */
+    var app = $('app'), fab = $('fab'); if (!app || $('dyn')) return;
+    var banners = $('banners');
+    var crumb = E('div', { class: 'crumb', id: 'crumb', 'aria-label': 'Путь' });
+    var dyn = E('div', { id: 'dyn', class: 'vhide' });
+    banners.after(crumb); app.insertBefore(dyn, fab);
     var tag = function (el, v) { if (el) el.setAttribute('data-view', v); };
-    tag(document.querySelector('.hero-line'), 'home'); tag(document.querySelector('.kpis'), 'home'); tag($('totN'), 'home'); tag(document.querySelector('.charts'), 'home');
-    tag(document.querySelector('.tools'), 'calc'); tag($('seg'), 'calc'); tag($('panel'), 'calc');
-    var sd = $('secData'); if (sd) { var grp = sd.nextElementSibling, nt = document.querySelector('#app > .note'); st.appendChild(sd); st.appendChild(grp); if (nt) st.appendChild(nt); }
-  }
-
-  function renderRecent() {
-    var ul = $('recentList'); if (!ul) return;
-    var l = lsGet('printlog', []).slice(0, 5);
-    ul.replaceChildren();
-    if (!l.length) ul.appendChild(E('li', null, [E('span', { class: 'xnote', text: 'Печать ещё не выполнялась. Откройте «Печать → Предпросмотр».' })]));
-    l.forEach(function (r) { ul.appendChild(E('li', null, [E('span', { text: (ACT[r.action] || r.action) + ' · ' + (FORM_NAME[r.form] || r.form).split(' — ')[0] }), E('small', { text: fmtIso(r.t) })])); });
+    tag(document.querySelector('.hero-line'), 'home/overview'); tag(document.querySelector('.kpis'), 'home/overview'); tag($('totN'), 'home/overview'); tag(document.querySelector('.charts'), 'home/overview');
+    var sl = $('secList');
+    if (sl) { var hd = pageHead('Мои расчёты', 'Список расчётов, поиск и разделы по типам объектов'); hd.setAttribute('data-view', 'calc/list'); sl.parentNode.insertBefore(hd, sl); sl.remove(); var qq = $('quick'); if (qq) hd.after(qq); }
+    tag(document.querySelector('.tools'), 'calc/list'); tag($('seg'), 'calc/list'); tag($('panel'), 'calc/list');
+    var sd = $('secData');
+    if (sd) { var grp = sd.nextElementSibling, nt = document.querySelector('#app > .note'); var dh = pageHead('Данные', 'Экспорт, импорт и очистка расчётов; печать форм'); dh.setAttribute('data-view', 'set/data'); sd.parentNode.insertBefore(dh, sd); sd.remove(); tag(grp, 'set/data'); tag(nt, 'set/data'); }
   }
 
   /* ---------- вид ---------- */
@@ -350,7 +436,7 @@
     xwin({ title: 'Заменить в поле', width: 'min(460px,100%)', body: E('div', { style: 'display:grid;gap:10px' }, [E('label', { class: 'xfield' }, [E('span', { text: 'Найти' }), a]), E('label', { class: 'xfield' }, [E('span', { text: 'Заменить на' }), b]), E('p', { class: 'xnote', text: 'Замена выполняется в последнем активном текстовом поле.' })]),
       footer: [{ label: 'Отмена' }, { label: 'Заменить всё', kind: 'fill', onClick: function () { if (!a.value) return; f.value = f.value.split(a.value).join(b.value); f.dispatchEvent(new Event('input', { bubbles: true })); toast('Замена выполнена.'); } }] });
   }
-  function findCmd() { if (RW) { RW.focusSearch(); return; } if (curView !== 'calc') activate('calc'); var s = $('search'); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.focus({ preventScroll: true }); s.select(); }
+  function findCmd() { if (RW) { RW.focusSearch(); return; } if (curKey !== 'calc/list') navigate('calc', 'list'); var s = $('search'); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.focus({ preventScroll: true }); s.select(); }
   var MENUS = [
     { t: 'Файл', items: [
       { t: 'Новый', k: 'Ctrl+N', run: function () { newCalc(); } }, { t: 'Открыть…', k: 'Ctrl+O', run: importCalc },
@@ -659,7 +745,7 @@
       else if ((e.ctrlKey || e.metaKey) && e.key === '-') { e.preventDefault(); px.zoomMode = 'fixed'; setZoom(zoom - 0.1); }
     }
     document.addEventListener('keydown', onKey, true);
-    PW = { apply: function (o) { if (o.form) { formSel.value = o.form; refresh(); } if (o.focus === 'settings') { prFs.scrollIntoView({ behavior: 'smooth' }); paperSel.focus(); } if (o.focus === 'print') $('pw-print').focus(); ov.style.zIndex = '86'; }, close: close };
+    PW = { apply: function (o) { if (o.year) R.year.value = o.year; if (o.month) monthSel.value = o.month; if (o.form || o.year || o.month) { if (o.form) formSel.value = o.form; refresh(); } if (o.focus === 'settings') { prFs.scrollIntoView({ behavior: 'smooth' }); paperSel.focus(); } if (o.focus === 'print') $('pw-print').focus(); ov.style.zIndex = '86'; }, close: close };
     fillPresets(); setUiFromPx(); setZoom(1);
     refresh();
     PW.apply(opts);
@@ -767,8 +853,8 @@
     if (k === 'F1') { e.preventDefault(); if (RW) RW.focusSearch(); else openRef(); return; }
     if (k === 'F11') { e.preventDefault(); fullscreen(); return; }
     if (k === 'F5') { e.preventDefault(); recalcAll(); return; }
-    if (e.altKey && !c && /^[1-5]$/.test(k)) { e.preventDefault(); var s = SECTIONS[parseInt(k, 10) - 1]; activate(s.id); if (s.id === 'home') scrollTo('top'); return; }
-    if (c && !e.altKey && /^[1-5]$/.test(k)) { e.preventDefault(); var s2 = SECTIONS[parseInt(k, 10) - 1]; activate(s2.id); return; }
+    if (e.altKey && !c && /^[1-5]$/.test(k)) { e.preventDefault(); var s = SECTIONS[parseInt(k, 10) - 1]; navigate(s.id); return; }
+    if (c && !e.altKey && /^[1-5]$/.test(k)) { e.preventDefault(); var s2 = SECTIONS[parseInt(k, 10) - 1]; navigate(s2.id); return; }
     if (!c || e.altKey) return;
     var inField = !!e.target.closest && e.target.closest('input,textarea,select');
     if (lk === 'n' && !e.shiftKey) { e.preventDefault(); newCalc(); }
@@ -787,7 +873,8 @@
   /* ---------- запуск ---------- */
   function init() {
     buildSide(); buildTabbar(); buildQuick(); buildPages(); buildMenubar(); loadView(); buildStatus();
-    var m = /^#\/(\w+)/.exec(location.hash); activate(m && VIEW_OF[m[1]] ? m[1] : 'home', true);
+    var m = /^#\/(\w+)(?:\/(\w+))?/.exec(location.hash); navigate(m ? m[1] : 'home', m ? m[2] : undefined, true);
+    var mo2 = new MutationObserver(function () { refreshDyn(); }); ['totC', 'totV'].forEach(function (id) { if ($(id)) mo2.observe($(id), { childList: true, characterData: true, subtree: true }); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 }());
