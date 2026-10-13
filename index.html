@@ -299,15 +299,86 @@ path,line,circle,rect,polyline,polygon{vector-effect:non-scaling-stroke}
 .l-links{gap:12px!important;flex-wrap:wrap;justify-content:flex-start}
 .l-links button.glass{padding:11px 22px;border:1px solid var(--glass-border)}
 .l-links button.glass:hover{background:var(--glass-bg-strong);transform:scale(1.05)}
-/* glass for the app itself */
-body{background:radial-gradient(60% 50% at 15% 0%,rgba(43,93,75,.35),transparent 70%),radial-gradient(50% 45% at 100% 20%,rgba(120,150,90,.28),transparent 70%),var(--bg-primary);background-attachment:fixed}
-.top,.tile,.group,.tools input,.seg,.sheet{background:var(--material)!important;-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.45);box-shadow:0 8px 28px rgba(21,26,23,.1),inset 0 1px 0 rgba(255,255,255,.7)}
-:root{--material:rgba(255,255,255,.55)}
-.top{padding:10px 14px;border-radius:var(--radius-xl)}
-:root[data-theme="dark"]{--material:rgba(40,52,46,.5)}
-@media (prefers-color-scheme:dark){:root[data-theme="system"]{--material:rgba(40,52,46,.5)}}
-:root[data-theme="dark"] .top,:root[data-theme="dark"] .tile,:root[data-theme="dark"] .group,:root[data-theme="dark"] .fab,:root[data-theme="dark"] .sheet{border-color:rgba(255,255,255,.14);box-shadow:0 8px 28px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18)}
+/* ===== App: liquid glass dashboard ===== */
+:root{--g-bg:rgba(255,255,255,.38);--g-bg2:rgba(255,255,255,.55);--g-border:rgba(255,255,255,.7);--g-shadow:0 10px 34px rgba(60,70,100,.14),inset 0 1px 0 rgba(255,255,255,.85),inset 0 -1px 0 rgba(255,255,255,.25);
+--c-tent:#4F8A73;--c-dugout:#5D78B0;--c-bldg:#A579BC;--c-wash:#D58E4F;--material:rgba(255,255,255,.6)}
+:root[data-theme="dark"]{--g-bg:rgba(24,30,38,.46);--g-bg2:rgba(30,38,48,.66);--g-border:rgba(255,255,255,.16);--g-shadow:0 10px 34px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.16);--c-tent:#7CCBA2;--c-dugout:#8EA9E6;--c-bldg:#C79BE0;--c-wash:#F0AE70;--material:rgba(30,38,48,.7)}
+@media (prefers-color-scheme:dark){:root[data-theme="system"]{--g-bg:rgba(24,30,38,.46);--g-bg2:rgba(30,38,48,.66);--g-border:rgba(255,255,255,.16);--g-shadow:0 10px 34px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.16);--c-tent:#7CCBA2;--c-dugout:#8EA9E6;--c-bldg:#C79BE0;--c-wash:#F0AE70;--material:rgba(30,38,48,.7)}}
+body{background:var(--bg-primary)}
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:url(assets/bg.jpg) center/cover no-repeat}
+body::after{content:"";position:fixed;inset:0;z-index:-1;background:transparent;pointer-events:none}
+:root[data-theme="dark"] body::after{background:rgba(8,12,18,.62)}
+@media (prefers-color-scheme:dark){:root[data-theme="system"] body::after{background:rgba(8,12,18,.62)}}
+.app{max-width:1120px}
+.gcard,.top,.group,.sheet,.tools input,.seg,.empty,.banner{background:var(--g-bg)!important;-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);border:1px solid var(--g-border)!important;box-shadow:var(--g-shadow)}
+.gcard{border-radius:26px;position:relative}
+.top{padding:12px 16px;border-radius:26px;margin-bottom:22px}
+.logo{background:linear-gradient(135deg,#5E9C84,#4A6FA5);border-radius:16px;color:#fff;box-shadow:0 6px 16px rgba(74,111,165,.35)}
+.icon-btn{border-radius:14px;background:var(--g-bg)}
+.hero-line{margin:0 4px 18px}
+.hero-line h2{font-size:clamp(26px,4vw,38px);line-height:1.1;font-weight:800;letter-spacing:-.02em}
+.hero-line p{margin-top:6px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:8px}
+.kpi{padding:20px 22px;display:grid;gap:4px;overflow:hidden}
+.kpi::after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:var(--kc);opacity:.22;filter:blur(8px)}
+.kpi-ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--kc);color:#fff;margin-bottom:8px;box-shadow:0 6px 14px rgba(0,0,0,.15)}
+.kpi-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kpi-v{font-size:clamp(24px,3.2vw,34px);line-height:1.1;font-weight:800;letter-spacing:-.02em}
+.totals-note{margin:0 6px 20px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
+.chart{padding:20px 22px}
+.chart.wide{grid-column:1 / -1}
+.chart h3{font-size:16px;font-weight:700;margin:0 0 14px;letter-spacing:-.01em}
+.chart h3 small{font-weight:400;color:var(--label-secondary);margin-left:6px;font-size:13px}
+.donut-wrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.donut{width:168px;height:168px;flex:0 0 auto}
+.donut circle.seg{transition:stroke-width .25s var(--spring);animation:dn .9s var(--spring) both}
+.donut circle.seg:hover{stroke-width:20}
+@keyframes dn{from{stroke-dasharray:0 1000}}
+.donut text{fill:var(--label-primary);text-anchor:middle}
+.legend{display:grid;gap:10px;flex:1;min-width:150px}
+.lg{display:flex;align-items:center;gap:10px;font-size:14px;line-height:18px}
+.lg i{width:12px;height:12px;border-radius:4px;background:var(--col);flex:0 0 auto}
+.lg b{margin-left:auto;font-variant-numeric:tabular-nums}
+.lg span.pc{color:var(--label-secondary);width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.hb{display:grid;gap:14px}
+.hb-row{display:grid;gap:6px}
+.hb-top{display:flex;justify-content:space-between;gap:12px;font-size:14px;line-height:18px}
+.hb-top span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb-top b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.hb-track{height:10px;border-radius:99px;background:var(--fill-tertiary);overflow:hidden}
+.hb-fill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--col),color-mix(in srgb,var(--col) 55%,#fff));transform-origin:left;animation:gr .9s var(--spring) both}
+@keyframes gr{from{transform:scaleX(0)}}
+.cols svg{width:100%;height:auto;display:block;overflow:visible}
+.cols text{fill:var(--label-secondary);font-size:11px;font-family:var(--font)}
+.cols .grid{stroke:var(--separator);stroke-dasharray:3 4}
+.cols rect.bar{fill:url(#cg);transition:opacity .2s;animation:rise .8s var(--spring) both;transform-box:fill-box;transform-origin:bottom}
+.cols rect.bar:hover{opacity:.7}
+@keyframes rise{from{transform:scaleY(0)}}
+.chart-empty{padding:28px 0;text-align:center;color:var(--label-secondary);font-size:14px}
+.tools{margin-top:22px}
+.tools input{border-radius:18px;min-height:50px;padding:0 18px}
+.seg{border-radius:20px;padding:5px;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--g-border)}
+.seg button{border:0;border-radius:15px;min-height:40px}
+.seg button[aria-selected="true"]{background:var(--g-bg2);color:var(--label-primary);box-shadow:0 2px 10px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.7)}
+#list.group{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;background:none!important;-webkit-backdrop-filter:none;backdrop-filter:none;border:0!important;box-shadow:none;overflow:visible;border-radius:0}
+#list.group.sep>*+*::before{display:none}
+.item{position:relative;border-radius:24px;padding-bottom:24px;background:var(--g-bg);-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);border:1px solid var(--g-border);box-shadow:var(--g-shadow);transition:transform .35s var(--spring),box-shadow .35s;overflow:hidden}
+.item:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(60,70,100,.22),inset 0 1px 0 rgba(255,255,255,.9)}
+.item::before{content:"";position:absolute;left:18px;right:18px;bottom:12px;height:5px;border-radius:9px;background:var(--fill-tertiary)}
+.item::after{content:"";position:absolute;left:18px;bottom:12px;height:5px;border-radius:9px;width:calc((100% - 36px)*var(--share,0));background:linear-gradient(90deg,var(--col,var(--c-tent)),color-mix(in srgb,var(--col,var(--c-tent)) 55%,#fff));animation:gr .9s var(--spring) both;transform-origin:left}
+.item-main{padding:16px 0 4px 18px;min-height:96px;border-radius:24px 0 0 24px}
+.item .chip{background:color-mix(in srgb,var(--col) 20%,transparent);color:var(--label-primary);border:1px solid color-mix(in srgb,var(--col) 45%,transparent)}
+.item .item-res .t-headline{font-size:20px;line-height:24px;font-weight:800}
+.group:not(#list){border-radius:24px}
+.section-title{margin:28px 6px 12px;font-size:12px;font-weight:700}
+.row-btn{min-height:54px}
+.fab{border-radius:20px;background:linear-gradient(135deg,#5E9C84,#4A6FA5)!important;color:#fff!important;box-shadow:0 12px 30px rgba(74,111,165,.45),inset 0 1px 0 rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.4)}
+.scrim{background:rgba(30,40,60,.28)}
+.sheet{background:var(--g-bg2)!important;-webkit-backdrop-filter:blur(40px) saturate(190%);backdrop-filter:blur(40px) saturate(190%)}
 .brand{cursor:pointer}
+@media (max-width:760px){.kpis{grid-template-columns:1fr 1fr}.kpi:first-child{grid-column:1 / -1}.charts{grid-template-columns:1fr}.donut{margin:0 auto}}
+@media (max-width:420px){.kpis{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){#landing video{display:none}}
 </style>
 <script>
@@ -355,11 +426,19 @@ body{background:radial-gradient(60% 50% at 15% 0%,rgba(43,93,75,.35),transparent
     </div>
   </header>
   <div id="banners"></div>
-  <section class="totals" aria-label="Итоги по списку">
-    <div class="tile"><p class="t-foot sec">Объём дров</p><p class="t-title num" id="totV">0,000 м³</p></div>
-    <div class="tile"><p class="t-foot sec">Масса дров</p><p class="t-title num" id="totM">0,000 кг</p></div>
-    <p class="t-foot sec totals-note" id="totN"></p>
+  <div class="hero-line"><h2>Обзор потребления</h2><p class="t-sub sec">Сводка и графики по текущему списку расчётов</p></div>
+  <section class="kpis" aria-label="Итоги по списку">
+    <div class="kpi gcard" style="--kc:#4F8A73"><span class="kpi-ic"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5V8zM3 8l9 5 9-5M12 13v8"/></svg></span><p class="t-foot sec">Объём дров</p><p class="kpi-v num" id="totV">0,000 м³</p></div>
+    <div class="kpi gcard" style="--kc:#5D78B0"><span class="kpi-ic"><svg viewBox="0 0 24 24"><path d="M6 20h12M12 4v3M5 9h14l-2 11H7L5 9zM9 9a3 3 0 0 1 6 0"/></svg></span><p class="t-foot sec">Масса дров</p><p class="kpi-v num" id="totM">0,000 кг</p></div>
+    <div class="kpi gcard" style="--kc:#D58E4F"><span class="kpi-ic"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span><p class="t-foot sec">Расчётов в списке</p><p class="kpi-v num" id="totC">0</p></div>
   </section>
+  <p class="t-foot sec totals-note" id="totN"></p>
+  <section class="charts" aria-label="Графики">
+    <article class="chart gcard"><h3>Структура по объектам <small>м³</small></h3><div id="chDonut"></div></article>
+    <article class="chart gcard"><h3>Крупнейшие расчёты <small>м³</small></h3><div id="chBars"></div></article>
+    <article class="chart gcard wide"><h3>Динамика потребления <small>м³ в сутки</small></h3><div id="chCols" class="cols"></div></article>
+  </section>
+  <h2 class="t-foot sec section-title">Расчёты</h2>
   <div class="tools">
     <label class="sr" for="search">Поиск по расчётам</label>
     <input id="search" type="search" placeholder="Поиск по наименованию" autocomplete="off" enterkeyhint="search">
@@ -1961,7 +2040,7 @@ function buildSeg() {
   });
 }
 
-function rowNode(it, c) {
+function rowNode(it, c, share) {
   const o = objectOf(it.object);
   const res = c.ok
     ? [h('span', { class: 't-headline num blk', text: fmtScaled(c.volL, 3) + ' м³' }), h('span', { class: 't-foot sec num blk', text: fmtScaled(c.massG, 3) + ' кг' })]
@@ -1976,7 +2055,10 @@ function rowNode(it, c) {
     h('span', { class: 'item-res' }, res)
   ]);
   const del = h('button', { type: 'button', class: 'icon-btn danger', 'aria-label': 'Удалить: ' + it.title, onclick: () => deleteItem(it.id) }, [icon('trash')]);
-  return h('li', { class: 'item', dataset: { id: it.id } }, [main, del]);
+  const li = h('li', { class: 'item', dataset: { id: it.id } }, [main, del]);
+  li.style.setProperty('--col', 'var(--c-' + o.kind + ')');
+  li.style.setProperty('--share', String(share || 0));
+  return li;
 }
 
 function emptyNodes(total) {
@@ -2001,11 +2083,16 @@ function render() {
   let sumV = 0n;
   let sumM = 0n;
   const frag = document.createDocumentFragment();
+  const rows = [];
   for (const it of items) {
     const c = calcRecord(it);
     if (c.ok) { sumV += c.volL; sumM += c.massG; }
-    frag.appendChild(rowNode(it, c));
+    rows.push({ it: it, c: c, v: c.ok ? Number(c.volL) / 1000 : 0 });
   }
+  const maxV = rows.reduce((m, r) => Math.max(m, r.v), 0);
+  for (const r of rows) frag.appendChild(rowNode(r.it, r.c, maxV ? Math.max(r.v / maxV, 0.03) : 0));
+  renderCharts(rows);
+  $('totC').textContent = String(items.length);
   $('totV').textContent = fmtScaled(sumV, 3) + ' м³';
   $('totM').textContent = fmtScaled(sumM, 3) + ' кг';
   $('totN').textContent = 'Показано расчётов: ' + items.length + ' из ' + all.length;
@@ -2023,6 +2110,69 @@ function render() {
   }
   $('undoBtn').disabled = undoStack.length === 0;
   syncQuar();
+}
+
+
+/* ================= графики ================= */
+const CAT_NAME = { tent: 'Палатки', dugout: 'Землянки', bldg: 'Строения', wash: 'Помывка' };
+function escH(t) { return String(t).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+function fm(n, d) { return n.toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function dayNum(iso) { return Math.round(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86400000); }
+function dayIso(n) { return new Date(n * 86400000).toISOString().slice(0, 10); }
+function renderCharts(rows) {
+  const ok = rows.filter((r) => r.c.ok && r.v > 0);
+  const dn = $('chDonut'), hb = $('chBars'), cl = $('chCols');
+  if (!ok.length) {
+    const e = '<p class="chart-empty">Нет данных для графика</p>';
+    dn.innerHTML = e; hb.innerHTML = e; cl.innerHTML = e;
+    return;
+  }
+  /* donut */
+  const by = { tent: 0, dugout: 0, bldg: 0, wash: 0 };
+  let total = 0;
+  for (const r of ok) { by[objectOf(r.it.object).kind] += r.v; total += r.v; }
+  const R = 62, C = 2 * Math.PI * R;
+  let acc = 0, segs = '', leg = '';
+  const keys = Object.keys(by).filter((k) => by[k] > 0);
+  for (const k of keys) {
+    const share = by[k] / total;
+    const len = Math.max(share * C - (keys.length > 1 ? 3 : 0), 0.5);
+    segs += '<circle class="seg" cx="90" cy="90" r="' + R + '" fill="none" stroke="var(--c-' + k + ')" stroke-width="16" stroke-linecap="round" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 90 90)"><title>' + CAT_NAME[k] + ': ' + fm(by[k], 3) + ' м³</title></circle>';
+    acc += share * C;
+    leg += '<div class="lg" style="--col:var(--c-' + k + ')"><i></i><span>' + CAT_NAME[k] + '</span><span class="pc">' + fm(share * 100, 0) + '%</span><b>' + fm(by[k], 2) + '</b></div>';
+  }
+  dn.innerHTML = '<div class="donut-wrap"><svg class="donut" viewBox="0 0 180 180" role="img" aria-label="Структура потребления по типам объектов"><circle cx="90" cy="90" r="' + R + '" fill="none" stroke="var(--fill-tertiary)" stroke-width="16"/>' + segs + '<text x="90" y="88" font-size="22" font-weight="800">' + fm(total, 2) + '</text><text x="90" y="108" font-size="12" style="fill:var(--label-secondary)">м³ всего</text></svg><div class="legend">' + leg + '</div></div>';
+  /* top bars */
+  const top = ok.slice().sort((a, b) => b.v - a.v).slice(0, 5);
+  const mx = top[0].v;
+  hb.innerHTML = '<div class="hb">' + top.map((r) => '<div class="hb-row" style="--col:var(--c-' + objectOf(r.it.object).kind + ')"><div class="hb-top"><span>' + escH(r.it.title) + '</span><b>' + fm(r.v, 3) + '</b></div><div class="hb-track"><span class="hb-fill" style="width:' + (r.v / mx * 100).toFixed(1) + '%"></span></div></div>').join('') + '</div>';
+  /* daily columns */
+  let lo = Infinity, hi = -Infinity;
+  for (const r of ok) { const s0 = dayNum(r.it.date); lo = Math.min(lo, s0); hi = Math.max(hi, s0 + r.it.days - 1); }
+  const span = hi - lo + 1;
+  const day = new Array(span).fill(0);
+  for (const r of ok) { const s0 = dayNum(r.it.date) - lo; const per = r.v / r.it.days; for (let k = 0; k < r.it.days; k++) day[s0 + k] += per; }
+  const bsz = Math.max(1, Math.ceil(span / 120));
+  const n = Math.ceil(span / bsz);
+  const vals = [];
+  for (let i = 0; i < n; i++) { let sum = 0, cnt = 0; for (let j = i * bsz; j < Math.min(span, (i + 1) * bsz); j++) { sum += day[j]; cnt++; } vals.push(sum / cnt); }
+  const vmax = Math.max.apply(null, vals) * 1.1 || 1;
+  const W = 720, H = 230, L = 46, T = 10, B = 26, pw = W - L - 6, ph = H - T - B;
+  const slot = pw / n, bw = Math.max(Math.min(slot * 0.7, 22), 1.5);
+  let g = '<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--c-dugout)"/><stop offset="1" stop-color="var(--c-tent)"/></linearGradient></defs>';
+  for (let i = 0; i <= 3; i++) {
+    const y = T + ph - ph * i / 3;
+    g += '<line class="grid" x1="' + L + '" x2="' + (W - 6) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + fm(vmax * i / 3, vmax < 10 ? 2 : 1) + '</text>';
+  }
+  vals.forEach((v, i) => {
+    const hgt = Math.max(ph * v / vmax, v > 0 ? 2 : 0);
+    const x = L + slot * i + (slot - bw) / 2;
+    const d0 = dayIso(lo + i * bsz);
+    g += '<rect class="bar" x="' + x.toFixed(2) + '" y="' + (T + ph - hgt).toFixed(2) + '" width="' + bw.toFixed(2) + '" height="' + hgt.toFixed(2) + '" rx="' + Math.min(bw / 2, 5).toFixed(1) + '"><title>' + fmtDateRu(d0) + (bsz > 1 ? ' (ср. за ' + bsz + ' сут.)' : '') + ': ' + fm(v, 3) + ' м³/сут.</title></rect>';
+  });
+  const lbl = [0, Math.floor((n - 1) / 2), n - 1].filter((v, i, a) => a.indexOf(v) === i);
+  lbl.forEach((i, k) => { g += '<text x="' + (L + slot * i + slot / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (k === 0 && lbl.length > 1 ? 'start' : (k === lbl.length - 1 && lbl.length > 1 ? 'end' : 'middle')) + '">' + fmtDateRu(dayIso(lo + i * bsz)).slice(0, 5) + '</text>'; });
+  cl.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Суточное потребление дров по датам">' + g + '</svg>';
 }
 
 /* ================= самопроверка ================= */
