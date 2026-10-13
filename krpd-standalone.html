@@ -428,7 +428,6 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;background:transparent;
   .fab{display:none}
   .section-title{scroll-margin-top:24px}
 }
-.side-brand{display:flex;align-items:center;gap:var(--sp-3);padding:6px;border:0;border-radius:var(--r-md);background:transparent;text-align:left}
 .side-logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#5E9C84,#4A6FA5);box-shadow:0 6px 16px rgba(74,111,165,.35)}
 .side-logo svg{width:26px;height:26px}
 .side-title b{display:block;font-size:20px;line-height:24px;font-weight:800;letter-spacing:.3px}
@@ -660,6 +659,14 @@ mark.hit.cur{background:#ff9f43;outline:2px solid #ff9f43}
   .pw-copy:last-child{break-after:auto}
 }
 
+.vhide{display:none!important}
+#app [data-view]:not(.vhide),#viewDocs,#viewPrint,#viewSet{animation:vin .4s var(--ease)}
+@keyframes vin{from{opacity:0;transform:translateY(10px)}}
+.pgrid{margin-bottom:18px}
+.pgrid .xcard{align-content:start}
+.pg-h{margin:22px 4px 10px;font-size:18px;font-weight:700}
+.xcard.gcard{background:var(--g-bg);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--g-shadow);border-radius:var(--r-lg);padding:16px 18px}
+
 /*@@END*/
 </style>
 <script>
@@ -693,10 +700,6 @@ mark.hit.cur{background:#ff9f43;outline:2px solid #ff9f43}
   <div class="l-modal" id="m-auth"><section class="l-card glass" role="dialog" aria-modal="true" aria-label="Авторы"><button class="l-close" type="button" aria-label="Закрыть">✕</button><h3>Авторы</h3><p><b>Иван Куликов</b> — автор и разработчик проекта (GitHub: IvanKulikovst).</p></section></div>
 </div>
 <aside class="side xhide" id="side" aria-label="Главное меню">
-  <button type="button" class="side-brand" data-go="about" aria-label="О программе">
-    <span class="side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.6 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.2 1 2 1.8 2.3C11.5 8 11 5.5 12 3z"/></svg></span>
-    <span class="side-title"><b>КРПД</b><small>приказ № 270</small></span>
-  </button>
   <button type="button" class="side-cta" id="sideNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Новый расчёт</button>
   <nav class="side-nav" id="sideNav"></nav>
   <div class="side-foot">
@@ -741,7 +744,7 @@ mark.hit.cur{background:#ff9f43;outline:2px solid #ff9f43}
     <ul id="list" class="group sep"></ul>
     <div id="empty" class="empty" hidden></div>
   </div>
-  <h2 class="t-foot sec section-title" id="secData">Данные и печать</h2>
+  <h2 class="t-foot sec section-title" id="secData">Данные</h2>
   <div class="group sep">
     <button type="button" class="row-btn" id="btnPrint"><span id="icPrint"></span><span class="t-body">Печать форм (приложения № 1–4)</span></button>
     <button type="button" class="row-btn" id="btnExport"><span id="icExport"></span><span class="t-body">Экспорт в файл</span></button>
@@ -3256,10 +3259,8 @@ start();
   };
   var SECTIONS = [
     { id: 'home', label: 'Главная', icon: PATH.home, items: [
-      { t: 'Обзор', h: 'Дашборд и статистика', run: function () { scrollTo('top'); } },
-      { t: 'Быстрые действия', h: 'Новый расчёт, печать, справка', run: function () { scrollTo('quick'); } },
-      { t: 'Последние расчёты', h: 'Список расчётов', run: function () { scrollTo('list'); } },
-      { t: 'Последние документы', h: 'Недавняя печать и экспорт', run: function () { scrollTo('recent'); } }] },
+      { t: 'Обзор', h: 'Потребление: итоги и графики', run: function () { showSection('home'); } },
+      { t: 'Графики', h: 'Структура, крупнейшие расчёты, динамика', run: function () { showSection('home'); var c = document.querySelector('.charts'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }] },
     { id: 'calc', label: 'Расчёт', icon: PATH.calc, items: [
       { t: 'Новый расчёт', h: 'Создание расчёта', run: function () { newCalc(); } },
       { t: 'Загрузить расчёт', h: 'Импорт из файла', run: importCalc },
@@ -3279,8 +3280,20 @@ start();
       { t: 'Параметры расчёта', h: 'Константы и значения по умолчанию', run: function () { settingsWin('calc'); } }] }
   ];
   var curSec = 'home';
+  var VIEW_OF = { home: 'home', calc: 'calc', docs: 'docs', print: 'print', set: 'set' };
+  var curView = 'home';
+  function setViewName(name, fromHash) {
+    curView = name;
+    var app = $('app'); if (!app) return;
+    app.setAttribute('data-cur', name);
+    document.querySelectorAll('#app [data-view]').forEach(function (n) { n.classList.toggle('vhide', n.getAttribute('data-view').split(' ').indexOf(name) < 0); });
+    if (!fromHash && location.hash !== '#/' + name && location.hash !== '#selftest') { try { history.pushState(null, '', '#/' + name); } catch (e) { location.hash = '#/' + name; } }
+    window.scrollTo({ top: 0 });
+  }
+  function showSection(id) { activate(id); }
+  window.addEventListener('popstate', function () { var m = /^#\/(\w+)/.exec(location.hash); var id = m && VIEW_OF[m[1]] ? m[1] : 'home'; activate(id, true); });
   function activate(id, silent) {
-    curSec = id;
+    curSec = id; setViewName(VIEW_OF[id] || 'home', !!silent);
     document.querySelectorAll('.side-sec').forEach(function (el) {
       var on = el.getAttribute('data-sec') === id;
       el.classList.toggle('on', on);
@@ -3294,10 +3307,10 @@ start();
     nav.replaceChildren(E('p', { class: 'side-label', text: 'Разделы' }));
     SECTIONS.forEach(function (s, i) {
       var sub = E('div', { class: 'side-sub', role: 'menu', 'aria-label': s.label }, [E('div', null, s.items.map(function (it) {
-        return E('button', { type: 'button', class: 'side-item', role: 'menuitem', tabindex: '-1', onclick: function () { it.run(); } }, [it.t, E('small', { text: it.h })]);
+        return E('button', { type: 'button', class: 'side-item', role: 'menuitem', tabindex: '-1', onclick: function () { if (curSec !== s.id || curView !== VIEW_OF[s.id]) activate(s.id); it.run(); } }, [it.t, E('small', { text: it.h })]);
       }))]);
       var chev = E('span'); chev.innerHTML = '<svg class="chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
-      var btn = E('button', { type: 'button', class: 'side-sec-btn', 'aria-expanded': 'false', title: s.label + ' (Alt+' + (i + 1) + ')', onclick: function () { activate(s.id); if (s.id === 'home') scrollTo('top'); } }, [svg(s.icon), E('span', { text: s.label }), E('span', { class: 'kbd', text: 'Alt ' + (i + 1) }), chev.firstChild]);
+      var btn = E('button', { type: 'button', class: 'side-sec-btn', 'aria-expanded': 'false', title: s.label + ' (Alt+' + (i + 1) + ')', onclick: function () { activate(s.id); } }, [svg(s.icon), E('span', { text: s.label }), E('span', { class: 'kbd', text: 'Alt ' + (i + 1) }), chev.firstChild]);
       nav.appendChild(E('div', { class: 'side-sec', 'data-sec': s.id }, [btn, sub]));
     });
     activate('home');
@@ -3312,7 +3325,7 @@ start();
         var open = !pop.hidden && pop.getAttribute('data-sec') === s.id;
         if (open) { pop.hidden = true; return; }
         pop.replaceChildren(E('h4', { text: s.label }));
-        s.items.forEach(function (it) { pop.appendChild(E('button', { type: 'button', class: 'side-item', onclick: function () { pop.hidden = true; it.run(); } }, [it.t, E('small', { text: it.h })])); });
+        s.items.forEach(function (it) { pop.appendChild(E('button', { type: 'button', class: 'side-item', onclick: function () { pop.hidden = true; activate(s.id); it.run(); } }, [it.t, E('small', { text: it.h })])); });
         pop.setAttribute('data-sec', s.id); pop.hidden = false; activate(s.id);
       } }, [svg(s.icon), s.label]);
       tb.appendChild(b);
@@ -3321,17 +3334,54 @@ start();
   }
   function buildQuick() {
     var kp = document.querySelector('.kpis'); if (!kp || $('quick')) return;
-    var q = E('div', { class: 'quick', id: 'quick', role: 'toolbar', 'aria-label': 'Быстрые действия' }, [
+    var q = E('div', { class: 'quick', id: 'quick', 'data-view': 'calc', role: 'toolbar', 'aria-label': 'Быстрые действия' }, [
       E('button', { type: 'button', onclick: function () { newCalc(); } }, [svg('M12 5v14M5 12h14'), 'Новый расчёт']),
       E('button', { type: 'button', onclick: importCalc }, [svg('M12 16V5M7 9l5-5 5 5M5 20h14'), 'Загрузить']),
       E('button', { type: 'button', onclick: function () { openPrintWin(); } }, [svg(PATH.print), 'Печать форм']),
       E('button', { type: 'button', onclick: function () { openRef(); } }, [svg('M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM9 7h6'), 'Справочные данные']),
-      E('button', { type: 'button', onclick: function () { var s = $('search'); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.focus({ preventScroll: true }); } }, [svg('M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.5-3.5'), 'Поиск'])]);
+      E('button', { type: 'button', onclick: function () { if (curView !== 'calc') activate('calc'); var s = $('search'); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.focus({ preventScroll: true }); } }, [svg('M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.5-3.5'), 'Поиск'])]);
     kp.parentNode.insertBefore(q, kp);
-    var charts = document.querySelector('.charts');
-    if (charts && !$('recentCard')) charts.appendChild(E('article', { class: 'chart gcard', id: 'recentCard' }, [E('h3', null, ['Последние документы']), E('ul', { class: 'recent-list', id: 'recentList' })]));
-    renderRecent();
   }
+  function pageHead(title, sub) { return E('div', { class: 'hero-line' }, [E('h2', { text: title }), E('p', { class: 't-sub sec', text: sub })]); }
+  function actCard(title, text, btns) { return E('div', { class: 'xcard gcard' }, [E('b', { text: title }), E('small', { text: text }), E('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px' }, btns.map(function (b) { return E('button', { type: 'button', class: 'xbtn sm' + (b[2] ? ' fill' : ''), text: b[0], onclick: b[1] }); }))]); }
+  function buildPages() {
+    var app = $('app'), fab = $('fab'); if (!app || $('viewDocs')) return;
+    function ins(n) { app.insertBefore(n, fab); }
+    /* расчёты: заголовок и быстрые действия */
+    var sl = $('secList');
+    if (sl) { var hd = pageHead('Расчёты', 'Список расчётов, поиск и разделы по типам объектов'); hd.setAttribute('data-view', 'calc'); sl.parentNode.insertBefore(hd, sl); sl.remove(); var qq = $('quick'); if (qq) hd.after(qq); }
+    /* документы */
+    var d = E('div', { id: 'viewDocs', 'data-view': 'docs' }, [pageHead('Документы', 'Приказ, дополнения и формы приложений'),
+      E('div', { class: 'xgrid3 pgrid' }, [
+        actCard('Приказ Росгвардии от 14.07.2025 № 270', 'Об утверждении Порядка обеспечения дровами и Норм расхода дров в войсках национальной гвардии.', [['Полный текст', function () { openRef('s1'); }, 1], ['Порядок', function () { openRef('s1', 'ref-p1'); }], ['Нормы', function () { openRef('s3'); }]]),
+        actCard('Дополнения', 'К приказу № 270 дополнений в программе нет.', [['Открыть список', openAmend]]),
+        actCard('Справочные данные', 'Формулы, таблицы, примеры и пояснения по приказу.', [['Открыть (F1)', function () { openRef(); }, 1]])]),
+      E('h3', { class: 'pg-h', text: 'Шаблоны документов' }),
+      E('div', { class: 'xgrid3 pgrid' }, ['a1', 'a2', 'a3', 'a4'].map(function (f) { return actCard(FORM_NAME[f], 'Рекомендуемый образец формы', [['Открыть предпросмотр', function () { openPrintWin({ form: f }); }, 1]]); }))]);
+    ins(d);
+    /* печать */
+    var pr = E('div', { id: 'viewPrint', 'data-view': 'print' }, [pageHead('Печать', 'Предпросмотр, параметры страницы и журнал'),
+      E('div', { class: 'xgrid3 pgrid' }, [
+        actCard('Предпросмотр', 'Просмотр формы перед печатью, масштаб, страницы.', [['Открыть', function () { openPrintWin(); }, 1]]),
+        actCard('Настройки печати', 'Бумага, ориентация, поля, копии, колонтитулы.', [['Параметры страницы', function () { openPrintWin({ focus: 'settings' }); }]]),
+        actCard('История печати', 'Журнал печати и экспорта.', [['Открыть журнал', openPrintLog]])]),
+      E('h3', { class: 'pg-h', text: 'Последние документы' }),
+      E('div', { class: 'gcard', style: 'padding:16px 20px' }, [E('ul', { class: 'recent-list', id: 'recentList' })])]);
+    ins(pr); renderRecent();
+    /* настройки */
+    var st = E('div', { id: 'viewSet', 'data-view': 'set' }, [pageHead('Настройки', 'Пользователь, организация, параметры расчёта и данные'),
+      E('div', { class: 'xgrid3 pgrid' }, [
+        actCard('Пользователь', 'Звание, фамилия и должность — подставляются в подписи форм.', [['Изменить', function () { settingsWin('user'); }, 1]]),
+        actCard('Организация', 'Воинская часть и место дислокации.', [['Изменить', function () { settingsWin('org'); }, 1]]),
+        actCard('Параметры расчёта', 'КПД, Qт и плотность по умолчанию; константы приказа.', [['Изменить', function () { settingsWin('calc'); }, 1]])])]);
+    ins(st);
+    /* пометки существующих блоков */
+    var tag = function (el, v) { if (el) el.setAttribute('data-view', v); };
+    tag(document.querySelector('.hero-line'), 'home'); tag(document.querySelector('.kpis'), 'home'); tag($('totN'), 'home'); tag(document.querySelector('.charts'), 'home');
+    tag(document.querySelector('.tools'), 'calc'); tag($('seg'), 'calc'); tag($('panel'), 'calc');
+    var sd = $('secData'); if (sd) { var grp = sd.nextElementSibling, nt = document.querySelector('#app > .note'); st.appendChild(sd); st.appendChild(grp); if (nt) st.appendChild(nt); }
+  }
+
   function renderRecent() {
     var ul = $('recentList'); if (!ul) return;
     var l = lsGet('printlog', []).slice(0, 5);
@@ -3376,7 +3426,7 @@ start();
     xwin({ title: 'Заменить в поле', width: 'min(460px,100%)', body: E('div', { style: 'display:grid;gap:10px' }, [E('label', { class: 'xfield' }, [E('span', { text: 'Найти' }), a]), E('label', { class: 'xfield' }, [E('span', { text: 'Заменить на' }), b]), E('p', { class: 'xnote', text: 'Замена выполняется в последнем активном текстовом поле.' })]),
       footer: [{ label: 'Отмена' }, { label: 'Заменить всё', kind: 'fill', onClick: function () { if (!a.value) return; f.value = f.value.split(a.value).join(b.value); f.dispatchEvent(new Event('input', { bubbles: true })); toast('Замена выполнена.'); } }] });
   }
-  function findCmd() { if (RW) { RW.focusSearch(); return; } var s = $('search'); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.focus({ preventScroll: true }); s.select(); }
+  function findCmd() { if (RW) { RW.focusSearch(); return; } if (curView !== 'calc') activate('calc'); var s = $('search'); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.focus({ preventScroll: true }); s.select(); }
   var MENUS = [
     { t: 'Файл', items: [
       { t: 'Новый', k: 'Ctrl+N', run: function () { newCalc(); } }, { t: 'Открыть…', k: 'Ctrl+O', run: importCalc },
@@ -3428,7 +3478,6 @@ start();
   }
   function buildMenubar() {
     var bar = E('div', { class: 'menubar xhide', role: 'menubar', 'aria-label': 'Строка меню' });
-    bar.appendChild(E('span', { class: 'mb-title', text: 'КРПД' }));
     MENUS.forEach(function (m, i) {
       var b = E('button', { type: 'button', class: 'mb-top', role: 'menuitem', 'aria-haspopup': 'true', 'aria-expanded': 'false', text: m.t,
         onclick: function (e) { e.stopPropagation(); if (openMenu && openMenu.i === i) closeMenu(); else showMenu(i, b); },
@@ -3813,7 +3862,8 @@ start();
 
   /* ---------- запуск ---------- */
   function init() {
-    buildSide(); buildTabbar(); buildQuick(); buildMenubar(); loadView(); buildStatus();
+    buildSide(); buildTabbar(); buildQuick(); buildPages(); buildMenubar(); loadView(); buildStatus();
+    var m = /^#\/(\w+)/.exec(location.hash); activate(m && VIEW_OF[m[1]] ? m[1] : 'home', true);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 }());

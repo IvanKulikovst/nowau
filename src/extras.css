@@ -211,3 +211,11 @@ mark.hit.cur{background:#ff9f43;outline:2px solid #ff9f43}
   .pw-copy{break-after:page}
   .pw-copy:last-child{break-after:auto}
 }
+
+.vhide{display:none!important}
+#app [data-view]:not(.vhide),#viewDocs,#viewPrint,#viewSet{animation:vin .4s var(--ease)}
+@keyframes vin{from{opacity:0;transform:translateY(10px)}}
+.pgrid{margin-bottom:18px}
+.pgrid .xcard{align-content:start}
+.pg-h{margin:22px 4px 10px;font-size:18px;font-weight:700}
+.xcard.gcard{background:var(--g-bg);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--g-shadow);border-radius:var(--r-lg);padding:16px 18px}
