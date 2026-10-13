@@ -391,7 +391,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;background:transparent;
 @media (prefers-color-scheme:dark){:root[data-theme="system"]{--c-primary:#7CCBA2;--c-primary-2:#8EA9E6}}
 .top{position:sticky;top:max(8px,env(safe-area-inset-top));z-index:20}
 .tabbar{display:none}
-@media (max-width:700px){
+@media (max-width:899px){
   .app{padding-bottom:calc(var(--tabbar-h) + 110px + env(safe-area-inset-bottom))}
   .tabbar{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;height:var(--tabbar-h);display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px;border-radius:26px;background:var(--g-bg2);-webkit-backdrop-filter:blur(30px) saturate(190%);backdrop-filter:blur(30px) saturate(190%);border:1px solid var(--g-border);box-shadow:var(--g-shadow)}
   .tabbar button{display:grid;place-items:center;gap:2px;align-content:center;border:0;border-radius:20px;background:transparent;color:var(--label-secondary);font-size:11px;line-height:13px;font-weight:600;letter-spacing:0;min-height:48px}
@@ -404,6 +404,46 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;background:transparent;
 .top{background:color-mix(in srgb,var(--bg-secondary) 82%,transparent)!important}
 @media (max-width:700px){.tabbar{background:var(--g-bg2);background:color-mix(in srgb,var(--bg-secondary) 88%,transparent)}.top .brand-text p{display:none}.top{padding:8px 12px;margin-bottom:14px}.logo{width:40px;height:40px}.hero-line{margin-bottom:12px}}
 .kbd{display:inline-block;padding:0 6px;border:1px solid var(--g-border);border-radius:6px;font-size:11px;line-height:18px;color:var(--label-secondary)}
+
+/* ===== Left sidebar + theme switch ===== */
+.theme-switch{position:relative;display:grid;grid-template-columns:repeat(3,1fr);padding:4px;border-radius:var(--r-pill);background:var(--fill-tertiary);border:1px solid var(--g-border);isolation:isolate}
+.theme-switch::before{content:"";position:absolute;z-index:-1;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);border-radius:var(--r-pill);background:var(--g-bg2);box-shadow:0 2px 10px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.7);transition:transform var(--dur-2) var(--ease)}
+.theme-switch[data-t="light"]::before{transform:translateX(0)}
+.theme-switch[data-t="system"]::before{transform:translateX(100%)}
+.theme-switch[data-t="dark"]::before{transform:translateX(200%)}
+.theme-switch button{display:flex;align-items:center;justify-content:center;gap:4px;min-height:38px;padding:0 2px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--label-secondary);font-size:12px;line-height:16px;font-weight:600;letter-spacing:0;transition:color var(--dur-1)}
+.theme-switch button svg{width:16px;height:16px;flex:0 0 auto}
+.theme-switch button[aria-checked="true"]{color:var(--label-primary)}
+.theme-switch[data-t="light"] button[aria-checked="true"] svg{color:#D58E4F}
+.theme-switch[data-t="dark"] button[aria-checked="true"] svg{color:#8EA9E6}
+.theme-switch.compact{width:128px}
+.theme-switch.compact button{min-height:34px}
+.theme-switch.compact button span{display:none}
+.side{display:none}
+@media (min-width:900px){
+  body{padding-left:296px}
+  .side{display:flex;flex-direction:column;gap:var(--sp-4);position:fixed;z-index:25;left:16px;top:16px;bottom:16px;width:264px;padding:var(--sp-4);border-radius:var(--r-lg);background:color-mix(in srgb,var(--bg-secondary) 55%,transparent);-webkit-backdrop-filter:blur(30px) saturate(190%);backdrop-filter:blur(30px) saturate(190%);border:1px solid var(--g-border);box-shadow:var(--g-shadow);overflow-y:auto}
+  .app>.top{display:none}
+  .app{margin:0 auto}
+  .fab{display:none}
+  .section-title{scroll-margin-top:24px}
+}
+.side-brand{display:flex;align-items:center;gap:var(--sp-3);padding:6px;border:0;border-radius:var(--r-md);background:transparent;text-align:left}
+.side-logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#5E9C84,#4A6FA5);box-shadow:0 6px 16px rgba(74,111,165,.35)}
+.side-logo svg{width:26px;height:26px}
+.side-title b{display:block;font-size:20px;line-height:24px;font-weight:800;letter-spacing:.3px}
+.side-title small{display:block;font-size:12px;line-height:16px;color:var(--label-secondary);letter-spacing:0}
+.side-cta{display:flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:48px;border:1px solid rgba(255,255,255,.4);border-radius:var(--r-md);background:linear-gradient(135deg,#5E9C84,#4A6FA5);color:#fff;font-weight:700;box-shadow:0 10px 24px rgba(74,111,165,.4),inset 0 1px 0 rgba(255,255,255,.5)}
+.side-cta svg{width:20px;height:20px}
+.side-nav{display:grid;gap:var(--sp-1)}
+.side-label{margin:var(--sp-2) var(--sp-2) var(--sp-1);font-size:11px;line-height:14px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--label-tertiary)}
+.side-nav button{display:flex;align-items:center;gap:var(--sp-3);min-height:44px;padding:0 var(--sp-3);border:0;border-radius:var(--r-md);background:transparent;color:var(--label-secondary);font-size:15px;font-weight:600;text-align:left;letter-spacing:-.1px;transition:background var(--dur-1),color var(--dur-1)}
+.side-nav button svg{width:22px;height:22px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.side-nav button .kbd{margin-left:auto}
+.side-nav button:hover{background:var(--fill-tertiary);color:var(--label-primary)}
+.side-nav button.on{background:var(--accent-soft);color:var(--system-accent);box-shadow:inset 3px 0 0 var(--system-accent)}
+.side-foot{margin-top:auto}
+@media (max-width:899px){.theme-switch.compact{width:112px}}
 @media (prefers-reduced-motion:reduce){#landing video{display:none}}
 </style>
 <script>
@@ -436,6 +476,25 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;background:transparent;
   <div class="l-modal" id="m-req"><section class="l-card glass" role="dialog" aria-modal="true" aria-label="Системные требования"><button class="l-close" type="button" aria-label="Закрыть">✕</button><h3>Системные требования</h3><ul><li>Современный браузер: Chrome, Edge, Firefox, Safari (последние 2 версии)</li><li>Любая ОС: Windows, macOS, Linux, iOS, Android</li><li>Включённые JavaScript и локальное хранилище браузера</li><li>Принтер или «Печать в PDF» — для форм приложений</li><li>Установка и подключение к интернету не требуются</li></ul></section></div>
   <div class="l-modal" id="m-auth"><section class="l-card glass" role="dialog" aria-modal="true" aria-label="Авторы"><button class="l-close" type="button" aria-label="Закрыть">✕</button><h3>Авторы</h3><p><b>Иван Куликов</b> — автор и разработчик проекта (GitHub: IvanKulikovst).</p></section></div>
 </div>
+<aside class="side" id="side" aria-label="Главное меню">
+  <button type="button" class="side-brand" data-go="about" aria-label="О программе">
+    <span class="side-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.6 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.2 1 2 1.8 2.3C11.5 8 11 5.5 12 3z"/></svg></span>
+    <span class="side-title"><b>КРПД</b><small>приказ № 270</small></span>
+  </button>
+  <button type="button" class="side-cta" id="sideNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Новый расчёт</button>
+  <nav class="side-nav">
+    <p class="side-label">Разделы</p>
+    <button type="button" data-go="top" class="on"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9H3z"/></svg>Обзор</button>
+    <button type="button" data-go="list"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Расчёты</button>
+    <button type="button" data-go="print"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7z"/></svg>Печать форм</button>
+    <button type="button" data-go="data"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>Данные</button>
+    <button type="button" data-go="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Поиск<span class="kbd">Ctrl K</span></button>
+  </nav>
+  <div class="side-foot">
+    <p class="side-label">Тема</p>
+    <div class="theme-switch" role="radiogroup" aria-label="Тема оформления"></div>
+  </div>
+</aside>
 <div id="app" class="app">
   <header class="top">
     <div class="brand">
@@ -447,7 +506,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;background:transparent;
     </div>
     <div class="top-actions">
       <button type="button" id="printBtn" class="icon-btn" aria-label="Печать форм по приказу"></button>
-      <button type="button" id="themeBtn" class="icon-btn" aria-label="Тема"></button>
+      <div class="theme-switch compact" role="radiogroup" aria-label="Тема оформления"></div>
     </div>
   </header>
   <div id="banners"></div>
@@ -1559,9 +1618,10 @@ function applyTheme(t) {
   if (t === 'light') { lt.content = '#EDEFEA'; dk.content = '#EDEFEA'; }
   else if (t === 'dark') { lt.content = '#0D110F'; dk.content = '#0D110F'; }
   else { lt.content = '#EDEFEA'; dk.content = '#0D110F'; }
-  const btn = $('themeBtn');
-  btn.replaceChildren(icon(t === 'light' ? 'sun' : (t === 'dark' ? 'moon' : 'auto')));
-  btn.setAttribute('aria-label', 'Тема: ' + THEME_LABEL[t] + '. Нажмите, чтобы сменить');
+  document.querySelectorAll('.theme-switch').forEach((box) => {
+    box.setAttribute('data-t', t);
+    box.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', b.dataset.t === t ? 'true' : 'false'));
+  });
 }
 
 /* ================= баннеры и тосты ================= */
@@ -2409,11 +2469,19 @@ function bindShell() {
   $('icImport').appendChild(icon('upload'));
   $('icUndo').appendChild(icon('undo'));
   $('icClear').appendChild(icon('trash'));
-  $('themeBtn').addEventListener('click', () => {
-    curTheme = THEMES[(THEMES.indexOf(curTheme) + 1) % THEMES.length];
-    applyTheme(curTheme);
-    try { localStorage.setItem(LS_THEME, curTheme); } catch (e) { toast('Тему не удалось запомнить.'); }
+  document.querySelectorAll('.theme-switch').forEach((box) => {
+    [['light', 'sun', 'Светлая'], ['system', 'auto', 'Авто'], ['dark', 'moon', 'Тёмная']].forEach((it) => {
+      const b = h('button', { type: 'button', role: 'radio', 'aria-label': 'Тема: ' + it[2], dataset: { t: it[0] } }, [icon(it[1]), h('span', { text: it[2] })]);
+      b.addEventListener('click', () => {
+        curTheme = it[0];
+        applyTheme(curTheme);
+        try { localStorage.setItem(LS_THEME, curTheme); } catch (e) { toast('Тему не удалось запомнить.'); }
+      });
+      box.appendChild(b);
+    });
   });
+  applyTheme(curTheme);
+  $('sideNew').addEventListener('click', () => openEditor(null));
   $('search').addEventListener('input', () => { ui.q = $('search').value; render(); });
   buildSeg();
   $('fab').addEventListener('click', () => openEditor(null));
@@ -2476,16 +2544,17 @@ start();
 </script>
 <script>
 (function(){
-  var tb=document.getElementById('tabbar');if(!tb)return;
   function go(k){
     if(k==='print'){var b=document.getElementById('btnPrint');if(b)b.click();return;}
+    if(k==='about'){var br=document.querySelector('.brand');if(br)br.click();return;}
+    if(k==='search'){var q=document.getElementById('search');if(q){q.scrollIntoView({behavior:'smooth',block:'center'});q.focus({preventScroll:true});}return;}
     var t=k==='list'?document.getElementById('secList'):k==='data'?document.getElementById('secData'):null;
     if(t)t.scrollIntoView({behavior:'smooth',block:'start'});else window.scrollTo({top:0,behavior:'smooth'});
-    tb.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-go')===k)});
+    document.querySelectorAll('[data-go]').forEach(function(x){if(x.closest('.side-nav,.tabbar'))x.classList.toggle('on',x.getAttribute('data-go')===k)});
   }
-  tb.addEventListener('click',function(e){var b=e.target.closest('button');if(b)go(b.getAttribute('data-go'))});
+  document.addEventListener('click',function(e){var b=e.target.closest('[data-go]');if(b)go(b.getAttribute('data-go'))});
   document.addEventListener('keydown',function(e){
-    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();var l=document.getElementById('landing');if(l&&!l.hidden)return;var q=document.getElementById('search');if(q){q.scrollIntoView({block:'center'});q.focus();}}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();var l=document.getElementById('landing');if(l&&!l.hidden)return;go('search');}
   });
 }());
 </script>
