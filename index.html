@@ -2250,7 +2250,7 @@ function runSelfTest() {
     const t = calcRecord(base());
     T('Предмет: таблица М-10, 0 °C, 0 м/с → N = 3,780; 20,301 кг; 0,034 м³', t.ok && t.nMilli === 3780n && t.massG === 20301n && t.volL === 34n);
     const ip = normRational('m10', -2, 1, 1, 1);
-    T('Предмет: интерполяция по температуре и ветру → 4,275', ip.n === 4275 && ip.d === 10);
+    T('Предмет: интерполяция по температуре и ветру → 4,275', ip.n * 10 === 4275 * ip.d);
     const w = base(); w.object = 'wash_s'; w.qty = 3; w.tempC = 0; w.windMs = 0;
     const wc = calcRecord(w);
     T('Предмет: 0,115 × 3 точно = 0,345 кг у.т. и 1,853 кг', wc.ok && wc.nMilli === 345n && wc.massG === 1853n);
