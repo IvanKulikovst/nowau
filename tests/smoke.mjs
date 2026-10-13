@@ -1,0 +1,21 @@
+// Запуск приложения по file://, сбор ошибок консоли, сетевых запросов и результатов встроенной самопроверки.
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.PW_PATH || 'playwright');
+import path from 'node:path';
+const file = path.resolve(process.argv[2] || 'krpd-standalone.html');
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const page = await ctx.newPage();
+const errors = [], requests = [];
+page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
+page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+page.on('request', (r) => { const u = r.url(); if (!u.startsWith('data:') && !u.startsWith('file:') && !u.startsWith('blob:')) requests.push(u); });
+const t0 = Date.now();
+await page.goto('file://' + file + '#selftest', { waitUntil: 'load' });
+await page.waitForFunction(() => window.KRPD && window.KRPD.isReady());
+const loadMs = Date.now() - t0;
+const st = await page.evaluate(() => [...document.querySelectorAll('#banners .banner')].map((b) => b.innerText.replace(/\s+/g, ' ')));
+const crash = await page.evaluate(() => !!document.querySelector('[aria-label="Сбой интерфейса"]'));
+console.log(JSON.stringify({ loadMs, banners: st, crash, errors, externalRequests: requests }, null, 2));
+await browser.close();

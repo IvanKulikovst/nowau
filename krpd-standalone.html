@@ -679,6 +679,11 @@ mark.hit.cur{background:#ff9f43;outline:2px solid #ff9f43}
 .seed-note{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;margin:0 0 14px;border-radius:var(--r-md);font-size:13.5px;line-height:18px;border-left:4px solid var(--system-warning)}
 .seed-note[hidden]{display:none}
 
+/* элементы сеток не должны расширять колонку по длине содержимого (узкие экраны 320–380 px) */
+.charts>*,.kpis>*,.hb>*,.hb-row>*,.hb-top>span{min-width:0}
+/* печать: отступы под боковую панель и строку меню не должны сдвигать лист */
+@media print{html.printing body{padding:0!important}}
+
 /*@@END*/
 </style>
 <script>
@@ -1412,7 +1417,7 @@ function modelA1(items, p) {
         fmtScaled(c.nMilli, 3), fmtKpd(it.kpdBp), fmtScaled(c.kMilli, 3), String(it.density), fmtScaled(c.volL, 3)]);
     }
   }
-  return { form: 'a1', year: p.year, unit: p.unit, role1: p.role1, sign1: p.sign1, sign2: p.sign2, role1: p.role1, role2: p.role2, heat: heat, wash: wash,
+  return { form: 'a1', year: p.year, unit: p.unit, sign1: p.sign1, sign2: p.sign2, role1: p.role1, role2: p.role2, heat: heat, wash: wash,
     heatVol: fmtScaled(hv, 3), washVol: fmtScaled(wv, 3), total: fmtScaled(hv + wv, 3) };
 }
 
@@ -2762,7 +2767,7 @@ window.KRPD = {
   DEFAULT_ROLES: DEFAULT_ROLES, fmtScaled: fmtScaled, fmtDateRu: fmtDateRu, fmtT: fmtT, toast: toast,
   removeSeeds: () => commit('delete', (st) => { st.payload = st.payload.filter((x) => !/^seed\d+$/.test(x.id)); }),
   hasSeeds: () => state.payload.some((x) => /^seed\d+$/.test(x.id)),
-  validateRoot: validateRoot, emptyDocument: emptyDocument,
+  validateRoot: validateRoot, emptyDocument: emptyDocument, pInt: pInt, pKpd: pKpd,
   undo: () => gate(() => { undo(); }), canUndo: () => undoStack.length > 0, render: () => render(), isReady: () => ready
 };
 start();
@@ -2773,17 +2778,19 @@ start();
   var L=document.getElementById('landing'),v=document.getElementById('lvid');
   var BG=['app','side','tabbar','tabpop','scrim'];
   function bg(on){BG.forEach(function(id){var e=document.getElementById(id);if(e){try{e.inert=on}catch(x){}if(on)e.setAttribute('aria-hidden','true');else e.removeAttribute('aria-hidden')}});document.querySelectorAll('.menubar,.statusbar').forEach(function(e){try{e.inert=on}catch(x){}if(on)e.setAttribute('aria-hidden','true');else e.removeAttribute('aria-hidden')})}
-  function show(){L.hidden=false;L.classList.remove('leave');bg(true);document.body.style.overflow='hidden';try{v.play()}catch(e){}var sb=document.getElementById('startBtn');if(sb)sb.focus()}
+  function show(){L.hidden=false;L.classList.remove('leave');bg(true);document.body.style.overflow='hidden';try{var pp=v.play();if(pp&&pp.catch)pp.catch(function(){})}catch(e){}var sb=document.getElementById('startBtn');if(sb)sb.focus()}
   function hide(){bg(false);L.classList.add('leave');document.body.style.overflow='';setTimeout(function(){if(L.classList.contains('leave')){L.hidden=true;try{v.pause()}catch(e){}}},750)}
   document.body.style.overflow='hidden';
   window.addEventListener('DOMContentLoaded',function(){bg(true);var sb=document.getElementById('startBtn');if(sb)sb.focus()});if(document.readyState!=='loading'){bg(true)}
   v.play&&v.play().catch(function(){});
   document.getElementById('startBtn').addEventListener('click',hide);
-  L.querySelectorAll('[data-open]').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.getAttribute('data-open')).classList.add('open')})});
+  var opener=null;
+  function closeModal(m){m.classList.remove('open');if(opener&&document.contains(opener)){try{opener.focus()}catch(x){}}opener=null}
+  L.querySelectorAll('[data-open]').forEach(function(b){b.addEventListener('click',function(){var m=document.getElementById(b.getAttribute('data-open'));m.classList.add('open');opener=b;var x=m.querySelector('.l-close');function fx(){if(x&&m.classList.contains('open')&&!m.contains(document.activeElement)){try{x.focus()}catch(e){}}}setTimeout(fx,60);setTimeout(fx,400)})});
   L.querySelectorAll('.l-modal').forEach(function(m){
-    m.addEventListener('click',function(e){if(e.target===m||e.target.classList.contains('l-close'))m.classList.remove('open')});
+    m.addEventListener('click',function(e){if(e.target===m||e.target.classList.contains('l-close'))closeModal(m)});
   });
-  document.addEventListener('keydown',function(e){if(e.key==='Escape')L.querySelectorAll('.l-modal.open').forEach(function(m){m.classList.remove('open')})});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')L.querySelectorAll('.l-modal.open').forEach(closeModal)});
   var br=document.querySelector('.brand');if(br)br.addEventListener('click',show);
 }());
 </script>
@@ -3330,7 +3337,7 @@ start();
     var n = K.getItems().length;
     r.appendChild(pageHead('Загрузка и сохранение', 'Расчёты хранятся в этом браузере; файл нужен для переноса на другое устройство и резервной копии'));
     r.appendChild(grid([
-      actCard('Загрузить расчёты из файла', 'Файл JSON, сохранённый этой программой. Расчёты из файла объединяются с текущими; повреждённые записи программа отклоняет и сообщает.', [['Выбрать файл…', importCalc, 1]]),
+      actCard('Загрузить расчёты из файла', 'Файл JSON, сохранённый этой программой. После выбора файла программа покажет, сколько записей будет принято, и предложит объединить их с текущими или заменить текущие; повреждённые записи отклоняются и попадают в карантин.', [['Выбрать файл…', importCalc, 1]]),
       actCard('Сохранить расчёты в файл', 'Сейчас в списке расчётов: ' + n + '. Файл можно открыть на другом компьютере или телефоне.', [['Сохранить файл', exportCalc, n > 0]])]));
     r.appendChild(group('Рекомендации', null, E('ul', { class: 'xnote' , style: 'padding-left:18px;list-style:disc;display:grid;gap:4px' }, ['Сохраняйте файл перед очисткой списка и после крупных изменений.', 'Данные не передаются в интернет — файл остаётся только у вас.', 'Для печати форм файл не нужен: используйте раздел «Печать».'].map(function (t) { return E('li', { text: t }); }))));
   };
@@ -3394,7 +3401,7 @@ start();
   };
   PAGES['print/params'] = function (r) {
     r.appendChild(pageHead('Параметры печати', 'Значения по умолчанию для окна печати; в самом окне их можно менять для конкретной печати'));
-    var px = Object.assign(defaultPx(), lsGet('printx', {}));
+    var px = clampPx(Object.assign(defaultPx(), lsGet('printx', {})));
     var f = {};
     function sel(key, opts) { var s = E('select', { class: 'xin' }, opts.map(function (o) { return E('option', { value: o[0], text: o[1] }); })); s.value = String(px[key]); f[key] = s; return s; }
     function num(key, min, max) { var i = E('input', { type: 'number', class: 'xin', min: String(min), max: String(max), value: String(px[key]) }); f[key] = i; return i; }
@@ -3410,9 +3417,12 @@ start();
       E('button', { type: 'button', class: 'xbtn fill', text: 'Сохранить', onclick: function () {
         var o = Object.assign(defaultPx(), lsGet('printx', {}));
         ['paper', 'orient', 'color'].forEach(function (k) { o[k] = f[k].value; });
-        ['mt', 'mr', 'mb', 'ml', 'copies'].forEach(function (k) { var v = parseFloat(f[k].value); o[k] = isNaN(v) ? px[k] : v; });
+        var fixed = false;
+        ['mt', 'mr', 'mb', 'ml', 'copies'].forEach(function (k) { var v = parseFloat(String(f[k].value).replace(',', '.')); o[k] = isNaN(v) ? px[k] : v; });
         ['duplex', 'header', 'pageno'].forEach(function (k) { o[k] = f[k].checked; });
-        if (lsSet('printx', o)) toast('Параметры печати сохранены.');
+        clampPx(o);
+        ['mt', 'mr', 'mb', 'ml', 'copies'].forEach(function (k) { if (String(o[k]) !== String(f[k].value).replace(',', '.')) fixed = true; f[k].value = String(o[k]); });
+        if (lsSet('printx', o)) toast(fixed ? 'Сохранено. Значения вне диапазона исправлены: поля 0–60 мм, копий 1–99.' : 'Параметры печати сохранены.');
       } }),
       E('button', { type: 'button', class: 'xbtn', text: 'Сбросить', onclick: function () { var o = defaultPx(); o.presets = (lsGet('printx', {}).presets) || []; lsSet('printx', o); renderPage(); toast('Параметры сброшены.'); } })]));
   };
@@ -3435,7 +3445,22 @@ start();
         var inp = E('input', { type: 'text', maxlength: '200', value: s[cfg[2]][fd[0]] || '', placeholder: kind === 'calc' ? ({ kpd: '0,7', qt: '1862', density: '590' })[fd[0]] : '' }); inputs[fd[0]] = inp;
         return E('label', { class: 'xfield' }, [E('span', { text: fd[1] }), inp]);
       }));
-      form.appendChild(E('div', { style: 'display:flex;gap:8px' }, [E('button', { type: 'button', class: 'xbtn fill', text: 'Сохранить', onclick: function () { var cur = getS(); cur[cfg[2]] = {}; cfg[3].forEach(function (fd) { cur[cfg[2]][fd[0]] = inputs[fd[0]].value.trim(); }); if (setS(cur)) toast('Сохранено.'); } })]));
+      var errs = {};
+      cfg[3].forEach(function (fd) { var er = E('span', { class: 'xerr', hidden: true }); errs[fd[0]] = er; inputs[fd[0]].parentNode.appendChild(er); });
+      /* те же диапазоны, что проверяет редактор расчёта (checkItem) */
+      function calcErr(key, v) {
+        if (kind !== 'calc' || v === '') return '';
+        if (key === 'kpd') { var bp = K.pKpd(v); return bp !== null && bp >= 100 && bp <= 10000 ? '' : 'Коэффициент от 0,01 до 1 (например, 0,7).'; }
+        var n = K.pInt(v);
+        if (key === 'qt') return n !== null && n >= 500 && n <= 7000 ? '' : 'Целое число от 500 до 7000 ккал/кг.';
+        return n !== null && n >= 100 && n <= 2000 ? '' : 'Целое число от 100 до 2000 кг/м³.';
+      }
+      form.appendChild(E('div', { style: 'display:flex;gap:8px' }, [E('button', { type: 'button', class: 'xbtn fill', text: 'Сохранить', onclick: function () {
+        var cur = getS(), vals = {}, bad = null;
+        cfg[3].forEach(function (fd) { var k = fd[0], v = inputs[k].value.trim(), m = calcErr(k, v); vals[k] = v; errs[k].textContent = m; errs[k].hidden = !m; inputs[k].classList.toggle('bad', !!m); if (m && !bad) bad = inputs[k]; });
+        if (bad) { bad.focus(); toast('Исправьте отмеченные поля.'); return; }
+        cur[cfg[2]] = vals; if (setS(cur)) toast('Сохранено.');
+      } })]));
       r.appendChild(form);
       if (kind === 'calc') r.appendChild(group('Константы приказа (не изменяются)', 'Источник — приказ № 270; подробности в справочных данных.', E('div', { class: 'gcard', style: 'padding:16px 20px' }, [E('ul', { style: 'padding-left:18px;list-style:disc;display:grid;gap:4px;font-size:14px' }, [
         'Qут = 7000 ккал/кг — условное топливо', 'Температура внутри по умолчанию +18 °C — примечание к Норме № 3', 'Время топки палатки по умолчанию 12 ч — Норма № 1', 'Запас дров: 0,125 м³/сут на печь на 3 суток — п. 14', 'Помывка: 0,115 (лето) и 0,138 (отопительный период) кг у.т. на человека — Норма № 4'].map(function (t) { return E('li', { text: t }); })),
@@ -3707,7 +3732,7 @@ start();
       return out;
     }
     var body = walk(paper);
-    var sect = '<w:sectPr><w:pgSz w:w="' + tw(g.orient === 'landscape' ? g.h : g.w) + '" w:h="' + tw(g.orient === 'landscape' ? g.w : g.h) + '"' + (g.orient === 'landscape' ? ' w:orient="landscape"' : '') + '/><w:pgMar w:top="' + tw(px.mt) + '" w:right="' + tw(px.mr) + '" w:bottom="' + tw(px.mb) + '" w:left="' + tw(px.ml) + '" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>';
+    var sect = '<w:sectPr><w:pgSz w:w="' + tw(g.w) + '" w:h="' + tw(g.h) + '"' + (g.orient === 'landscape' ? ' w:orient="landscape"' : '') + '/><w:pgMar w:top="' + tw(px.mt) + '" w:right="' + tw(px.mr) + '" w:bottom="' + tw(px.mb) + '" w:left="' + tw(px.ml) + '" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>';
     var NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
     return zipStore([
       { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
@@ -3755,11 +3780,25 @@ start();
   var PAPERS = { A4: [210, 297, 'A4'], A3: [297, 420, 'A3'], A5: [148, 210, 'A5'], Letter: [215.9, 279.4, 'letter'], Legal: [215.9, 355.6, 'legal'] };
   var MM = 96 / 25.4;
   function defaultPx() { return { printer: 'system', copies: 1, orient: 'landscape', paper: 'A4', mt: 12, mr: 12, mb: 12, ml: 15, duplex: false, color: 'color', header: true, pageno: true, nup: 1, zoomMode: 'fitw', presets: [] }; }
+  /* значения из хранилища могли быть записаны вручную или прежней версией: приводим к допустимым диапазонам */
+  function clampPx(o) {
+    var d = defaultPx();
+    ['mt', 'mr', 'mb', 'ml'].forEach(function (k) { var v = Number(o[k]); o[k] = isFinite(v) ? Math.min(60, Math.max(0, v)) : d[k]; });
+    var c = Math.round(Number(o.copies)); o.copies = isFinite(c) ? Math.min(99, Math.max(1, c)) : 1;
+    if (!PAPERS[o.paper]) o.paper = d.paper;
+    if (o.orient !== 'portrait' && o.orient !== 'landscape') o.orient = d.orient;
+    if (o.color !== 'bw' && o.color !== 'color') o.color = d.color;
+    if ([1, 2, 4].indexOf(o.nup) < 0) o.nup = 1;
+    if (['fitw', 'fith', 'fit', 'fixed'].indexOf(o.zoomMode) < 0) o.zoomMode = d.zoomMode;
+    if (o.printer !== 'pdf') o.printer = 'system';
+    if (!Array.isArray(o.presets)) o.presets = [];
+    return o;
+  }
   function openPrintWin(opts) {
     opts = opts || {};
     if (!K.isReady()) { toast('Данные ещё загружаются.'); return; }
     if (PW) { PW.apply(opts); return; }
-    var px = Object.assign(defaultPx(), lsGet('printx', {}));
+    var px = clampPx(Object.assign(defaultPx(), lsGet('printx', {})));
     var S = getS(), pref = K.loadPrintPrefs(), roles = pref.roles || {};
     var now = new Date();
     var draft = { form: opts.form || 'a1', year: String(now.getFullYear()), month: String(now.getMonth() + 1), unit: pref.unit || S.org.unit || '', place: pref.place || S.org.place || '', rem: '0', price: pref.price || '', sign1: pref.sign1 || [S.user.rank, S.user.name].filter(Boolean).join(' '), sign2: pref.sign2 || '', role1: '', role2: '' };
@@ -3787,9 +3826,9 @@ start();
     function marg(label, key) { var i = E('input', { type: 'number', min: '0', max: '60', step: '1', value: String(px[key]), class: 'xin', 'aria-label': label }); i.addEventListener('change', function () { var v = parseFloat(i.value); if (!(v >= 0 && v <= 60)) v = 12; i.value = String(v); px[key] = v; saveP(); rebuild(); }); return E('label', { class: 'xfield' }, [E('span', { text: label }), i]); }
     var colorBtns = ['color', 'bw'].map(function (v) { var b = E('button', { type: 'button', text: v === 'color' ? 'Цветная' : 'Чёрно-белая', onclick: function () { px.color = v; syncColor(); saveP(); } }); b.setAttribute('data-v', v); return b; });
     function syncColor() { colorBtns.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-v') === px.color); }); }
-    var presetSel = E('select', { id: 'pw-presets' }); var presetName = E('input', { type: 'text', class: 'xin', placeholder: 'Название шаблона печати', maxlength: '60' });
+    var presetSel = E('select', { id: 'pw-presets' }); var presetName = E('input', { type: 'text', class: 'xin', placeholder: 'Название шаблона печати', 'aria-label': 'Название шаблона печати', maxlength: '60' });
     function fillPresets() { presetSel.replaceChildren(E('option', { value: '', text: 'Шаблоны печати…' })); (px.presets || []).forEach(function (p, i) { presetSel.appendChild(E('option', { value: String(i), text: p.name })); }); }
-    presetSel.addEventListener('change', function () { var p = (px.presets || [])[parseInt(presetSel.value, 10)]; if (!p) return; Object.assign(px, p.s); setUiFromPx(); saveP(); rebuild(); toast('Шаблон применён.'); });
+    presetSel.addEventListener('change', function () { var p = (px.presets || [])[parseInt(presetSel.value, 10)]; if (!p) return; Object.assign(px, p.s); clampPx(px); setUiFromPx(); saveP(); rebuild(); toast('Шаблон применён.'); });
     function savePreset() { var n = presetName.value.trim(); if (!n) { toast('Введите название шаблона.'); presetName.focus(); return; } var s = {}; ['orient', 'paper', 'mt', 'mr', 'mb', 'ml', 'duplex', 'color', 'header', 'pageno', 'copies', 'nup'].forEach(function (k) { s[k] = px[k]; }); px.presets = (px.presets || []).filter(function (p) { return p.name !== n; }).concat([{ name: n, s: s }]); saveP(); fillPresets(); presetName.value = ''; toast('Шаблон «' + n + '» сохранён.'); }
     var marginInputs = [marg('Верх, мм', 'mt'), marg('Право, мм', 'mr'), marg('Низ, мм', 'mb'), marg('Лево, мм', 'ml')];
     function setUiFromPx() { paperSel.value = px.paper; copies.value = String(px.copies); syncOri(); syncColor(); ['duplex', 'header', 'pageno'].forEach(function (k) { R[k].checked = !!px[k]; }); nupSel.value = String(px.nup); marginInputs.forEach(function (m, i) { m.querySelector('input').value = String(px[['mt', 'mr', 'mb', 'ml'][i]]); }); }
@@ -3934,6 +3973,7 @@ start();
       var g = geom();
       if (!styleEl) { styleEl = E('style', { id: 'pw-print-style' }); document.head.appendChild(styleEl); }
       styleEl.textContent = pageCss(g);
+      var refStyle = $('rw-print-style'); if (refStyle) refStyle.textContent = '';
       var root = $('printRoot'); root.replaceChildren();
       var model = K.buildModel(K.getItems(), v.r.p);
       for (var i = 0; i < px.copies; i++) root.appendChild(E('div', { class: 'pw-copy' }, [K.renderPaper(model)]));
@@ -4042,6 +4082,7 @@ start();
       var root = $('printRoot'); root.replaceChildren();
       secs.filter(function (s) { return ids.indexOf(s.id) >= 0; }).forEach(function (s) { root.appendChild(s.el.cloneNode(true)); });
       if (!$('rw-print-style')) document.head.appendChild(E('style', { id: 'rw-print-style' }));
+      var formStyle = $('pw-print-style'); if (formStyle) formStyle.textContent = '';
       $('rw-print-style').textContent = '@page{size:A4 portrait;margin:15mm 12mm 15mm 15mm;@bottom-center{content:"Страница " counter(page) " из " counter(pages);font:9pt serif}}@media print{html.printing #printRoot{display:block}}';
       document.documentElement.classList.add('printing');
       logPrint('ref', 'print', all ? 'Справочник целиком' : 'Раздел: ' + secs.filter(function (s) { return s.id === curSecId; })[0].title);
@@ -4062,7 +4103,7 @@ start();
     var bar = E('div', { class: 'rw-bar' }, [search, count, btn('▲', function () { step(-1); }, '', 'Предыдущее совпадение'), btn('▼', function () { step(1); }, '', 'Следующее совпадение'), bookBtn,
       btn('Копировать', function () { copyText(secText([curSecId])).then(function () { toast('Текст раздела скопирован.'); }, function () { toast('Не удалось скопировать.'); }); }, '', 'Копировать текст текущего раздела'),
       btn('Печать раздела', function () { printRef(false); }), btn('Печать всего', function () { printRef(true); }), btn('Экспорт в PDF', function () { printRef(true, true); }, 'fill')]);
-    var api = xwin({ title: 'Справочные данные — приказ Росгвардии № 270 от 14.07.2025', cls: 'rw', width: 'min(1240px,100%)', bar: bar, body: E('div', { class: 'rw-main', style: 'margin:0 -16px;border-top:1px solid var(--separator)' }, [toc, content]), onClose: function () { RW = null; } });
+    var api = xwin({ title: 'Справочные данные — приказ Росгвардии № 270 от 14.07.2025', cls: 'rw', width: 'min(1240px,100%)', bar: bar, body: E('div', { class: 'rw-main', style: 'margin:0 -16px;border-top:1px solid var(--separator)' }, [toc, content]), onClose: function () { RW = null; if (obs) obs.disconnect(); } });
     api.body.style.cssText = 'padding:0;overflow:hidden;display:block';
     api.body.firstChild.style.cssText = 'height:100%;display:grid;grid-template-columns:260px minmax(0,1fr);margin:0';
     api.el.style.height = 'calc(100vh - 24px)'; api.el.style.width = 'min(1240px,100%)';
@@ -4082,6 +4123,14 @@ start();
     if (landingOpen()) return;
     var k = e.key, c = e.ctrlKey || e.metaKey, lk = k.length === 1 ? k.toLowerCase() : k;
     if (k === 'Escape') { if (stack.length) { stack[stack.length - 1].close(); e.preventDefault(); } return; }
+    /* окно печати или лист (редактор, импорт, подтверждение) модальны: команды разделов не выполняются под ними,
+       а действия браузера, теряющие ввод или печатающие экран, подавляются */
+    var sheetOpen = $('scrim') && !$('scrim').hidden;
+    if ((PW || sheetOpen) && !stack.length && k !== 'F11') {
+      if (PW && c && !e.altKey && lk === 'p') { e.preventDefault(); PW.apply({ focus: 'print' }); }
+      else if (k === 'F1' || k === 'F5' || (c && !e.altKey && (lk === 's' || lk === 'o' || lk === 'p'))) e.preventDefault();
+      return;
+    }
     if (stack.length && !(RW && k === 'F1')) { if (!(c && (lk === 'f' || lk === 'b'))) { if (k !== 'F11') return; } }
     if (k === 'F1') { e.preventDefault(); if (RW) RW.focusSearch(); else openRef(); return; }
     if (k === 'F11') { e.preventDefault(); fullscreen(); return; }
