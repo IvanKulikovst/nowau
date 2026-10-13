@@ -294,6 +294,11 @@ path,line,circle,rect,polyline,polygon{vector-effect:non-scaling-stroke}
 .l-close{position:absolute!important;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.2);color:#fff;font-size:18px;cursor:pointer;z-index:2}
 @media (max-width:560px){.l-links button{padding:8px 10px;font-size:13px}.l-brand span{display:none}}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:rgba(30,40,35,.7)}}
+
+.l-nav{justify-content:center!important;padding:0!important;border-radius:0!important}
+.l-links{gap:12px!important;flex-wrap:wrap;justify-content:center}
+.l-links button.glass{padding:11px 22px;border:1px solid var(--glass-border)}
+.l-links button.glass:hover{background:var(--glass-bg-strong);transform:scale(1.05)}
 /* glass for the app itself */
 body{background:radial-gradient(60% 50% at 15% 0%,rgba(43,93,75,.35),transparent 70%),radial-gradient(50% 45% at 100% 20%,rgba(120,150,90,.28),transparent 70%),var(--bg-primary);background-attachment:fixed}
 .top,.tile,.group,.tools input,.seg,.sheet{background:var(--material)!important;-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.45);box-shadow:0 8px 28px rgba(21,26,23,.1),inset 0 1px 0 rgba(255,255,255,.7)}
@@ -321,12 +326,11 @@ body{background:radial-gradient(60% 50% at 15% 0%,rgba(43,93,75,.35),transparent
 <div id="landing">
   <video id="lvid" poster="assets/poster.jpg" src="assets/hero.mp4" autoplay muted loop playsinline preload="auto"></video>
   <div class="shade"></div>
-  <nav class="l-nav glass" aria-label="Главное меню">
-    <div class="l-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.2 1 2 1.8 2.3C11.5 8 11 5.5 12 3z"/></svg><span>КРПД</span></div>
+  <nav class="l-nav" aria-label="Главное меню">
     <div class="l-links">
-      <button type="button" data-open="m-about">О программе</button>
-      <button type="button" data-open="m-req">Системные требования</button>
-      <button type="button" data-open="m-auth">Авторы</button>
+      <button type="button" class="glass" data-open="m-about">О программе</button>
+      <button type="button" class="glass" data-open="m-req">Системные требования</button>
+      <button type="button" class="glass" data-open="m-auth">Авторы</button>
     </div>
   </nav>
   <main class="l-hero"><h1 class="sr">КРПД — расчёт потребления дров</h1>
