@@ -229,3 +229,5 @@ mark.hit.cur{background:#ff9f43;outline:2px solid #ff9f43}
 @media (max-width:700px){.span2{grid-column:auto}}
 #dyn{min-height:40vh}
 #dyn .hero-line{margin-bottom:14px}
+.seed-note{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;margin:0 0 14px;border-radius:var(--r-md);font-size:13.5px;line-height:18px;border-left:4px solid var(--system-warning)}
+.seed-note[hidden]{display:none}

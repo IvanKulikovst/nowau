@@ -5,6 +5,12 @@
   var K = window.KRPD;
   if (!K) return;
   var NS = 'krpd-firewood.';
+  var RM = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  (function () {
+    var sv = Element.prototype.scrollIntoView, st = window.scrollTo;
+    Element.prototype.scrollIntoView = function (o) { if (RM && RM.matches && o && typeof o === 'object') o = Object.assign({}, o, { behavior: 'auto' }); return o === undefined ? sv.call(this) : sv.call(this, o); };
+    window.scrollTo = function (a, b) { if (RM && RM.matches && a && typeof a === 'object') a = Object.assign({}, a, { behavior: 'auto' }); return b === undefined ? st.call(window, a) : st.call(window, a, b); };
+  }());
   function $(id) { return document.getElementById(id); }
   function E(tag, attrs, kids) {
     var n = document.createElement(tag);
@@ -149,7 +155,7 @@
       el.querySelectorAll('.side-item').forEach(function (i) { i.tabIndex = on ? 0 : -1; i.classList.toggle('on', i.getAttribute('data-key') === curKey); });
     });
     document.querySelectorAll('.tabbar button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sec') === curSec); });
-    renderPage();
+    renderPage(); updSeed();
     if (!silent) { var h = '#/' + curSec + '/' + curSub; if (location.hash !== h && location.hash !== '#selftest') { try { history.pushState(null, '', h); } catch (e) { location.hash = h; } } }
     window.scrollTo({ top: 0 });
   }
@@ -385,6 +391,13 @@
       E('button', { type: 'button', onclick: function () { openRef(); } }, [svg('M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM9 7h6'), 'Справочные данные'])]);
     kp.parentNode.insertBefore(q, kp);
   }
+  function updSeed() {
+    var has = K.hasSeeds();
+    ['seedNote', 'seedNote2'].forEach(function (id) { var e = $(id); if (e) e.hidden = !has; });
+  }
+  function seedNode(id, view) {
+    return E('div', { class: 'seed-note gcard', id: id, 'data-view': view, hidden: true }, [E('span', { text: 'В списке есть демонстрационные примеры. Они входят в итоги, графики и печатные формы.' }), E('button', { type: 'button', class: 'xbtn sm', text: 'Удалить примеры', onclick: function () { K.removeSeeds().then(function () { toast('Примеры удалены.'); updSeed(); }); } })]);
+  }
   function buildPages() {
     var app = $('app'), fab = $('fab'); if (!app || $('dyn')) return;
     var banners = $('banners');
@@ -395,9 +408,10 @@
     tag(document.querySelector('.hero-line'), 'home/overview'); tag(document.querySelector('.kpis'), 'home/overview'); tag($('totN'), 'home/overview'); tag(document.querySelector('.charts'), 'home/overview');
     var sl = $('secList');
     if (sl) { var hd = pageHead('Мои расчёты', 'Список расчётов, поиск и разделы по типам объектов'); hd.setAttribute('data-view', 'calc/list'); sl.parentNode.insertBefore(hd, sl); sl.remove(); var qq = $('quick'); if (qq) hd.after(qq); }
+    var qq2 = $('quick'); if (qq2) qq2.after(seedNode('seedNote', 'calc/list'));
     tag(document.querySelector('.tools'), 'calc/list'); tag($('seg'), 'calc/list'); tag($('panel'), 'calc/list');
     var sd = $('secData');
-    if (sd) { var grp = sd.nextElementSibling, nt = document.querySelector('#app > .note'); var dh = pageHead('Данные', 'Экспорт, импорт и очистка расчётов; печать форм'); dh.setAttribute('data-view', 'set/data'); sd.parentNode.insertBefore(dh, sd); sd.remove(); tag(grp, 'set/data'); tag(nt, 'set/data'); }
+    if (sd) { var grp = sd.nextElementSibling, nt = document.querySelector('#app > .note'); var dh = pageHead('Данные', 'Экспорт, импорт и очистка расчётов; печать форм'); dh.setAttribute('data-view', 'set/data'); sd.parentNode.insertBefore(dh, sd); sd.remove(); tag(grp, 'set/data'); tag(nt, 'set/data'); dh.after(seedNode('seedNote2', 'set/data')); }
   }
 
   /* ---------- вид ---------- */
@@ -522,6 +536,118 @@
     window.KRPD_X.statusUpdate = upd;
   }
 
+  /* ---------- нативные файлы DOCX / XLSX (ZIP без сжатия) ---------- */
+  var CRC_T = (function () { var t = [], c, n, k; for (n = 0; n < 256; n++) { c = n; for (k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; }());
+  function crc32(b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zipStore(files) {
+    var enc = new TextEncoder(), parts = [], central = [], off = 0;
+    function u16(v) { return [v & 255, (v >>> 8) & 255]; } function u32(v) { return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; }
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+      var lh = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0));
+      parts.push(new Uint8Array(lh), name, data);
+      central.push({ name: name, crc: crc, size: data.length, off: off });
+      off += lh.length + name.length + data.length;
+    });
+    var cdStart = off, cdLen = 0;
+    central.forEach(function (c) {
+      var h = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(c.crc), u32(c.size), u32(c.size), u16(c.name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(c.off));
+      parts.push(new Uint8Array(h), c.name); cdLen += h.length + c.name.length;
+    });
+    parts.push(new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(central.length), u16(central.length), u32(cdLen), u32(cdStart), u16(0))));
+    return new Blob(parts, { type: 'application/zip' });
+  }
+  function downloadBlob(name, blob) {
+    var a = E('a', { href: URL.createObjectURL(blob), download: name }); document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  }
+  function xe(t) { return String(t).replace(/[&<>"\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, function (c) { return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : ''; }); }
+  /* DOCX из DOM-формы */
+  function docxBlob(paper, g, px) {
+    var tw = function (mm) { return Math.round(mm * 56.7); };
+    function para(text, o) {
+      o = o || {};
+      return '<w:p><w:pPr>' + (o.center ? '<w:jc w:val="center"/>' : '') + (o.right ? '<w:jc w:val="right"/>' : '') + '<w:spacing w:before="' + (o.before || 0) + '" w:after="' + (o.after == null ? 60 : o.after) + '"/></w:pPr>' +
+        (text === '' ? '' : '<w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>' + (o.bold ? '<w:b/>' : '') + (o.italic ? '<w:i/>' : '') + '<w:sz w:val="' + (o.sz || 22) + '"/></w:rPr><w:t xml:space="preserve">' + xe(text) + '</w:t></w:r>') + '</w:p>';
+    }
+    function table(t) {
+      var rows = [].slice.call(t.rows), occ = [], dense = !!t.closest('.dense') || t.classList.contains('dense'), out = '', ncols = 0;
+      rows.forEach(function (tr) { var n = 0; [].forEach.call(tr.cells, function (c) { n += c.colSpan; }); ncols = Math.max(ncols, n); });
+      ncols = Math.max(ncols, 1);
+      out += '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:jc w:val="center"/><w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(function (b) { return '<w:' + b + ' w:val="single" w:sz="4" w:space="0" w:color="000000"/>'; }).join('') + '</w:tblBorders><w:tblLayout w:type="autofit"/><w:tblCellMar><w:left w:w="60" w:type="dxa"/><w:right w:w="60" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>' + new Array(ncols + 1).join('<w:gridCol w:w="' + Math.floor(9000 / ncols) + '"/>') + '</w:tblGrid>';
+      rows.forEach(function (tr, ri) {
+        occ[ri] = occ[ri] || []; var col = 0; out += '<w:tr>';
+        function fillCont() { while (occ[ri][col]) { out += '<w:tc><w:tcPr><w:vMerge/></w:tcPr><w:p/></w:tc>'; col += occ[ri][col].span; } }
+        [].forEach.call(tr.cells, function (c) {
+          fillCont();
+          var cs = c.colSpan, rs = c.rowSpan;
+          if (rs > 1) for (var k = 1; k < rs; k++) { occ[ri + k] = occ[ri + k] || []; occ[ri + k][col] = { span: cs }; }
+          var isH = c.tagName === 'TH', left = c.classList.contains('l') || c.classList.contains('b');
+          out += '<w:tc><w:tcPr>' + (cs > 1 ? '<w:gridSpan w:val="' + cs + '"/>' : '') + (rs > 1 ? '<w:vMerge w:val="restart"/>' : '') + '<w:vAlign w:val="center"/></w:tcPr>' + para(c.textContent.trim(), { center: !left, bold: isH || c.classList.contains('b'), sz: dense ? 16 : 20, after: 0 }) + '</w:tc>';
+          col += cs;
+        });
+        fillCont();
+        out += '</w:tr>';
+      });
+      return out + '</w:tbl>' + para('', { after: 80 });
+    }
+    function walk(n) {
+      var out = '';
+      [].forEach.call(n.children, function (c) {
+        var tag = c.tagName, cl = c.classList;
+        if (tag === 'TABLE') out += table(c);
+        else if (tag === 'DIV' && (cl.contains('sg') || (!cl.contains('uline') && !cl.contains('sg-line') && c.querySelector('p,table')))) out += walk(c);
+        else if (tag === 'P' || tag === 'DIV') {
+          var t = c.textContent.trim();
+          out += para(t, { center: cl.contains('pt') || cl.contains('pt-sub') || cl.contains('ucap') || cl.contains('sg-cap') || cl.contains('ph-note') || cl.contains('uline'), bold: cl.contains('pt') || cl.contains('pt-sub') || cl.contains('sec-h'), italic: cl.contains('ph-note'), sz: cl.contains('ucap') || cl.contains('sg-cap') || cl.contains('pnote') ? 18 : (cl.contains('pt') ? 28 : 22), before: cl.contains('sec-h') || cl.contains('sg') ? 120 : 0 });
+        }
+      });
+      return out;
+    }
+    var body = walk(paper);
+    var sect = '<w:sectPr><w:pgSz w:w="' + tw(g.orient === 'landscape' ? g.h : g.w) + '" w:h="' + tw(g.orient === 'landscape' ? g.w : g.h) + '"' + (g.orient === 'landscape' ? ' w:orient="landscape"' : '') + '/><w:pgMar w:top="' + tw(px.mt) + '" w:right="' + tw(px.mr) + '" w:bottom="' + tw(px.mb) + '" w:left="' + tw(px.ml) + '" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>';
+    var NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+    return zipStore([
+      { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
+      { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+      { name: 'word/document.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + body + sect + '</w:body></w:document>' }
+    ]);
+  }
+  /* XLSX: blocks = [{title, rows:[[{t,rs,cs}]]}] */
+  function xlsxBlob(blocks) {
+    function colName(n) { var s = ''; n++; while (n > 0) { var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
+    var rowsXml = '', merges = [], r = 0, maxc = 1;
+    function row(cells, bold) { r++; var x = '<row r="' + r + '">'; cells.forEach(function (c) { if (c.t !== '' && c.t != null) x += '<c r="' + colName(c.c) + r + '" t="inlineStr"' + (bold || c.h ? ' s="1"' : ' s="2"') + '><is><t xml:space="preserve">' + xe(c.t) + '</t></is></c>'; if (c.cs > 1 || c.rs > 1) merges.push(colName(c.c) + r + ':' + colName(c.c + (c.cs || 1) - 1) + (r + (c.rs || 1) - 1)); maxc = Math.max(maxc, c.c + (c.cs || 1)); }); rowsXml += x + '</row>'; }
+    blocks.forEach(function (b) {
+      if (b.title) row([{ c: 0, t: b.title, cs: 1 }], true);
+      var occ = {};
+      b.rows.forEach(function (tr, ri) {
+        var col = 0, cells = [], rowIdx = r + 1;
+        tr.forEach(function (c) { while (occ[rowIdx + ',' + col]) col++; cells.push({ c: col, t: c.t, cs: c.cs || 1, rs: c.rs || 1, h: c.h }); if ((c.rs || 1) > 1) for (var k = 1; k < c.rs; k++) for (var j = 0; j < (c.cs || 1); j++) occ[(rowIdx + k) + ',' + (col + j)] = 1; col += c.cs || 1; });
+        row(cells);
+      });
+      row([]);
+    });
+    var cols = '<cols><col min="1" max="' + maxc + '" width="22" customWidth="1"/></cols>';
+    var NSS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
+    return zipStore([
+      { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
+      { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook ' + NSS + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="КРПД" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: 'xl/styles.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet ' + NSS + '><fonts count="2"><font><sz val="11"/><name val="Times New Roman"/></font><font><b/><sz val="11"/><name val="Times New Roman"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf></cellXfs></styleSheet>' },
+      { name: 'xl/worksheets/sheet1.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet ' + NSS + '>' + cols + '<sheetData>' + rowsXml + '</sheetData>' + (merges.length ? '<mergeCells count="' + merges.length + '">' + merges.map(function (m) { return '<mergeCell ref="' + m + '"/>'; }).join('') + '</mergeCells>' : '') + '</worksheet>' }
+    ]);
+  }
+  function blocksFromPaper(paper) {
+    var out = [];
+    [].forEach.call(paper.querySelectorAll('.pt,.pt-sub,.sec-h,table'), function (n) {
+      if (n.tagName === 'TABLE') out.push({ rows: [].map.call(n.rows, function (tr) { return [].map.call(tr.cells, function (c) { return { t: c.textContent.trim(), rs: c.rowSpan, cs: c.colSpan, h: c.tagName === 'TH' || c.classList.contains('b') }; }); }) });
+      else out.push({ title: n.textContent.trim(), rows: [] });
+    });
+    return out;
+  }
+
   /* ---------- окно печати ---------- */
   var PW = null;
   var PAPERS = { A4: [210, 297, 'A4'], A3: [297, 420, 'A3'], A5: [148, 210, 'A5'], Letter: [215.9, 279.4, 'letter'], Legal: [215.9, 355.6, 'legal'] };
@@ -536,7 +662,9 @@
     var now = new Date();
     var draft = { form: opts.form || 'a1', year: String(now.getFullYear()), month: String(now.getMonth() + 1), unit: pref.unit || S.org.unit || '', place: pref.place || S.org.place || '', rem: '0', price: pref.price || '', sign1: pref.sign1 || [S.user.rank, S.user.name].filter(Boolean).join(' '), sign2: pref.sign2 || '', role1: '', role2: '' };
     var curForm = null, pages = 1, curPage = 1, zoom = 1, paperEl = null, lastModel = null;
-    var ov = E('div', { class: 'pw xhide', role: 'dialog', 'aria-label': 'Предпросмотр и печать', 'aria-modal': 'false' });
+    var ov = E('div', { class: 'pw xhide', role: 'dialog', 'aria-label': 'Предпросмотр и печать', 'aria-modal': 'true' });
+    var opener = document.activeElement, BGS = '#app,#side,#tabbar,.menubar,.statusbar';
+    function setBg(on) { document.querySelectorAll(BGS).forEach(function (e) { try { e.inert = on; } catch (x) { } if (on) e.setAttribute('aria-hidden', 'true'); else e.removeAttribute('aria-hidden'); }); }
     var w0 = Math.min(1440, window.innerWidth - 32), h0 = Math.min(900, window.innerHeight - 32);
     ov.style.cssText = 'left:' + Math.max(8, (window.innerWidth - w0) / 2) + 'px;top:' + Math.max(8, (window.innerHeight - h0) / 2) + 'px;width:' + w0 + 'px;height:' + h0 + 'px';
     var R = {};
@@ -590,7 +718,7 @@
     var bar = E('div', { class: 'pw-bar' }, [E('div', { class: 'grp' }, zBtns.concat([slider, zlabel])), E('div', { class: 'grp' }, fitBtns), E('div', { class: 'grp' }, [navBtns[0], navBtns[1], pgIn, navBtns[2], navBtns[3], pgInfo])]);
     var statusEl = E('span', { class: 'pw-status', id: 'pw-status' });
     function exportBtn(label, fn) { return E('button', { type: 'button', class: 'xbtn', text: label, onclick: fn }); }
-    var foot = E('div', { class: 'pw-foot' }, [exportBtn('Экспорт в PDF', function () { doPrint('pdf'); }), exportBtn('Экспорт в Word', function () { doExport('word'); }), exportBtn('Экспорт в Excel', function () { doExport('excel'); }), exportBtn('Отправить по e-mail', function () { doMail(); }), statusEl, E('span', { class: 'sp' }), E('button', { type: 'button', class: 'xbtn', text: 'Закрыть', onclick: function () { close(); } }), E('button', { type: 'button', class: 'xbtn fill', id: 'pw-print', text: 'Печать', onclick: function () { doPrint('print'); } })]);
+    var foot = E('div', { class: 'pw-foot' }, [exportBtn('Экспорт в PDF', function () { doPrint('pdf'); }), exportBtn('Экспорт в Word (.docx)', function () { doExport('word'); }), exportBtn('Экспорт в Excel (.xlsx)', function () { doExport('excel'); }), exportBtn('Отправить по e-mail', function () { doMail(); }), statusEl, E('span', { class: 'sp' }), E('button', { type: 'button', class: 'xbtn', text: 'Закрыть', onclick: function () { close(); } }), E('button', { type: 'button', class: 'xbtn fill', id: 'pw-print', text: 'Печать', onclick: function () { doPrint('print'); } })]);
     /* заголовок окна */
     var maxBtn = E('button', { type: 'button', title: 'Развернуть / восстановить', 'aria-label': 'Развернуть', text: '▢', onclick: function () { toggleMax(); } });
     var fsBtn = E('button', { type: 'button', title: 'Полный экран (F11)', 'aria-label': 'Полный экран', text: '⛶', onclick: function () { fullscreen(); } });
@@ -716,17 +844,11 @@
     function doExport(kind) {
       var v = validated(); if (!v) return;
       var model = K.buildModel(K.getItems(), v.r.p), paper = K.renderPaper(model), g = geom();
-      var css = 'body{font-family:"Times New Roman",serif;font-size:11pt}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:3px 4px;text-align:center;vertical-align:middle;font-size:10pt}td.l,td.b{text-align:left}.pt,.pt-sub{text-align:center;font-weight:bold}.uline,.sg-line{border-bottom:1px solid #000;min-height:16px}.ucap,.sg-cap,.pnote{font-size:9pt}';
-      if (kind === 'word') {
-        var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>КРПД</title><style>@page{size:' + g.w + 'mm ' + g.h + 'mm;margin:' + px.mt + 'mm ' + px.mr + 'mm ' + px.mb + 'mm ' + px.ml + 'mm}' + css + '</style></head><body>' + paper.outerHTML + '</body></html>';
-        download(fileName('doc'), 'application/msword', html);
-      } else {
-        var tabs = [].slice.call(paper.querySelectorAll('table')).map(function (t) { return t.outerHTML; }).join('<br>');
-        var head = [].slice.call(paper.querySelectorAll('.pt,.pt-sub,.uline')).map(function (n) { return '<p><b>' + n.innerHTML + '</b></p>'; }).join('');
-        download(fileName('xls'), 'application/vnd.ms-excel', '<html><head><meta charset="utf-8"><style>' + css + '</style></head><body>' + head + tabs + '</body></html>');
-      }
-      logPrint(v.d.form, kind, fileName(kind === 'word' ? 'doc' : 'xls'));
-      toast('Файл сформирован: ' + fileName(kind === 'word' ? 'doc' : 'xls'));
+      var ext = kind === 'word' ? 'docx' : 'xlsx';
+      var blob = kind === 'word' ? docxBlob(paper, { w: g.w, h: g.h, orient: px.orient }, px) : xlsxBlob(blocksFromPaper(paper));
+      downloadBlob(fileName(ext), blob);
+      logPrint(v.d.form, kind, fileName(ext));
+      toast('Файл сформирован: ' + fileName(ext));
     }
     function doMail() {
       var v = validated(); if (!v) return;
@@ -735,8 +857,13 @@
       logPrint(v.d.form, 'email', v.d.unit || '');
       location.href = 'mailto:?subject=' + encodeURIComponent('КРПД: ' + FORM_NAME[v.d.form]) + '&body=' + encodeURIComponent(body);
     }
-    function close() { if (!PW) return; document.removeEventListener('keydown', onKey, true); if (ro) ro.disconnect(); ov.remove(); PW = null; if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) { } } }
+    function close() { if (!PW) return; document.removeEventListener('keydown', onKey, true); if (ro) ro.disconnect(); setBg(false); ov.remove(); PW = null; if (opener && opener.focus) { try { opener.focus(); } catch (e) { } } if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) { } } }
     function onKey(e) {
+      if (e.key === 'Tab' && !stack.length) {
+        var f = [].slice.call(ov.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]')).filter(function (x) { return x.offsetParent !== null; });
+        if (f.length) { var i = f.indexOf(document.activeElement); if (e.shiftKey && (i <= 0)) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); } }
+        return;
+      }
       if (e.key === 'Escape' && !stack.length && !openMenu) { close(); }
       else if (e.key === 'F11') { e.preventDefault(); fullscreen(); }
       else if (e.key === 'PageDown' && !e.target.closest('input,select,textarea')) { e.preventDefault(); goPage(curPage + 1); }
@@ -748,7 +875,9 @@
     PW = { apply: function (o) { if (o.year) R.year.value = o.year; if (o.month) monthSel.value = o.month; if (o.form || o.year || o.month) { if (o.form) formSel.value = o.form; refresh(); } if (o.focus === 'settings') { prFs.scrollIntoView({ behavior: 'smooth' }); paperSel.focus(); } if (o.focus === 'print') $('pw-print').focus(); ov.style.zIndex = '86'; }, close: close };
     fillPresets(); setUiFromPx(); setZoom(1);
     refresh();
+    setBg(true);
     PW.apply(opts);
+    setTimeout(function () { var pb = $('pw-print'); if (pb && !opts.focus) pb.focus(); }, 40);
   }
 
   /* ---------- справочные данные ---------- */
@@ -820,10 +949,12 @@
     FORM_NAME.ref = 'Справочные данные';
     function xl(id) {
       var all = window.KRPD_REF.tables(), pick = id === 'all' ? all : all.filter(function (t) { return t.id === id; });
-      var html = '<html><head><meta charset="utf-8"><style>td,th{border:1px solid #000;padding:2px 5px;text-align:center}</style></head><body>' + pick.map(function (t) {
-        return '<p><b>' + t.title + '</b><br>Единица измерения: ' + t.unit + '<br>Источник: ' + t.source + '</p><table>' + t.head.map(function (r) { return '<tr>' + r.map(function (c) { return '<th' + (c.rs ? ' rowspan="' + c.rs + '"' : '') + (c.cs ? ' colspan="' + c.cs + '"' : '') + '>' + c.t + '</th>'; }).join('') + '</tr>'; }).join('') + t.rows.map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</table><p>Примечание: ' + t.note + '</p><br>';
-      }).join('') + '</body></html>';
-      download('krpd-tablicy-' + (id === 'all' ? 'vse' : id) + '.xls', 'application/vnd.ms-excel', html);
+      var blocks = [];
+      pick.forEach(function (t) {
+        blocks.push({ title: t.title, rows: [[{ t: 'Единица измерения: ' + t.unit }], [{ t: 'Источник: ' + t.source }]] });
+        blocks.push({ rows: t.head.map(function (r) { return r.map(function (c) { return { t: c.t, rs: c.rs, cs: c.cs, h: true }; }); }).concat(t.rows.map(function (r) { return r.map(function (c) { return { t: c }; }); })).concat([[{ t: 'Примечание: ' + t.note }]]) });
+      });
+      downloadBlob('krpd-tablicy-' + (id === 'all' ? 'vse' : id) + '.xlsx', xlsxBlob(blocks));
     }
     content.addEventListener('click', function (e) { var b = e.target.closest('[data-xl]'); if (b) xl(b.getAttribute('data-xl')); });
     var bar = E('div', { class: 'rw-bar' }, [search, count, btn('▲', function () { step(-1); }, '', 'Предыдущее совпадение'), btn('▼', function () { step(1); }, '', 'Следующее совпадение'), bookBtn,
@@ -872,9 +1003,11 @@
 
   /* ---------- запуск ---------- */
   function init() {
+    if (landingOpen()) document.querySelectorAll('.menubar,.statusbar').forEach(function (e) { });
     buildSide(); buildTabbar(); buildQuick(); buildPages(); buildMenubar(); loadView(); buildStatus();
     var m = /^#\/(\w+)(?:\/(\w+))?/.exec(location.hash); navigate(m ? m[1] : 'home', m ? m[2] : undefined, true);
-    var mo2 = new MutationObserver(function () { refreshDyn(); }); ['totC', 'totV'].forEach(function (id) { if ($(id)) mo2.observe($(id), { childList: true, characterData: true, subtree: true }); });
+    if (landingOpen()) document.querySelectorAll('.menubar,.statusbar,#tabpop').forEach(function (e) { try { e.inert = true; } catch (x) { } e.setAttribute('aria-hidden', 'true'); });
+    var mo2 = new MutationObserver(function () { refreshDyn(); updSeed(); }); ['totC', 'totV'].forEach(function (id) { if ($(id)) mo2.observe($(id), { childList: true, characterData: true, subtree: true }); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 }());

@@ -119,7 +119,7 @@
     wrap.appendChild(E('div', { class: 'ref-scroll' }, [t]));
     wrap.appendChild(E('p', { class: 'ref-note', text: 'Примечание: ' + tb.note }));
     wrap.appendChild(E('p', null, [src('Источник: ' + tb.source), ' ', src('Утверждена: 14.07.2025 (приказ № 270)')]));
-    var btn = E('button', { type: 'button', class: 'ref-btn', 'data-xl': tb.id, text: 'Экспорт таблицы в Excel' });
+    var btn = E('button', { type: 'button', class: 'ref-btn', 'data-xl': tb.id, text: 'Экспорт таблицы в Excel (.xlsx)' });
     wrap.appendChild(btn);
     return wrap;
   }
@@ -246,7 +246,7 @@
 
     /* 3 */
     var tn = [p('Раздел содержит все таблицы Приложения № 2 к приказу (Нормы № 1–4) и таблицу C1 в виде формулы. Таблиц, изменённых дополнениями, нет (дополнений в материалах нет). Дата утверждения всех таблиц — 14.07.2025.'),
-      E('p', null, [E('button', { type: 'button', class: 'ref-btn', 'data-xl': 'all', text: 'Экспорт всех таблиц в Excel' })])];
+      E('p', null, [E('button', { type: 'button', class: 'ref-btn', 'data-xl': 'all', text: 'Экспорт всех таблиц в Excel (.xlsx)' })])];
     tables().forEach(function (tb) { tn.push(tableNode(tb)); });
     sec('s3', 'Раздел 3. Таблицы', tn);
 
