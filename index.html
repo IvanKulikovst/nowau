@@ -2524,6 +2524,47 @@ html.is-app[data-theme="dark"] body::after  { opacity: 1; background: rgba(8, 12
 .f-table tbody tr:nth-child(even) td, .table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--text) 2.5%, transparent); }
 .f-table tbody tr.is-clickable:hover td, .table tbody tr:hover td { background: var(--accent-soft); }
 
+/* Компактная таблица («Ближайшие ТО»): помещается без горизонтальной прокрутки */
+.f-table.f-table-fit { table-layout: auto; min-width: 0; }
+.f-fit-state { display: grid; gap: 7px; justify-items: start; }
+.f-fit-state .f-bar-cell { width: 100%; }
+.f-table-fit td { overflow-wrap: normal; hyphens: auto; -webkit-hyphens: auto; }
+@media (max-width: 1180px) {
+  .f-table-fit th, .f-table-fit td { padding: 9px 7px; }
+  .f-table.f-table-fit .f-bar-cell { min-width: 104px; }
+  .f-table-fit .f-bar-caption { white-space: normal; }
+  .f-table-fit .f-badge { white-space: normal; }
+}
+@media (min-width: 901px) and (max-width: 1180px) {
+  .f-navbar { flex-basis: 204px; width: 204px; }
+  .f-nav-btn { font-size: 14px; gap: 10px; padding: 0 10px; }
+  .f-scroll { padding-left: 20px; padding-right: 20px; }
+}
+/* Телефон: строки таблицы превращаются в карточки — без горизонтальной прокрутки */
+@media (max-width: 700px) {
+  .f-table.f-table-fit { min-width: 0; }
+  .f-table-fit thead { display: none; }
+  .f-table-fit tbody tr {
+    display: grid; grid-template-columns: 18px minmax(0, 1fr) 40px;
+    column-gap: 10px; row-gap: 6px; padding: 12px 12px;
+    border-bottom: 1px solid var(--separator);
+  }
+  .f-table-fit tbody tr:last-child { border-bottom: 0; }
+  .f-table-fit tbody td { display: block; padding: 0; border: 0; background: none !important; }
+  .f-table-fit tbody td:nth-child(1) { grid-column: 1; grid-row: 1; padding-top: 5px; }
+  .f-table-fit tbody td:nth-child(2) { grid-column: 2; grid-row: 1; }
+  .f-table-fit tbody td:nth-child(6) { grid-column: 3; grid-row: 1; justify-self: end; }
+  .f-table-fit tbody td:nth-child(3), .f-table-fit tbody td:nth-child(4), .f-table-fit tbody td:nth-child(5) { grid-column: 2 / 4; }
+  .f-table-fit tbody td:nth-child(4)::before { content: "Плановая дата ТО: "; color: var(--text-secondary); }
+  .f-table-fit .f-fit-state .f-bar-cell { min-width: 0; }
+}
+.f-table-fit th { white-space: normal; }
+.f-table-fit th, .f-table-fit td { padding: 10px 10px; }
+.f-table-fit .f-fit-sub { display: inline-block; margin-top: 4px; font-size: 12.5px; }
+.f-table.f-table-fit .f-bar-cell { min-width: 150px; }
+.f-table-fit .f-badge { white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
 /* ---------- Окна, панели, уведомления ---------- */
 .f-modal-backdrop {
   background: rgba(20, 30, 45, .38);
@@ -10454,36 +10495,26 @@ function renderDashResults(rows) {
 
   return `
     <div class="f-table-wrap"><div class="f-table-scroll">
-      <table class="f-table">
+      <table class="f-table f-table-fit">
         <thead><tr>
-          <th style="width:34px"></th>
-          ${th('Наименование', 'name', 'dash')}
-          <th>Гос. номер</th>
-          ${th('Подразделение', 'unit', 'dash')}
-          ${th('Ответственный', 'responsible', 'dash')}
-          <th>Состояние</th>
-          ${th('Осталось мото·ч', 'hours', 'dash', { num: true })}
-          ${th('Осталось дней', 'days', 'dash', { num: true })}
+          <th style="width:30px"></th>
+          ${th('Техника', 'name', 'dash')}
+          ${th('Подразделение / ответственный', 'unit', 'dash')}
           ${th('Плановая дата ТО', 'nextDate', 'dash')}
-          <th>Остаток ресурса</th>
-          <th style="width:44px"></th>
+          ${th('Состояние и остаток ресурса', 'hours', 'dash')}
+          <th style="width:44px"><span class="sr-only">Действия</span></th>
         </tr></thead>
         <tbody>
           ${rows.map(({ v, st }) => `
             <tr class="is-clickable" data-act="open-vehicle" data-id="${v.id}">
               <td><span class="f-dot f-lvl-${st.level}"></span></td>
-              <td class="f-td-strong">${esc(v.name)}</td>
-              <td>${v.regNumber ? `<span class="f-plate">${esc(v.regNumber)}</span>` : '—'}</td>
-              <td>${esc(v.unit || '—')}</td>
-              <td>${esc(v.responsible || '—')}</td>
-              <td>${levelBadge(st.level)}</td>
-              <td class="f-td-num" ${st.remainingHours != null && st.remainingHours <= 0 ? 'style="color:var(--st-overdue-text);font-weight:600"' : ''}>
-                ${st.remainingHours != null ? fmtNum(st.remainingHours, 0) : '—'}</td>
-              <td class="f-td-num" ${st.remainingDays != null && st.remainingDays <= 0 ? 'style="color:var(--st-overdue-text);font-weight:600"' : ''}>
-                ${st.remainingDays != null ? st.remainingDays : '—'}</td>
+              <td><div class="f-td-strong">${esc(v.name)}</div>
+                ${v.regNumber ? `<span class="f-plate f-fit-sub">${esc(v.regNumber)}</span>` : ''}</td>
+              <td><div>${esc(v.unit || '—')}</div>
+                <div class="f-td-muted f-fit-sub">${esc(v.responsible || '—')}</div></td>
               <td class="f-td-nowrap">${st.nextDate ? fmtDate(st.nextDate) : '—'}</td>
-              <td>${resourceCell(st)}</td>
-              <td><button type="button" class="f-icon-btn" data-act="add-maint" data-id="${v.id}" title="Провести ТО">${FI.wrench(15)}</button></td>
+              <td><div class="f-fit-state">${levelBadge(st.level)}${resourceCell(st)}</div></td>
+              <td><button type="button" class="f-icon-btn" data-act="add-maint" data-id="${v.id}" title="Провести ТО" aria-label="Провести ТО">${FI.wrench(15)}</button></td>
             </tr>`).join('')}
         </tbody>
       </table>
