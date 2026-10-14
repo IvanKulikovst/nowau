@@ -2605,6 +2605,61 @@ html.is-app[data-theme="dark"] body::after  { opacity: 1; background: rgba(8, 12
   .f-table-rep.is-wide tbody tr { border-right: 0; }
 }
 
+/* ---------- Учётные карточки техники (штабное оформление) ---------- */
+.f-cards.f-cards-staff { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
+.f-vcard.sc { padding: 0 0 0 4px; display: flex; flex-direction: column; border-radius: 18px; }
+.f-vcard.sc .f-vcard-check { top: 13px; left: auto; right: 14px; }
+.sc-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 46px 10px 16px;
+  border-bottom: 1px solid var(--separator);
+  background: color-mix(in srgb, var(--system-accent) 9%, transparent);
+}
+.sc-doc { white-space: nowrap; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--label-secondary); }
+.sc-status {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 6px; border: 1px solid var(--g-border);
+  background: var(--g-bg2); color: var(--label-primary); white-space: nowrap;
+}
+.sc-title { padding: 12px 16px 4px; }
+.sc-name { font-size: 16.5px; font-weight: 800; letter-spacing: -.01em; line-height: 1.25; }
+.sc-sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
+.sc-cat { display: flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11.5px; color: var(--system-accent); min-width: 0; }
+.sc-cat span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-cat svg { flex: 0 0 auto; }
+.sc-sec { padding: 8px 16px 10px; border-top: 1px dashed var(--separator); margin-top: 6px; }
+.sc-title + .sc-sec { border-top: 0; margin-top: 4px; }
+.sc-h {
+  display: flex; align-items: center; gap: 7px; margin: 0 0 6px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--label-secondary);
+}
+.sc-h b {
+  display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 5px;
+  background: var(--system-accent); color: var(--on-accent); font-size: 10px; letter-spacing: 0;
+}
+.sc-ids { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.sc-ids div { display: grid; gap: 2px; padding: 6px 8px; border-radius: 8px; background: var(--fill-tertiary); border: 1px solid var(--g-border); min-width: 0; }
+.sc-ids span { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); }
+.sc-ids b { font: 600 12.5px/1.25 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+.sc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 3px 0; font-size: 13px; border-bottom: 1px dotted color-mix(in srgb, var(--separator) 70%, transparent); }
+.sc-row:last-child { border-bottom: 0; }
+.sc-k { color: var(--text-secondary); flex: 0 0 auto; }
+.sc-v { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; min-width: 0; overflow-wrap: anywhere; }
+.sc-v small { font-weight: 500; color: var(--text-secondary); font-size: 11px; }
+.sc-v.is-bad { color: var(--st-overdue-text); }
+.sc-state { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.sc-state .f-ring-wrap { width: 78px; height: 78px; flex: 0 0 auto; }
+.sc-state .f-ring-pct { font-size: 18px; }
+.sc-state .f-ring-cap { max-width: 66px; font-size: 9.5px; }
+.sc-state-rows { flex: 1; min-width: 0; }
+.sc-foot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: auto;
+  padding: 10px 16px 12px; border-top: 1px solid var(--separator);
+}
+.sc-meta { font-size: 11.5px; color: var(--text-secondary); }
+.sc-meta.is-warn { color: var(--st-urgent-text); font-weight: 600; }
+@media (max-width: 440px) { .f-cards.f-cards-staff { grid-template-columns: 1fr; } .sc-ids div { padding: 5px 6px; } .sc-ids b { font-size: 11.5px; } }
+
 /* ---------- Окна, панели, уведомления ---------- */
 .f-modal-backdrop {
   background: rgba(20, 30, 45, .38);
@@ -9743,6 +9798,84 @@ function resourceCell(st) {
   </div>`;
 }
 
+/* Учётная карточка единицы техники (режим «Карточки» в «Парке техники»).
+   Оформление — как у штабного документа: шапка с номером карточки и
+   статусом, нумерованные разделы, реквизиты моноширинным шрифтом,
+   даты ДД.ММ.ГГГГ, единицы измерения у каждого значения */
+function staffCard(v, st, i, selected) {
+  const dash = '—';
+  const row = (k, val, cls) => `<div class="sc-row"><span class="sc-k">${k}</span><span class="sc-v ${cls || ''}">${val}</span></div>`;
+  const node = catNodeOf(v);
+  const mc = maintOf(v.id);
+  const live = st.level !== 'retired';
+  const kind = live && st.level !== 'none' ? nextMaintKind(v) : '';
+  const lastM = st.lastMaint || mc[0] || null;
+  const since = v.regDate ? daysBetween(v.regDate, todayISO()) : null;
+  const yrs = since != null ? Math.floor(since / 365) : null;
+  const stale = hoursStale(v);
+  const upd = v.hoursUpdatedAt || v.regDate;
+  const red = n => n != null && n <= 0 ? 'is-bad' : '';
+  const nextVal = !live ? 'снято с учёта'
+    : st.level === 'none' ? 'интервал не задан'
+    : `${esc(kind)} · ${st.nextDate ? fmtDate(st.nextDate) : fmtNum(st.nextHours, 0) + ' мото·ч'}`;
+  const remain = [];
+  if (st.remainingHours != null) remain.push(`${st.remainingHours < 0 ? '−' : ''}${fmtNum(Math.abs(st.remainingHours), 0)} мото·ч`);
+  if (st.remainingDays != null) remain.push(`${st.remainingDays < 0 ? '−' : ''}${Math.abs(st.remainingDays)} дн.`);
+  const iv = v.interval || {};
+  const ivText = [iv.byHours && iv.hours ? fmtNum(iv.hours, 0) + ' мото·ч' : '', iv.byDate && iv.days ? iv.days + ' дн.' : ''].filter(Boolean).join(' / ') || dash;
+  return `
+    <article class="f-vcard sc lvl-${st.level} ${selected ? 'is-selected' : ''}" data-act="open-vehicle" data-id="${v.id}" aria-label="Учётная карточка: ${esc(v.name)}">
+      <input type="checkbox" class="f-vcard-check" data-act="row-select" data-id="${v.id}" title="Выбрать" aria-label="Выбрать: ${esc(v.name)}" ${selected ? 'checked' : ''}>
+      <header class="sc-top">
+        <span class="sc-doc">Учётная карточка № ${String(i + 1).padStart(3, '0')}</span>
+        <span class="sc-status">${esc(v.status)}</span>
+      </header>
+      <div class="sc-title">
+        <div class="sc-name">${esc(v.name)}</div>
+        <div class="sc-sub">${esc([v.brand, v.year ? v.year + ' г. в.' : ''].filter(Boolean).join(' · ') || 'Марка не указана')}</div>
+        ${node ? `<div class="sc-cat" title="${esc(node.name)}">${FI.file(12)}<span>${esc(node.name)}</span></div>` : ''}
+      </div>
+
+      <section class="sc-sec">
+        <h4 class="sc-h"><b>1</b>Идентификация</h4>
+        <div class="sc-ids">
+          <div><span>Гос. №</span><b>${esc(v.regNumber || dash)}</b></div>
+          <div><span>Инв. №</span><b>${esc(v.invNumber || dash)}</b></div>
+          <div><span>Зав. №</span><b>${esc(v.serialNumber || dash)}</b></div>
+        </div>
+      </section>
+
+      <section class="sc-sec">
+        <h4 class="sc-h"><b>2</b>Закрепление</h4>
+        ${row('Подразделение', esc(v.unit || dash))}
+        ${row('Ответственный', esc(v.responsible || dash))}
+        ${row('Группа эксплуатации', esc(v.expGroup || dash))}
+        ${row('На учёте', v.regDate ? fmtDate(v.regDate) + (yrs != null ? ` <small>(${yrs ? yrs + ' ' + plural(yrs, 'год', 'года', 'лет') : 'менее года'})</small>` : '') : dash)}
+      </section>
+
+      <section class="sc-sec">
+        <h4 class="sc-h"><b>3</b>Техническое состояние</h4>
+        <div class="sc-state">
+          ${resourceRing(st)}
+          <div class="sc-state-rows">
+            ${row('Наработка', fmtNum(v.currentHours, 0) + ' <small>мото·ч</small>')}
+            ${row('С последнего ТО', live ? fmtNum(st.hoursSince, 0) + ' <small>мото·ч</small>' : dash)}
+            ${row('Интервал ТО-1', ivText)}
+          </div>
+        </div>
+        ${row('Последнее ТО', lastM ? `${esc(lastM.kind.replace(/ \(.*\)$/, ''))} · ${fmtDate(lastM.date)}` : 'записей нет')}
+        ${row('Очередное ТО', nextVal, st.level === 'overdue' ? 'is-bad' : '')}
+        ${remain.length ? row('Остаток', remain.join(' · '), red(Math.min(st.remainingHours == null ? 1 : st.remainingHours, st.remainingDays == null ? 1 : st.remainingDays))) : ''}
+      </section>
+
+      <footer class="sc-foot">
+        ${levelBadge(st.level)}
+        <span class="sc-meta">Записей ТО: ${mc.length}</span>
+        <span class="sc-meta ${stale ? 'is-warn' : ''}" title="Дата последнего показания счётчика">${stale ? '⚠ ' : ''}Счётчик: ${upd ? fmtDate(upd) : dash}</span>
+      </footer>
+    </article>`;
+}
+
 /* Круговая диаграмма остатка ресурса */
 function resourceRing(st) {
   const R = 19, C = 2 * Math.PI * R;
@@ -10015,27 +10148,7 @@ function renderParkResults(rows) {
     </div>` : '';
 
   if (ui.park.mode === 'cards') {
-    return bulkBar + `<div class="f-cards">${rows.map(({ v, st }) => `
-      <div class="f-vcard lvl-${st.level} ${sel.has(v.id) ? 'is-selected' : ''}" data-act="open-vehicle" data-id="${v.id}">
-        <input type="checkbox" class="f-vcard-check" data-act="row-select" data-id="${v.id}" title="Выбрать" aria-label="Выбрать: ${esc(v.name)}" ${sel.has(v.id) ? 'checked' : ''}>
-        <div class="f-vcard-head">
-          <div style="min-width:0">
-            <div class="f-vcard-name">${esc(v.name)}</div>
-            <div class="f-vcard-model">${esc(v.brand || '—')}</div>
-          </div>
-          ${v.regNumber ? `<span class="f-plate">${esc(v.regNumber)}</span>` : ''}
-        </div>
-        <div class="f-vcard-body">
-          ${resourceRing(st)}
-          <div class="f-vcard-meta">
-            <div class="f-kv"><span class="f-kv-k">Подразделение</span><span class="f-kv-v" title="${esc(v.unit || '')}">${esc(v.unit || '—')}</span></div>
-            <div class="f-kv"><span class="f-kv-k">Моточасы</span><span class="f-kv-v">${fmtNum(v.currentHours, 0)}</span></div>
-            <div class="f-kv"><span class="f-kv-k">Последнее ТО</span><span class="f-kv-v">${fmtDate(st.lastMaint && st.lastMaint.date)}</span></div>
-            <div class="f-kv"><span class="f-kv-k">Следующее ТО</span><span class="f-kv-v">${st.nextDate ? fmtDate(st.nextDate) : (st.nextHours != null ? fmtNum(st.nextHours, 0) + ' м·ч' : '—')}</span></div>
-          </div>
-        </div>
-        <div style="margin-top:12px">${levelBadge(st.level)}</div>
-      </div>`).join('')}</div>`;
+    return bulkBar + `<div class="f-cards f-cards-staff">${rows.map(({ v, st }, i) => staffCard(v, st, i, sel.has(v.id))).join('')}</div>`;
   }
 
   const allSelected = rows.length > 0 && rows.every(({ v }) => sel.has(v.id));
