@@ -2392,6 +2392,46 @@ html.is-app[data-theme="dark"] body::after  { opacity: 1; background: rgba(8, 12
 .f-nav-btn.is-active svg { color: var(--system-accent); }
 .f-nav-btn.is-active .f-nav-count { background: var(--danger); color: #fff; }
 .f-nav-help { margin-left: auto; }
+
+/* Навигация учёта — левая боковая панель, как меню разделов КРПД.
+   Разделы сверху, «Печать» и «Справка» прижаты к низу панели */
+@media (min-width: 901px) {
+  .fleet-root { flex-direction: row; }
+  .f-navbar {
+    flex-direction: column; align-items: stretch; align-self: stretch;
+    flex: 0 0 248px; width: 248px; max-width: none;
+    margin: 14px 0 14px 16px; padding: 12px 10px; gap: 2px;
+    border-radius: var(--r-lg);
+    background: color-mix(in srgb, var(--bg-secondary) 55%, transparent);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
+    backdrop-filter: blur(30px) saturate(190%);
+    overflow-x: hidden; overflow-y: auto;
+  }
+  .f-navbar::before {
+    content: "Учёт техники"; display: block;
+    margin: 4px 10px 8px; font-size: 11px; line-height: 14px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .8px; color: var(--label-tertiary);
+  }
+  .f-nav-btn {
+    justify-content: flex-start; gap: 12px; width: 100%;
+    min-height: 44px; padding: 0 12px; border-radius: var(--r-md);
+    font-size: 15px; white-space: normal; text-align: left;
+  }
+  .f-nav-btn svg { width: 20px; height: 20px; flex: 0 0 auto; }
+  .f-nav-btn .f-nav-count { margin-left: auto; }
+  .f-nav-btn.is-active, .f-nav-btn.is-active:hover {
+    background: var(--accent-soft); color: var(--system-accent);
+    box-shadow: inset 3px 0 0 var(--system-accent);
+  }
+  [data-theme="dark"] .f-nav-btn.is-active { box-shadow: inset 3px 0 0 var(--system-accent); }
+  .f-nav-help { margin-left: 0; margin-top: auto; }
+  .f-nav-help::before {
+    content: ""; position: absolute; left: 10px; right: 10px; top: -7px;
+    height: 1px; background: var(--separator);
+  }
+  .f-nav-help { position: relative; margin-top: auto; }
+  .f-scroll { padding-left: 28px; }
+}
 .f-tabs { border-bottom: 1px solid var(--separator); }
 .f-tab { font-weight: 600; }
 .f-tab.is-active { color: var(--system-accent); border-bottom-color: var(--system-accent); }
