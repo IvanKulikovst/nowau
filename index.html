@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="Офлайн-справочник регламентов технического обслуживания и учёт эксплуатации технических средств служб тыла.">
+<meta name="application-name" content="Регламент-ТСТ">
+<meta name="description" content="Автоматизированная система учёта и контроля «Регламент-ТСТ»: офлайн-справочник регламентов технического обслуживания и учёт эксплуатации технических средств служб тыла.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a5fe0'/%3E%3Ccircle cx='16' cy='16' r='5' fill='none' stroke='white' stroke-width='2.4'/%3E%3Cpath d='M16 5v4M16 23v4M5 16h4M23 16h4' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <meta name="format-detection" content="telephone=no">
 <meta name="mobile-web-app-capable" content="yes">
@@ -13,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<title>Справочник технических средств служб тыла</title>
+<title>Регламент-ТСТ — автоматизированная система учёта и контроля</title>
 <style>
 /* =====================================================================
    СБРОС СТИЛЕЙ (минимальный normalize)
@@ -3324,7 +3325,7 @@ html.is-app #landing { display: none !important; }
     <div class="ld-page">
         <header class="ld-header">
             <nav class="ld-nav" aria-label="Разделы стартовой страницы">
-                <span class="ld-brand" aria-hidden="true"><i></i>ТСТ</span>
+                <span class="ld-brand" aria-hidden="true"><i></i>Регламент-ТСТ</span>
                 <span class="ld-nav-sep" aria-hidden="true"></span>
                 <button type="button" class="ld-nav-link active" data-target="home">Главная</button>
                 <button type="button" class="ld-nav-link" data-target="product">Продукт</button>
@@ -3339,10 +3340,10 @@ html.is-app #landing { display: none !important; }
         <!-- ГЛАВНАЯ -->
         <section class="ld-section ld-hero active" id="section-home">
             <div class="ld-hero-copy">
-                <span class="ld-eyebrow ld-anim" style="--i:0">Офлайн-справочник · Службы тыла</span>
+                <span class="ld-eyebrow ld-anim" style="--i:0">Автоматизированная система учёта и контроля</span>
                 <h1 class="ld-headline">
-                    <span class="ld-headline-line ld-anim" style="--i:1">Справочник</span>
-                    <span class="ld-headline-line ld-anim" style="--i:2">технических средств</span>
+                    <span class="ld-headline-line ld-anim" style="--i:1">Регламент<span style="font-family:var(--ld-sans);font-weight:300">-</span>ТСТ</span>
+                    <span class="ld-headline-line ld-anim" style="--i:2">техника служб тыла</span>
                 </h1>
                 <p class="ld-subtitle ld-anim" style="--i:3">
                     Регламенты технического обслуживания и учёт эксплуатации техники тыла в одном офлайн-приложении: найдите нужную карту ТО или проверьте сроки за пару касаний.
@@ -3489,8 +3490,8 @@ html.is-app #landing { display: none !important; }
       </svg>
     </div>
     <div>
-      <div class="brand-title">Справочник ТСТ</div>
-      <div class="brand-subtitle">Технические средства служб тыла</div>
+      <div class="brand-title">Регламент-ТСТ</div>
+      <div class="brand-subtitle">Автоматизированная система учёта и контроля</div>
     </div>
   </div>
 
@@ -3562,7 +3563,7 @@ html.is-app #landing { display: none !important; }
 <section class="overview-root" id="overviewRoot" role="main" aria-label="Обзор системы">
   <div class="overview-shell">
     <section class="overview-hero">
-      <div><div class="overview-eyebrow">Центр управления</div><h1 class="overview-title">Справочник ТСТ</h1></div>
+      <div><div class="overview-eyebrow">Центр управления</div><h1 class="overview-title">Регламент-ТСТ</h1></div>
       <div class="overview-date" id="overviewDate"></div>
     </section>
     <div id="overviewBackup"></div>
@@ -3688,7 +3689,7 @@ const TST = window.TST = (() => {
       const prev = current;
       current = ws;
       document.body.dataset.ws = ws;
-      document.title = (WS_TITLES[ws] || 'Справочник') + ' — Справочник ТСТ';
+      document.title = (WS_TITLES[ws] || 'Справочник') + ' — Регламент-ТСТ';
       document.querySelectorAll('[data-ws-btn]').forEach(b => {
         const on = b.dataset.wsBtn === ws;
         b.classList.toggle('is-active', on);
@@ -9435,7 +9436,7 @@ function exportPdf(report) {
   emitPrint({
     key: 'report-' + report.key, file: report.file, sheet: report.sheet,
     title: report.title,
-    subtitle: 'Справочник ТСТ · Регистрация технических средств тыла',
+    subtitle: 'АСУК «Регламент-ТСТ» · Учёт технических средств тыла',
     meta: 'Всего записей: ' + data.length,
     bodyHtml: `<table${report.columns.length > 9 ? ' class="dense"' : ''}><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`,
     footHtml: null
@@ -13459,7 +13460,7 @@ async function backupExport() {
     const pkg = { format: BACKUP_FORMAT, version: 2, createdAt, files: manifest, db: DB };
     files.unshift({ name: 'backup.json', data: utf8(JSON.stringify(pkg, null, 1)) });
     files.push({ name: 'ПРОЧТИТЕ.txt', data: utf8(
-      'Резервная копия программы «Справочник ТСТ» (модуль учёта техники).\r\n' +
+      'Резервная копия программы «Регламент-ТСТ» (модуль учёта техники).\r\n' +
       'Создана: ' + fmtDate(todayISO()) + '\r\n\r\n' +
       'Восстановление: Технические средства тыла → Настройки → «Восстановить из копии» — выберите этот ZIP-файл целиком, распаковывать его не нужно.\r\n' +
       'Содержимое: backup.json — карточки, журнал ТО, моточасы, путевые листы, нормативы и настройки; папка files — прикреплённые документы.\r\n') });
@@ -14748,7 +14749,7 @@ function openPrintWin(opts) {
     paperEl = paperFromSpec(spec, readDoc());
     rebuild();
   }
-  function headerText() { return (R.org.value.trim() || 'Справочник ТСТ') + ' · ' + (spec ? spec.title.replace(/\s+/g, ' ') : '') + ' · ' + nowStr().slice(0, 10); }
+  function headerText() { return (R.org.value.trim() || 'Регламент-ТСТ') + ' · ' + (spec ? spec.title.replace(/\s+/g, ' ') : '') + ' · ' + nowStr().slice(0, 10); }
   function rebuild() {
     if (!paperEl) return;
     const g = geom();
@@ -14849,7 +14850,7 @@ function openPrintWin(opts) {
     const body = docName() + (spec.subtitle ? '\n' + spec.subtitle : '') + (d.org ? '\nОрганизация: ' + d.org : '') + '\nСформировано: ' + nowStr() +
       '\n\nФайл документа (PDF, Word или Excel) прикрепите вручную: почтовая программа не принимает вложения от веб-страницы.';
     logPrint(docName(), 'email', d.org); drawLog();
-    location.href = 'mailto:?subject=' + encodeURIComponent('Учёт ТСТ: ' + docName()) + '&body=' + encodeURIComponent(body);
+    location.href = 'mailto:?subject=' + encodeURIComponent('Регламент-ТСТ: ' + docName()) + '&body=' + encodeURIComponent(body);
   }
   function close() {
     if (!PW) return;
@@ -14934,7 +14935,7 @@ function buildHelp() {
   /* 1 */
   sec('s1', 'Раздел 1. Общие сведения о модуле учёта', [
     E('div', { class: 'ref-lead' }, [
-      p('Модуль «Технические средства тыла» ведёт электронный учёт техники служб тыла: карточки единиц техники, журнал технического обслуживания (ТО), показания счётчиков моточасов, путевые листы, планирование эксплуатации и ремонта, печатные документы и отчёты.'),
+      p('Модуль «Технические средства тыла» автоматизированной системы учёта и контроля «Регламент-ТСТ» ведёт электронный учёт техники служб тыла: карточки единиц техники, журнал технического обслуживания (ТО), показания счётчиков моточасов, путевые листы, планирование эксплуатации и ремонта, печатные документы и отчёты.'),
       p('Программа работает без подключения к сети. Данные хранятся только в этом браузере на этом компьютере; перенос и сохранность обеспечиваются резервной копией (раздел 9).', 'Настройки → Сохранность данных')]),
     h3('1.1 Разделы модуля'),
     tbl(['Раздел', 'Назначение'], [
