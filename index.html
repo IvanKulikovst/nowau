@@ -2565,6 +2565,46 @@ html.is-app[data-theme="dark"] body::after  { opacity: 1; background: rgba(8, 12
 .f-table-fit .f-badge { white-space: nowrap; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+/* Предпросмотр отчёта: таблица укладывается в ширину панели без прокрутки */
+.f-table.f-table-rep { min-width: 0; width: 100%; table-layout: auto; }
+.f-table-rep th { white-space: normal; overflow-wrap: normal; hyphens: auto; -webkit-hyphens: auto; }
+.f-table-rep td { overflow-wrap: anywhere; word-break: normal; hyphens: auto; -webkit-hyphens: auto; }
+.f-table-rep th { overflow-wrap: anywhere; }
+.f-table-rep th, .f-table-rep td { padding: 10px 8px; }
+.f-table-rep.is-wide { font-size: 12px; }
+.f-table-rep.is-wide th { font-size: 10px; letter-spacing: .02em; }
+.f-table-rep.is-wide th, .f-table-rep.is-wide td { padding: 8px 5px; }
+/* Широкий отчёт на экране уже 1400 px и любой отчёт на телефоне:
+   каждая запись — карточка «поле: значение», без прокрутки и рваных слов */
+@media (max-width: 1399px) {
+  .f-table.f-table-rep.is-wide thead { display: none; }
+  .f-table.f-table-rep.is-wide, .f-table-rep.is-wide tbody { display: block; }
+  .f-table-rep.is-wide tbody { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .f-table-rep.is-wide tbody tr { display: block; padding: 12px 14px; border-bottom: 1px solid var(--separator); border-right: 1px solid var(--separator); }
+  .f-table-rep.is-wide tbody td {
+    display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr); gap: 10px;
+    padding: 3px 0 !important; border: 0; text-align: left; background: none !important;
+    font-size: 13px; overflow-wrap: break-word;
+  }
+  .f-table-rep.is-wide tbody td::before { content: attr(data-label); color: var(--text-secondary); font-size: 12px; }
+  .f-table-rep.is-wide tbody td:first-child { font-weight: 650; }
+}
+@media (max-width: 700px) {
+  .f-table.f-table-rep thead { display: none; }
+  .f-table.f-table-rep, .f-table-rep tbody { display: block; }
+  .f-table-rep tbody tr { display: block; padding: 10px 12px; border-bottom: 1px solid var(--separator); border-right: 0; }
+  .f-table-rep tbody tr:last-child { border-bottom: 0; }
+  .f-table-rep tbody td {
+    display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr); gap: 10px;
+    padding: 3px 0 !important; border: 0; text-align: left; background: none !important;
+    font-size: 13px; overflow-wrap: break-word;
+  }
+  .f-table-rep tbody td::before { content: attr(data-label); color: var(--text-secondary); font-size: 12px; }
+  .f-table-rep tbody td:first-child { font-weight: 650; }
+  .f-table-rep.is-wide tbody { grid-template-columns: 1fr; }
+  .f-table-rep.is-wide tbody tr { border-right: 0; }
+}
+
 /* ---------- Окна, панели, уведомления ---------- */
 .f-modal-backdrop {
   background: rgba(20, 30, 45, .38);
@@ -12358,12 +12398,12 @@ function renderReports() {
       ${!rows.length
         ? emptyState(FI.chart(28), 'Нет данных', 'По выбранным условиям записей не найдено.')
         : `<div class="f-table-wrap"><div class="f-table-scroll">
-            <table class="f-table">
+            <table class="f-table f-table-rep${rep.columns.length > 9 ? ' is-wide' : ''}">
               <thead><tr>${rep.columns.map(c => `<th class="${c.num ? 'f-td-num' : ''}">${esc(c.label)}</th>`).join('')}</tr></thead>
               <tbody>${preview.map(r => `<tr>${rep.columns.map(c => {
                 const v = r[c.key];
                 const disp = (v === '' || v == null) ? '—' : (c.num && typeof v === 'number' ? fmtNum(v) : v);
-                return `<td class="${c.num ? 'f-td-num' : ''}">${esc(disp)}</td>`;
+                return `<td class="${c.num ? 'f-td-num' : ''}" data-label="${esc(c.label)}">${esc(disp)}</td>`;
               }).join('')}</tr>`).join('')}</tbody>
             </table>
           </div></div>`}
