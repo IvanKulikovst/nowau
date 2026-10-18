@@ -2801,6 +2801,89 @@ html.is-app[data-theme="dark"] body::after  { opacity: 1; background: rgba(8, 12
   .f-vcard, .f-report-card, .summary, .summary-stat, .overview-fleet-stat, .tabs,
   .f-navbar, .sidebar, .header, .f-modal, .f-toast { background: var(--bg-elev); }
 }
+
+/* ---------- Командный пункт ---------- */
+.cp-section-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin:4px 2px 8px}
+.cp-stats{margin-bottom:18px}
+button.cp-tile{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%;border:1px solid var(--g-border);display:block}
+button.cp-tile:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring)}
+button.cp-tile[data-empty] .f-stat-value{opacity:.55}
+.cp-tile .f-stat-label{display:flex;align-items:center;gap:6px}
+.cp-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1360px){.cp-grid{grid-template-columns:minmax(0,1fr)}}
+.cp-table td,.cp-table th{vertical-align:middle}
+@media (min-width:641px){
+  .f-table.cp-table th,.f-table.cp-table td{padding:8px 6px}
+  .f-table.cp-table th:first-child,.f-table.cp-table td:first-child{padding-left:12px;min-width:110px}
+  .f-table.cp-table th:last-child,.f-table.cp-table td:last-child{padding-right:12px;min-width:84px}
+  .cp-table .cp-num{padding:3px 7px;min-width:26px}
+}
+.cp-num{font:inherit;font-weight:700;border:0;background:var(--fill-tertiary);color:inherit;border-radius:8px;padding:3px 9px;cursor:pointer;min-width:30px}
+.cp-num:hover{background:var(--accent-soft)}
+.cp-num:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring)}
+.cp-num.is-zero{background:none;cursor:default;opacity:.5;font-weight:600}
+.cp-ktg-cell{display:flex;flex-direction:column;gap:5px;font-weight:700;font-size:13px;white-space:nowrap}
+.cp-ktg-cell.is-below{color:var(--st-overdue-text)}
+.cp-bar{position:relative;width:100%;min-width:46px;height:8px;border-radius:99px;background:var(--fill-tertiary)}
+.cp-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--st-ok-text)}
+.cp-ktg-cell.is-below .cp-bar i{background:var(--st-overdue-text)}
+.cp-bar b{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--label-primary,var(--text));border-radius:1px}
+.cp-cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.cp-cal-head .f-panel-title{margin:0}
+.cp-tabs{margin:0}
+.cp-cal-list{display:flex;flex-direction:column;gap:6px;max-height:430px;overflow:auto}
+.cp-cal-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--fill-tertiary);cursor:pointer}
+.cp-cal-row:hover{background:var(--accent-soft)}
+.cp-cal-row .f-badge{flex:none}
+.cp-cal-date{flex:none;width:76px;display:flex;flex-direction:column;line-height:1.15}
+.cp-cal-date b{font-size:15px}
+.cp-cal-date span{font-size:11.5px;color:var(--text-secondary)}
+.cp-cal-date.is-late b,.cp-cal-date.is-late span{color:var(--st-overdue-text)}
+.cp-cal-date.is-today b{color:var(--st-urgent-text)}
+.cp-cal-main{flex:1;min-width:0}
+.cp-cal-main .f-td-strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.cp-cal-row .f-badge{display:none}}
+.cp-safety-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cp-safety.is-due{box-shadow:inset 4px 0 0 var(--st-urgent-text)}
+
+/* ---------- Сохранность данных ---------- */
+.sf-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sf-sm{font-size:20px}
+.f-stat.sf-due{box-shadow:inset 4px 0 0 var(--st-urgent-text)}
+.sf-alert{font-size:14px;line-height:1.5}
+.sf-alert.is-bad{background:var(--st-overdue-bg);color:var(--st-overdue-text)}
+.sf-alert.is-ok{background:var(--st-ok-bg);color:var(--st-ok-text)}
+.sf-check{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;background:var(--fill-tertiary)}
+.sf-check.is-ok{background:var(--st-ok-bg);color:var(--st-ok-text)}
+.sf-check.is-warn{background:var(--st-soon-bg)}
+.sf-check.is-bad{background:var(--st-overdue-bg)}
+.sf-check.is-bad>b{color:var(--st-overdue-text)}
+.sf-issues,.sf-tests,.sf-hist{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.sf-issues li.is-err{color:var(--st-overdue-text)}
+.sf-tests{padding-left:0;list-style:none;font-size:13px}
+.sf-tests li.is-ok{color:var(--st-ok-text)}
+.sf-tests li.is-err{color:var(--st-overdue-text);font-weight:700}
+.sf-tests-sum{font-weight:700;font-size:14px}
+.sf-tests-sum.is-ok{color:var(--st-ok-text)}
+.sf-tests-sum.is-bad{color:var(--st-overdue-text)}
+.sf-hist{font-size:13.5px;padding-left:0;list-style:none;margin-bottom:8px}
+.sf-hist .f-td-muted{display:inline-block;min-width:118px}
+.sf-cmp{min-width:0}
+.f-table.f-table-stack{table-layout:auto;min-width:0}
+.f-table-stack th{white-space:normal}
+@media (max-width:640px){
+  .f-table-stack thead{display:none}
+  .f-table-stack tbody tr{display:block;padding:10px 12px;border-bottom:1px solid var(--separator)}
+  .f-table-stack tbody tr:last-child{border-bottom:0}
+  .f-table-stack tbody td{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:3px 0;border:0;text-align:left;background:none!important}
+  .f-table-stack tbody td.is-head{display:block;padding:0 0 4px;font-weight:700}
+  .f-table-stack tbody td[data-label]::before{content:attr(data-label);color:var(--text-secondary);font-size:12.5px;font-weight:500;flex:none;white-space:nowrap;hyphens:none}
+  .f-table-stack tbody td[data-label]{text-align:right}
+  .f-table-stack .is-head .f-td-muted{font-weight:400}
+  .f-table-stack tbody td.is-acts{justify-content:flex-end;padding-top:6px}
+  .f-table-stack .cp-ktg-cell{flex:1;max-width:60%;align-items:flex-end}
+}
+.sf-row-acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
 </style>
 <style id="krpd-print-styles">
 /* =====================================================================
@@ -8601,6 +8684,267 @@ const QR = (() => {
 </script>
 <script>
 /* =========================================================================
+   ПЛАТФОРМА «РЕГЛАМЕНТ-ТСТ» — window.TST.platform
+   -------------------------------------------------------------------------
+   Ядро модульной архитектуры внутри одного офлайн-файла. Ничего не рисует
+   и не хранит само — задаёт правила, по которым работают модули:
+
+     • реестр модулей: идентификатор, версия, владение коллекциями данных,
+       зависимости, самотесты (register / modules / runTests);
+     • единые правила идентификации записей (ids);
+     • общая модель данных: описание коллекций, обязательных полей и связей
+       между записями (defineCollection / checkIntegrity);
+     • единый механизм событий — шина TST.on / TST.emit (общая шина
+       приложения); имена событий платформы перечислены в EVENTS.
+
+   Правило совместимости: модуль обращается к чужим данным только через
+   публичный API владельца (TST.fleet, TST.catalog …) или события шины,
+   поэтому новый модуль не может сломать уже работающие. Проверка
+   целостности и самотесты запускаются перед восстановлением из копии,
+   после обновления структуры данных и вручную в разделе «Сохранность данных».
+   ========================================================================= */
+(function () {
+  const T = window.TST;
+  if (!T) return;
+
+  const PLATFORM_VERSION = '2.0.0';
+
+  /* --- Правила идентификации ---------------------------------------------
+     Идентификатор записи: <префикс>_<время base36>_<случайная часть>.
+     Префикс определяет вид записи. Идентификатор присваивается один раз
+     при создании и больше не меняется (на нём держатся связи, история
+     изменений и QR-код техники). Допустимые символы — латиница, цифры,
+     «_» и «-», длина 4–64. */
+  const ID_RE = /^[A-Za-z0-9_-]{4,64}$/;
+  const ID_PREFIX = {
+    vehicles: 'v', maint: 'm', hours: 'h', trips: 't', norms: 'n', catalogEdits: 'c',
+    trash: 'r', history: 'e', snapshot: 's'
+  };
+  const ids = {
+    RE: ID_RE,
+    PREFIX: ID_PREFIX,
+    valid: id => typeof id === 'string' && ID_RE.test(id),
+    make(prefix, taken) {
+      let id;
+      do {
+        id = (prefix || 'id') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+      } while (!ID_RE.test(id) || (taken && taken(id)));
+      return id;
+    }
+  };
+
+  /* --- События платформы (передаются через общую шину TST) --- */
+  const EVENTS = {
+    DATA_CHANGED: 'fleet-changed',          // данные учёта сохранены
+    MODULE: 'platform:module',              // модуль зарегистрирован
+    INTEGRITY: 'platform:integrity',        // выполнена проверка целостности
+    SNAPSHOT: 'platform:snapshot',          // создана точка восстановления
+    MIGRATED: 'platform:migrated',          // структура данных обновлена
+    TESTS: 'platform:tests'                 // выполнены самотесты
+  };
+
+  /* --- Реестр модулей --- */
+  const modules = new Map();
+  function register(def) {
+    if (!def || !def.id || !def.name) throw new Error('platform.register: нужны id и name');
+    if (modules.has(def.id)) throw new Error('platform.register: модуль уже зарегистрирован — ' + def.id);
+    const m = Object.assign({ version: '1.0.0', state: 'работает', owns: [], depends: [], tests: [], desc: '' }, def);
+    (m.depends || []).forEach(d => {
+      if (!modules.has(d)) console.warn('[Платформа] модуль ' + m.id + ' зависит от незарегистрированного ' + d);
+    });
+    modules.set(m.id, m);
+    T.emit(EVENTS.MODULE, { id: m.id });
+    return m;
+  }
+
+  /* --- Модель данных: коллекции, обязательные поля, связи ----------------
+     refs: { поле: 'коллекция' } — значение поля должно быть id записи этой
+     коллекции (пустое значение допустимо, если поле не обязательно).
+     check(rec, ctx, issue) — дополнительные правила владельца коллекции. */
+  const collections = new Map();
+  function defineCollection(name, spec) {
+    collections.set(name, Object.assign({ name, required: [], refs: {}, unique: [] }, spec));
+  }
+
+  /* Проверка целостности базы. Ничего не меняет — только находит.
+     Уровни: error — нарушена связь или идентификатор (данные могут
+     работать неверно); warn — сомнительное значение. Каждой проблеме
+     может соответствовать fix — код автоматического исправления */
+  function checkIntegrity(db) {
+    const issues = [];
+    const issue = (level, coll, id, text, fix) => issues.push({ level, coll, id: id || '', text, fix: fix || null });
+    const index = {};
+    collections.forEach((spec, name) => {
+      const arr = db && db[name];
+      if (arr == null) return;
+      if (!Array.isArray(arr)) { issue('error', name, '', 'Коллекция повреждена (не список записей)', 'reset-collection'); return; }
+      const seen = new Map();
+      arr.forEach((r, i) => {
+        if (!r || typeof r !== 'object') { issue('error', name, '', `Запись №${i + 1} повреждена`, 'drop-broken'); return; }
+        if (!ids.valid(r.id)) issue('error', name, String(r.id || ''), 'Некорректный идентификатор записи', 'new-id');
+        else if (seen.has(r.id)) issue('error', name, r.id, 'Идентификатор повторяется', 'new-id');
+        else seen.set(r.id, r);
+      });
+      index[name] = seen;
+    });
+    collections.forEach((spec, name) => {
+      const arr = Array.isArray(db && db[name]) ? db[name] : [];
+      const uniq = {};
+      arr.forEach(r => {
+        if (!r || typeof r !== 'object') return;
+        spec.required.forEach(f => {
+          if (r[f] == null || r[f] === '') issue('error', name, r.id, `Не заполнено обязательное поле «${spec.labels && spec.labels[f] || f}»`, spec.fixRequired && spec.fixRequired[f]);
+        });
+        Object.keys(spec.refs).forEach(f => {
+          const target = spec.refs[f];
+          const val = r[f];
+          if (val == null || val === '') return;
+          if (!index[target] || !index[target].has(val)) issue('error', name, r.id, `Ссылка «${spec.labels && spec.labels[f] || f}» указывает на несуществующую запись (${target})`, 'drop-orphan');
+        });
+        spec.unique.forEach(f => {
+          const val = r[f];
+          if (val == null || String(val).trim() === '') return;
+          const k = String(val).trim().toLowerCase();
+          uniq[f] = uniq[f] || new Map();
+          if (uniq[f].has(k)) issue('warn', name, r.id, `Значение «${spec.labels && spec.labels[f] || f}» = «${val}» повторяется`);
+          else uniq[f].set(k, r.id);
+        });
+        if (spec.check) spec.check(r, { db, index }, (level, text, fix) => issue(level, name, r.id, text, fix));
+      });
+    });
+    const report = {
+      at: new Date().toISOString(),
+      errors: issues.filter(x => x.level === 'error'),
+      warnings: issues.filter(x => x.level === 'warn'),
+      fixable: issues.filter(x => x.fix).length,
+      counts: {}
+    };
+    collections.forEach((spec, name) => { report.counts[name] = Array.isArray(db && db[name]) ? db[name].length : 0; });
+    T.emit(EVENTS.INTEGRITY, { errors: report.errors.length, warnings: report.warnings.length });
+    return report;
+  }
+
+  /* Автоматическое исправление того, что исправляется однозначно:
+     повреждённые записи и записи-«сироты» удаляются, повторяющиеся и
+     некорректные идентификаторы заменяются новыми (кроме техники, на
+     которую могут ссылаться записи — там новый id получает только копия).
+     Возвращает копию базы и перечень исправлений; исходная не меняется */
+  function repair(db) {
+    const out = JSON.parse(JSON.stringify(db));
+    const fixes = [];
+    for (let pass = 0; pass < 3; pass++) {           // удаление сирот может породить новых (часы → ТО)
+      const rep = checkIntegrity(out);
+      const todo = rep.errors.filter(x => x.fix);
+      if (!todo.length) break;
+      collections.forEach((spec, name) => {
+        if (!Array.isArray(out[name])) {
+          if (todo.some(x => x.coll === name && x.fix === 'reset-collection')) { out[name] = []; fixes.push(`${name}: коллекция пересоздана пустой`); }
+          return;
+        }
+        const seen = new Set();
+        const prefix = ID_PREFIX[name] || 'id';
+        out[name] = out[name].filter(r => {
+          if (!r || typeof r !== 'object') { fixes.push(`${name}: удалена повреждённая запись`); return false; }
+          if (!ids.valid(r.id) || seen.has(r.id)) {
+            const old = r.id;
+            r.id = ids.make(prefix, x => seen.has(x));
+            fixes.push(`${name}: идентификатор ${old || '(пусто)'} заменён на ${r.id}`);
+          }
+          seen.add(r.id);
+          return true;
+        });
+      });
+      const rep2 = checkIntegrity(out);
+      const orphans = new Set(rep2.errors.filter(x => x.fix === 'drop-orphan').map(x => x.coll + '|' + x.id));
+      const reqFix = rep2.errors.filter(x => x.fix && x.fix.startsWith('set:'));
+      collections.forEach((spec, name) => {
+        if (!Array.isArray(out[name])) return;
+        out[name] = out[name].filter(r => {
+          if (orphans.has(name + '|' + r.id)) { fixes.push(`${name}: удалена запись ${r.id} без связанной записи`); return false; }
+          return true;
+        });
+        reqFix.filter(x => x.coll === name).forEach(x => {
+          const r = out[name].find(z => z.id === x.id);
+          const [, field, value] = x.fix.split(':');
+          if (r && (r[field] == null || r[field] === '')) { r[field] = value; fixes.push(`${name}: в записи ${r.id} заполнено поле ${field} = «${value}»`); }
+        });
+      });
+    }
+    return { db: out, fixes };
+  }
+
+  /* --- Самотесты модулей -------------------------------------------------
+     Тест — функция без побочных эффектов: работает на копиях данных, сама
+     ничего не сохраняет. Возвращает true / строку-пояснение либо бросает
+     исключение. Результат каждого теста изолирован от остальных */
+  async function runTests(only) {
+    const results = [];
+    for (const m of modules.values()) {
+      if (only && !only.includes(m.id)) continue;
+      for (const t of m.tests || []) {
+        const started = performance.now();
+        let ok = false, info = '';
+        try {
+          const r = await t.run();
+          ok = r === true || (typeof r === 'string');
+          info = typeof r === 'string' ? r : (r === true ? '' : 'тест вернул ' + JSON.stringify(r));
+        } catch (e) { ok = false; info = e && e.message ? e.message : String(e); }
+        results.push({ module: m.id, moduleName: m.name, version: m.version, name: t.name, ok, info, ms: Math.round(performance.now() - started) });
+      }
+    }
+    T.emit(EVENTS.TESTS, { total: results.length, failed: results.filter(r => !r.ok).length });
+    return results;
+  }
+  const assert = (cond, msg) => { if (!cond) throw new Error(msg || 'условие не выполнено'); };
+
+  T.platform = {
+    version: PLATFORM_VERSION,
+    ids, EVENTS,
+    register,
+    modules: () => Array.from(modules.values()),
+    module: id => modules.get(id) || null,
+    defineCollection,
+    collections: () => Array.from(collections.values()),
+    checkIntegrity, repair,
+    runTests, assert
+  };
+
+  /* Модуль ядра и его самотесты */
+  let lastSelftestEvent = null;
+  T.on('platform:selftest', d => { lastSelftestEvent = d; });
+  register({
+    id: 'platform', name: 'Ядро платформы', version: PLATFORM_VERSION,
+    desc: 'Реестр модулей, правила идентификации, модель данных, проверка целостности, шина событий',
+    tests: [
+      { name: 'Идентификаторы уникальны и соответствуют правилу', run() {
+        const set = new Set();
+        for (let i = 0; i < 2000; i++) { const id = ids.make('v', x => set.has(x)); assert(ids.valid(id), 'некорректный id ' + id); assert(!set.has(id), 'повтор ' + id); set.add(id); }
+        assert(!ids.valid('v_<script>') && !ids.valid('') && !ids.valid('a b'), 'правило пропускает недопустимые символы');
+        return '2000 идентификаторов без повторов';
+      } },
+      { name: 'Шина событий доставляет сообщения', run() {
+        const x = Math.random();
+        T.emit('platform:selftest', { x });
+        assert(lastSelftestEvent && lastSelftestEvent.x === x, 'событие не доставлено');
+        return true;
+      } },
+      { name: 'Проверка целостности находит нарушенные связи', run() {
+        const db = { vehicles: [{ id: 'v_test_0001', name: 'Т' }], maint: [{ id: 'm_test_0001', vehicleId: 'v_nope_0001', kind: 'ТО-1', date: '2025-01-01' }, { id: 'm_test_0001', vehicleId: 'v_test_0001', kind: 'ТО-1', date: '2025-01-01' }] };
+        const r = checkIntegrity(db);
+        assert(r.errors.some(x => /несуществующую/.test(x.text)), 'сирота не найдена');
+        assert(r.errors.some(x => /повторяется/.test(x.text)), 'повтор id не найден');
+        const fixed = repair(db);
+        assert(checkIntegrity(fixed.db).errors.length === 0, 'после исправления остались ошибки');
+        assert(db.maint.length === 2, 'исправление изменило исходную базу');
+        return 'исправлений: ' + fixed.fixes.length;
+      } }
+    ]
+  });
+})();
+
+</script>
+<script>
+/* =========================================================================
    ═══════════════════════════════════════════════════════════════════════
    МОДУЛЬ «РЕГИСТРАЦИЯ ТЕХНИЧЕСКИХ СРЕДСТВ ТЫЛА»
    ═══════════════════════════════════════════════════════════════════════
@@ -8626,12 +8970,13 @@ const LS_KEY  = 'spravochnik-tst-fleet-v1';
 const LS_PERSIST_ASKED = 'spravochnik-tst-persist-asked';
 const IDB_DB  = 'tst-fleet-files';
 const IDB_ST  = 'files';
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;   // история версий и миграции — MIGRATIONS (раздел 27c)
 
 /* Статусы единицы техники */
 const STATUSES = [
   'В эксплуатации',
   'Ремонт',
+  'Неисправна',
   'На хранении',
   'Консервация',
   'Списано'
@@ -8692,6 +9037,7 @@ const DEFAULT_SETTINGS = {
   hoursStaleDays: 14,    // напоминание об обновлении моточасов
   notifyOnStart:  true,  // всплывающая сводка при открытии раздела
   backupRemindDays: 14,  // напоминать о резервной копии, если последней больше N дней
+  trashDays:      30,    // хранить удалённое в корзине, дней
 
   /* --- Нормативные параметры планирования (методика ВАМТО, 2025) --- */
   ktgByGroup: {           // норматив КТГ по группам эксплуатации
@@ -8834,6 +9180,10 @@ let storageOK = true;
 /* Коллекции записей: у каждой записи есть уникальный id. По ним работают
    нормализация, слияние изменений из других вкладок и отмена удаления */
 const COLLECTIONS = ['vehicles', 'maint', 'hours', 'trips', 'norms', 'catalogEdits'];
+/* Плюс служебные коллекции подсистемы сохранности: тоже записи с id,
+   сливаются между вкладками и попадают в резервную копию, но удаление
+   с отменой их не касается */
+const ALL_COLLECTIONS = COLLECTIONS.concat(['trash', 'history']);
 
 /* Синхронизация вкладок.
    lastRaw  — строка, которую эта вкладка последней прочитала/записала;
@@ -8854,6 +9204,9 @@ function blankDB() {
     trips: [],
     norms: [],            // пользовательские нормативы ТО для позиций справочника без регламента
     catalogEdits: [],     // правки и добавленные позиции справочника (см. applyUserCatalog)
+    trash: [],            // корзина: удалённые записи со связанными (раздел 27c)
+    history: [],          // журнал изменений важных полей карточек
+    migrations: [],       // выполненные обновления структуры данных
     settings: Object.assign({}, DEFAULT_SETTINGS),
     seeded: false,
     lastBackupAt: ''      // ISO-время последней резервной копии
@@ -8870,14 +9223,17 @@ function normalizeDB(parsed) {
   d.settings.ktgByGroup = Object.assign({}, DEFAULT_SETTINGS.ktgByGroup, ps.ktgByGroup || {});
   d.settings.laborNorms = Object.assign({}, DEFAULT_SETTINGS.laborNorms, ps.laborNorms || {});
   d.settings.repairUnit = Object.assign({}, DEFAULT_SETTINGS.repairUnit, ps.repairUnit || {});
-  COLLECTIONS.forEach(k => { if (!Array.isArray(d[k])) d[k] = []; });
+  ALL_COLLECTIONS.forEach(k => { if (!Array.isArray(d[k])) d[k] = []; });
+  if (!Array.isArray(d.migrations)) d.migrations = [];
   return d;
 }
 
 function loadDB() {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    DB = raw ? normalizeDB(JSON.parse(raw)) : blankDB();
+    const parsedRaw = raw ? JSON.parse(raw) : null;
+    // Старая структура переводится на текущую (перед этим — точка восстановления)
+    DB = parsedRaw ? migrateDB(normalizeDB(parsedRaw), parsedRaw.version, raw) : blankDB();
     lastRaw = raw;
     migrateCatalogLinks();
   } catch (e) {
@@ -8903,7 +9259,7 @@ function recordKey(k, r) {
 function mergeDB(base, ours, theirs) {
   const out = normalizeDB(theirs);
   const index = arr => new Map((arr || []).map(r => [r && r.id, r]));
-  COLLECTIONS.forEach(k => {
+  ALL_COLLECTIONS.forEach(k => {
     const b = index(base[k]), o = index(ours[k]), t = index(theirs[k]);
     const ids = new Set([...t.keys(), ...o.keys(), ...b.keys()]);
     out[k] = [];
@@ -8913,7 +9269,7 @@ function mergeDB(base, ours, theirs) {
       if (pick) out[k].push(pick);
     });
   });
-  ['settings', 'seeded', 'lastBackupAt'].forEach(f => {
+  ['settings', 'seeded', 'lastBackupAt', 'migrations', 'version'].forEach(f => {
     if (JSON.stringify(ours[f]) !== JSON.stringify(base[f])) out[f] = ours[f];
   });
   out.vehicles.forEach(v => recomputeHours(v.id, out));
@@ -8958,6 +9314,8 @@ function migrateCatalogLinks() {
 /* Сохранение. opts.replace — полная замена базы (восстановление из копии,
    очистка): слияние с чужими изменениями в этом случае не нужно */
 function saveDB(opts) {
+  if (testDepth) return;          // самотест работает на временной базе — в хранилище не пишем
+  if (!(opts && opts.replace)) recordHistory();
   let merged = false;
   try {
     if (!(opts && opts.replace)) {
@@ -9600,7 +9958,7 @@ const FI = {
    9. СОСТОЯНИЕ ИНТЕРФЕЙСА МОДУЛЯ
    ========================================================================= */
 const ui = {
-  view: 'park',
+  view: 'command',     // стартовый экран — командный пункт
   vehicleId: null,
   vehicleTab: 'info',
   park: {
@@ -9613,6 +9971,8 @@ const ui = {
   report: { key: 'vehicles', from: '', to: '', unit: '' },
   trips:  { vehicle: '', from: '', to: '' },
   qr:     { q: '', filter: '', selected: new Set() },
+  cp:     { range: 'today' },
+  safety: { report: null, tests: null, fixes: null, hq: '' },
   planTab: 'ktg',
   docs:    { actFrom: addDays(todayISO(), -30), actTo: todayISO(), needDays: 30 },
   econ:    { from: '', to: '' }
@@ -9680,6 +10040,7 @@ function removeWithUndo(title, text, mutate) {
     removed[k] = before[k].filter(r => !keep.has(r.id));
   });
   docIds.forEach(id => pendingFileDeletes.add(id));
+  const trashId = trashPush(title, text, removed);
   saveDB();
   rerender();
 
@@ -9691,6 +10052,7 @@ function removeWithUndo(title, text, mutate) {
         DB[k] = DB[k].concat(removed[k].filter(r => !have.has(r.id)));
       });
       docIds.forEach(id => pendingFileDeletes.delete(id));
+      if (trashId) DB.trash = DB.trash.filter(t => t.id !== trashId);
       const touched = new Set([].concat(
         removed.vehicles.map(v => v.id), removed.maint.map(m => m.vehicleId),
         removed.hours.map(h => h.vehicleId), removed.trips.map(t => t.vehicleId)));
@@ -9699,16 +10061,19 @@ function removeWithUndo(title, text, mutate) {
       rerender();
       toast('info', 'Удаление отменено', '');
     },
-    onExpire: () => docIds.forEach(id => { if (pendingFileDeletes.delete(id)) fileDel(id); })
+    // Файлы остаются: запись лежит в корзине; их уберёт cleanupOrphanFiles, когда ссылок не останется
+    onExpire: () => docIds.forEach(id => pendingFileDeletes.delete(id))
   });
 }
 
 /* Вложения, на которые не ссылается ни одна запись ТО (например, вкладка
    закрыта до истечения срока отмены). Запускается с задержкой, заведомо
    большей срока отмены, чтобы отмена в другой вкладке успела синхронизироваться */
-function cleanupOrphanFiles() {
-  const used = new Set();
-  DB.maint.forEach(m => (m.docs || []).forEach(d => used.add(d.id)));
+async function cleanupOrphanFiles() {
+  let used;
+  // Ссылки — из текущих записей, корзины и точек восстановления. Не удалось
+  // прочитать точки — не удаляем ничего (лучше лишний файл, чем потерянный)
+  try { used = await referencedFileIds(); } catch (e) { return; }
   idbRun('readonly', st => st.getAllKeys())
     .then(keys => (keys || []).forEach(k => { if (!used.has(k)) fileDel(k); }))
     .catch(() => {});
@@ -9982,6 +10347,7 @@ function options(list, selected, placeholder) {
    13. НАВИГАЦИЯ МОДУЛЯ
    ========================================================================= */
 const NAV = [
+  { key: 'command',   label: 'Командный пункт',         icon: FI.gauge },
   { key: 'park',      label: 'Парк техники',            icon: FI.truck },
   { key: 'dashboard', label: 'Ближайшие ТО',            icon: FI.alert },
   { key: 'trips',     label: 'Путевые листы',           icon: FI.route },
@@ -9989,6 +10355,7 @@ const NAV = [
   { key: 'documents', label: 'Документы',               icon: FI.file  },
   { key: 'reports',   label: 'Отчёты',                  icon: FI.chart },
   { key: 'qr',        label: 'QR-маркировка',           icon: FI.grid  },
+  { key: 'safety',    label: 'Сохранность данных',      icon: FI.save  },
   { key: 'settings',  label: 'Настройки',               icon: FI.gear  }
 ];
 
@@ -10029,6 +10396,8 @@ function renderView() {
         v.innerHTML = renderVehicle();
       }
       break;
+    case 'command':   v.innerHTML = renderCommand();   break;
+    case 'safety':    v.innerHTML = renderSafety();    bindSafety(); break;
     case 'dashboard': v.innerHTML = renderDashboard(); break;
     case 'trips':     v.innerHTML = renderTrips();     bindTripFilters(); break;
     case 'planning':  v.innerHTML = renderPlanning();  bindPlanningInputs(); break;
@@ -10388,6 +10757,8 @@ function renderVehicleInfo(v, st) {
     ${renderVehicleQr(v)}
 
     ${renderVehicleCatalog(v)}
+
+    ${renderVehicleHistory(v)}
 
     <div class="f-panel">
       <div class="f-panel-title">Расчёт ресурса до следующего ТО</div>
@@ -12647,7 +13018,11 @@ function renderSettings() {
       <div class="f-form-grid" style="margin-top:14px">
         <div><label class="f-fld-label" for="setBackupDays">Напоминать о копии, если последней больше, дней</label>
           <input id="setBackupDays" class="f-input" type="number" min="1" max="365" value="${s.backupRemindDays}"></div>
+        <div><label class="f-fld-label" for="setTrashDays">Хранить удалённое в корзине, дней</label>
+          <input id="setTrashDays" class="f-input" type="number" min="1" max="365" value="${s.trashDays}"></div>
       </div>
+      <div class="f-hint" style="margin-top:10px">Точки восстановления, корзина, журнал изменений и проверка целостности — в разделе
+        <button type="button" class="link-btn" data-act="nav" data-key="safety">«Сохранность данных»</button>.</div>
       <div class="f-hint" style="margin-top:10px">
         Данные хранятся только в этом браузере на этом компьютере. Программу можно открывать в нескольких вкладках —
         изменения синхронизируются между ними автоматически.
@@ -12685,6 +13060,7 @@ function bindSettings() {
   num('setUrgent', 'urgentPct', 1, 99);
   num('setStale', 'hoursStaleDays', 1);
   num('setBackupDays', 'backupRemindDays', 1, 365);
+  num('setTrashDays', 'trashDays', 1, 365);
   fillStorageStatus();
   refreshStorageInfo();
 
@@ -13586,26 +13962,27 @@ function backupImport() {
       return;
     }
 
-    const ok = await confirmDialog('Восстановить из резервной копии?',
-      `Текущие данные будут заменены. В копии: ${parsed.vehicles.length} ед. техники` +
-      (files ? `, ${files.length} ${plural(files.length, 'вложение', 'вложения', 'вложений')}.`
-             : '. Это копия старого формата (JSON) — вложений в ней нет, уже сохранённые в браузере файлы останутся.'),
-      'Восстановить');
-    if (!ok) return;
+    const decision = await importReview(parsed, files, file.name);
+    if (!decision) return;
+    const srcVersion = parsed.version;
+    if (decision === 'repair') parsed = window.TST.platform.repair(normalizeDB(parsed)).db;
+    await snapCreate('import', 'Перед восстановлением из файла ' + file.name).catch(() => null);
 
     try {
       if (files) {
-        await idbRun('readwrite', st => st.clear()).catch(() => memFiles.clear());
+        // Существующие вложения не стираются: на них могут ссылаться точки
+        // восстановления; лишние уберёт cleanupOrphanFiles
         for (const f of files) {
           const type = f.meta.type || '';
           await filePut({ id: f.meta.id, name: f.meta.name, type, size: f.data.length,
                           blob: new Blob([f.data], { type }) });
         }
       }
-      DB = normalizeDB(parsed);
+      DB = migrateDB(normalizeDB(parsed), srcVersion);
       migrateCatalogLinks();
       resetUiSelection();
       saveDB({ replace: true });
+      ui.safety.report = null;
       toast('success', 'Данные восстановлены',
         `Загружено ${DB.vehicles.length} ед. техники` + (files ? ` и ${files.length} ${plural(files.length, 'вложение', 'вложения', 'вложений')}.` : '.'));
       go('park');
@@ -13687,13 +14064,14 @@ function fillStorageStatus() {
 
 async function wipeAll() {
   const ok = await confirmDialog('Очистить все данные?',
-    'Будут безвозвратно удалены все карточки техники, записи ТО, история моточасов и вложения. Если данные ещё нужны — сначала сохраните резервную копию.', 'Очистить');
+    'Будут удалены все карточки техники, записи ТО, история моточасов и вложения. Перед очисткой создаётся точка восстановления (раздел «Сохранность данных»), но надёжнее сначала сохранить резервную копию.', 'Очистить');
   if (!ok) return;
+  await snapCreate('wipe').catch(() => null);
   DB = blankDB();
   resetUiSelection();
   saveDB({ replace: true });
-  idbRun('readwrite', st => st.clear()).catch(() => memFiles.clear());
-  toast('success', 'Данные очищены', 'База приведена к исходному состоянию.');
+  setTimeout(cleanupOrphanFiles, 1500);
+  toast('success', 'Данные очищены', 'База приведена к исходному состоянию. Вернуть данные можно в разделе «Сохранность данных» → «Точки восстановления».');
   go('park');
 }
 
@@ -13721,6 +14099,28 @@ function onFleetClick(e) {
 
   switch (act) {
     case 'nav':          go(node.dataset.key); break;
+    case 'cp-list':      commandListModal(node.dataset.list); break;
+    case 'cp-task':      commandTask(node.dataset.list); break;
+    case 'cp-range':     ui.cp.range = node.dataset.range; renderView(); break;
+    case 'cp-report':    commandReport(); break;
+    case 'snap-create':  snapCreate('manual').then(() => { toast('success', 'Точка восстановления создана', fmtStamp(new Date().toISOString())); fillSafetyAsync(); })
+                           .catch(() => toast('danger', 'Не удалось создать точку', 'Хранилище браузера недоступно или переполнено.')); break;
+    case 'snap-restore': snapRestore(id); break;
+    case 'snap-download': snapDownload(id); break;
+    case 'snap-delete':  snapDelete(id); break;
+    case 'trash-restore': trashRestore(id); break;
+    case 'trash-delete': trashDelete(id); break;
+    case 'trash-empty':  trashEmpty(); break;
+    case 'integrity-run': ui.safety.report = window.TST.platform.checkIntegrity(DB); renderView();
+                           toast(ui.safety.report.errors.length ? 'warning' : 'success', 'Проверка целостности',
+                             `Ошибок: ${ui.safety.report.errors.length}, замечаний: ${ui.safety.report.warnings.length}.`); break;
+    case 'integrity-fix': integrityFix(); break;
+    case 'tests-run':    window.TST.platform.runTests().then(r => {
+                           ui.safety.tests = r; if (ui.view === 'safety') renderView();
+                           const bad = r.filter(t => !t.ok).length;
+                           toast(bad ? 'danger' : 'success', 'Самотесты модулей', bad ? `Не пройдено: ${bad} из ${r.length}.` : `Пройдено: ${r.length} из ${r.length}.`);
+                         }); break;
+    case 'help-safety':  if (window.TSTHelp) window.TSTHelp.open('s12'); break;
     case 'qr-show':      qrShowModal(id); break;
     case 'qr-print':     qrPrintModal([id], getVehicle(id) && getVehicle(id).qr ? { level: getVehicle(id).qr.level, format: getVehicle(id).qr.format } : {}); break;
     case 'qr-download': { const v = getVehicle(id); if (v) qrDownload(v, null, 'png'); break; }
@@ -14582,6 +14982,971 @@ function renderVehicleQr(v) {
 }
 
 /* =========================================================================
+   27c. СОХРАННОСТЬ ДАННЫХ
+   -------------------------------------------------------------------------
+   Данные хранятся только в этом браузере на этом компьютере, поэтому защита
+   от потери — отдельная подсистема, а не набор разрозненных кнопок:
+
+     • точки восстановления — автоматические снимки базы в IndexedDB:
+       ежедневно и перед каждой опасной операцией (восстановление из копии,
+       очистка, обновление структуры данных, исправление ошибок, откат);
+     • корзина — всё удалённое хранится trashDays дней (по умолчанию 30)
+       и возвращается одной кнопкой, вместе со связанными записями;
+     • журнал изменений важных полей карточки техники;
+     • проверка целостности перед восстановлением из копии и по запросу;
+     • версия структуры данных и безопасная миграция при обновлении
+       программы (перед миграцией — точка восстановления).
+
+   Вложения (PDF, изображения) в точки восстановления не копируются: они
+   лежат в отдельном хранилище и не удаляются, пока на них ссылается хотя бы
+   одна запись — текущая, в корзине или в точке восстановления.
+   ========================================================================= */
+
+/* --- Модель данных учёта для платформы --- */
+function defineFleetModel() {
+  const p = window.TST && window.TST.platform;
+  if (!p) return;
+  const drop = { vehicleId: 'drop-orphan' };
+  p.defineCollection('vehicles', {
+    owner: 'park', required: ['name'], unique: ['invNumber', 'regNumber', 'serialNumber'],
+    labels: { name: 'Наименование', invNumber: 'Инвентарный номер', regNumber: 'Государственный номер', serialNumber: 'Заводской номер' },
+    fixRequired: { name: 'set:name:Без наименования' },
+    check(v, ctx, issue) {
+      if (v.status && !STATUSES.includes(v.status)) issue('warn', `Неизвестный статус «${v.status}»`);
+      if (v.catalogId && CAT() && !CAT().get(v.catalogId)) issue('warn', 'Привязка к справочнику указывает на отсутствующую позицию');
+      if (v.regDate && !toDate(v.regDate)) issue('warn', 'Некорректная дата постановки на учёт');
+      if (v.currentHours != null && v.currentHours !== '' && !validHours(Number(v.currentHours))) issue('warn', 'Недопустимое значение моточасов');
+    }
+  });
+  p.defineCollection('maint', {
+    owner: 'maint', required: ['vehicleId', 'kind', 'date'], refs: { vehicleId: 'vehicles' },
+    labels: { vehicleId: 'Техника', kind: 'Вид ТО', date: 'Дата' }, fixRequired: drop,
+    check(m, ctx, issue) {
+      if (m.kind && !MAINT_KINDS.includes(m.kind)) issue('warn', `Неизвестный вид обслуживания «${m.kind}»`);
+      if (m.date && !toDate(m.date)) issue('warn', 'Некорректная дата проведения');
+    }
+  });
+  p.defineCollection('hours', {
+    owner: 'trips', required: ['vehicleId'], refs: { vehicleId: 'vehicles', maintId: 'maint', tripId: 'trips' },
+    labels: { vehicleId: 'Техника', maintId: 'Запись ТО', tripId: 'Путевой лист' }, fixRequired: drop,
+    check(h, ctx, issue) { if (!validHours(Number(h.value))) issue('warn', 'Недопустимое показание счётчика'); }
+  });
+  p.defineCollection('trips', { owner: 'trips', required: ['vehicleId'], refs: { vehicleId: 'vehicles' }, labels: { vehicleId: 'Техника' }, fixRequired: drop });
+  p.defineCollection('norms', { owner: 'catalog' });
+  p.defineCollection('catalogEdits', { owner: 'catalog' });
+  p.defineCollection('trash', { owner: 'safety' });
+  p.defineCollection('history', { owner: 'safety' });
+}
+
+/* --- Версия структуры данных и миграции ---------------------------------
+   Каждая миграция переводит базу на одну версию вперёд и принадлежит
+   модулю-владельцу. Перед миграцией создаётся точка восстановления со
+   старыми данными. База из более новой версии программы не понижается:
+   неизвестные поля сохраняются как есть, пользователь получает
+   предупреждение */
+const MIGRATIONS = [
+  { to: 2, module: 'safety', name: 'Корзина, журнал изменений, статус «Неисправна»',
+    run(d) { d.trash = Array.isArray(d.trash) ? d.trash : []; d.history = Array.isArray(d.history) ? d.history : []; } }
+];
+let newerData = null;     // { from, to } — база создана более новой версией программы
+let lastMigration = null; // { from, to } — миграция при этом запуске
+
+function migrateDB(d, from, rawForSnapshot) {
+  from = Number(from) || 1;
+  if (from > SCHEMA_VERSION) { newerData = { from, to: SCHEMA_VERSION }; return d; }
+  if (from >= SCHEMA_VERSION) { d.version = SCHEMA_VERSION; return d; }
+  if (rawForSnapshot) snapCreate('migration', `Перед обновлением структуры данных (версия ${from} → ${SCHEMA_VERSION})`, rawForSnapshot).catch(() => null);
+  MIGRATIONS.filter(m => m.to > from && m.to <= SCHEMA_VERSION).sort((a, b) => a.to - b.to).forEach(m => {
+    m.run(d);
+    d.migrations = (Array.isArray(d.migrations) ? d.migrations : []).concat([{ to: m.to, from, name: m.name, module: m.module, at: new Date().toISOString() }]);
+  });
+  d.version = SCHEMA_VERSION;
+  lastMigration = { from, to: SCHEMA_VERSION };
+  if (window.TST && window.TST.platform) window.TST.emit(window.TST.platform.EVENTS.MIGRATED, lastMigration);
+  return d;
+}
+
+/* --- Журнал изменений важных полей ------------------------------------ */
+const HISTORY_FIELDS = {
+  name: 'Наименование', brand: 'Марка, модель', invNumber: 'Инвентарный номер', regNumber: 'Государственный номер',
+  serialNumber: 'Заводской номер', unit: 'Подразделение', responsible: 'Ответственный', status: 'Статус',
+  expGroup: 'Группа эксплуатации', catalogId: 'Тип по справочнику', regDate: 'Дата постановки на учёт', year: 'Год выпуска'
+};
+const HISTORY_MAX = 3000;
+
+/* Разница между двумя состояниями списка техники — чистая функция */
+function historyDiff(beforeList, afterList, at) {
+  const before = new Map((beforeList || []).filter(Boolean).map(v => [v.id, v]));
+  const after = new Map((afterList || []).filter(Boolean).map(v => [v.id, v]));
+  const out = [];
+  const val = x => (x == null ? '' : String(x));
+  after.forEach((v, id) => {
+    const o = before.get(id);
+    if (!o) { out.push({ id: uid('e'), at, vehicleId: id, name: v.name || '', action: 'create' }); return; }
+    Object.keys(HISTORY_FIELDS).forEach(f => {
+      if (val(o[f]) !== val(v[f])) out.push({ id: uid('e'), at, vehicleId: id, name: v.name || '', action: 'edit', field: f, from: val(o[f]), to: val(v[f]) });
+    });
+  });
+  before.forEach((o, id) => { if (!after.has(id)) out.push({ id: uid('e'), at, vehicleId: id, name: o.name || '', action: 'delete' }); });
+  return out;
+}
+function recordHistory() {
+  let prev = null;
+  try { prev = baseJSON ? JSON.parse(baseJSON) : null; } catch (e) { prev = null; }
+  if (!prev) return;
+  const add = historyDiff(prev.vehicles, DB.vehicles, new Date().toISOString());
+  if (!add.length) return;
+  DB.history = (DB.history || []).concat(add);
+  if (DB.history.length > HISTORY_MAX) DB.history = DB.history.slice(-HISTORY_MAX);
+}
+function historyValue(field, value) {
+  if (!value) return '—';
+  if (field === 'catalogId') { const c = CAT(); const n = c && c.get(value); return n ? n.name : value; }
+  if (field === 'regDate') return fmtDate(value);
+  return value;
+}
+function historyText(e) {
+  if (e.action === 'create') return 'Запись создана (постановка на учёт или восстановление)';
+  if (e.action === 'delete') return 'Запись удалена (перемещена в корзину)';
+  return `${HISTORY_FIELDS[e.field] || e.field}: «${historyValue(e.field, e.from)}» → «${historyValue(e.field, e.to)}»`;
+}
+const fmtStamp = iso => iso ? fmtDate(iso.slice(0, 10)) + ' ' + new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
+
+/* --- Корзина ------------------------------------------------------------ */
+function trashDays() { return Math.max(1, Number(DB.settings.trashDays) || 30); }
+function trashPush(title, text, removed) {
+  const records = {};
+  let n = 0;
+  COLLECTIONS.forEach(k => { if (removed[k] && removed[k].length) { records[k] = removed[k]; n += removed[k].length; } });
+  if (!n) return null;
+  const entry = { id: uid('r'), at: new Date().toISOString(), title, text: text || '', records };
+  DB.trash = (DB.trash || []).concat([entry]);
+  return entry.id;
+}
+const trashCount = t => COLLECTIONS.reduce((s, k) => s + ((t.records && t.records[k]) || []).length, 0);
+/* Возврат записей из корзины в базу db (чистая функция над переданной базой).
+   Записи, чей «родитель» (техника) отсутствует, не возвращаются — иначе
+   появились бы записи-сироты */
+function trashApply(db, entry) {
+  const back = {}, skipped = [];
+  COLLECTIONS.forEach(k => {
+    const list = (entry.records && entry.records[k]) || [];
+    if (!list.length) return;
+    const have = new Set(db[k].map(r => r.id));
+    back[k] = list.filter(r => !have.has(r.id));
+  });
+  db.vehicles = db.vehicles.concat(back.vehicles || []);
+  const vids = new Set(db.vehicles.map(v => v.id));
+  ['maint', 'trips', 'hours'].forEach(k => {
+    if (!back[k]) return;
+    back[k] = back[k].filter(r => { const ok = !r.vehicleId || vids.has(r.vehicleId); if (!ok) skipped.push(r); return ok; });
+  });
+  ['maint', 'trips', 'hours', 'norms', 'catalogEdits'].forEach(k => { if (back[k]) db[k] = db[k].concat(back[k]); });
+  db.trash = db.trash.filter(t => t.id !== entry.id);
+  const touched = new Set([].concat((back.vehicles || []).map(v => v.id), (back.maint || []).map(m => m.vehicleId),
+    (back.hours || []).map(h => h.vehicleId), (back.trips || []).map(t => t.vehicleId)).filter(Boolean));
+  touched.forEach(id => recomputeHours(id, db));
+  return { restored: Object.keys(back).reduce((s, k) => s + back[k].length, 0), skipped: skipped.length };
+}
+function trashRestore(id) {
+  const entry = (DB.trash || []).find(t => t.id === id);
+  if (!entry) return;
+  const r = trashApply(DB, entry);
+  saveDB();
+  rerender();
+  toast('success', 'Восстановлено из корзины', `${entry.title}: возвращено записей — ${r.restored}` +
+    (r.skipped ? `; не возвращено ${r.skipped} (связанная техника отсутствует — сначала восстановите её)` : ''));
+}
+async function trashDelete(id) {
+  const entry = (DB.trash || []).find(t => t.id === id);
+  if (!entry) return;
+  const ok = await confirmDialog('Удалить навсегда?', `«${entry.title}» будет удалено без возможности возврата из корзины (останется только в точках восстановления).`, 'Удалить навсегда');
+  if (!ok) return;
+  DB.trash = DB.trash.filter(t => t.id !== id);
+  saveDB(); rerender();
+  setTimeout(cleanupOrphanFiles, 1500);
+}
+async function trashEmpty() {
+  if (!(DB.trash || []).length) return;
+  const ok = await confirmDialog('Очистить корзину?', `Будет окончательно удалено элементов: ${DB.trash.length}. Перед очисткой создаётся точка восстановления.`, 'Очистить корзину');
+  if (!ok) return;
+  await snapCreate('trash', 'Перед очисткой корзины').catch(() => null);
+  DB.trash = [];
+  saveDB(); rerender();
+  setTimeout(cleanupOrphanFiles, 1500);
+}
+function trashPurgeOld() {
+  const limit = new Date(Date.now() - trashDays() * MS_DAY).toISOString();
+  const before = (DB.trash || []).length;
+  DB.trash = (DB.trash || []).filter(t => (t.at || '') >= limit);
+  if (DB.trash.length !== before) saveDB();
+}
+
+/* --- Точки восстановления (IndexedDB «tst-fleet-snapshots») -------------- */
+const SNAP_DB = 'tst-fleet-snapshots', SNAP_ST = 'snaps';
+const SNAP_KEEP_AUTO = 20, SNAP_KEEP_MANUAL = 20;
+const SNAP_REASONS = {
+  manual: 'Создана вручную', daily: 'Ежедневная', import: 'Перед восстановлением из копии', wipe: 'Перед очисткой всех данных',
+  migration: 'Перед обновлением структуры данных', rollback: 'Перед откатом', repair: 'Перед исправлением ошибок', trash: 'Перед очисткой корзины'
+};
+let snapPromise = null;
+function snapIdb() {
+  if (snapPromise) return snapPromise;
+  snapPromise = new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) { reject(new Error('IndexedDB недоступна')); return; }
+    const req = indexedDB.open(SNAP_DB, 1);
+    req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(SNAP_ST)) req.result.createObjectStore(SNAP_ST, { keyPath: 'id' }); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  snapPromise.catch(() => { snapPromise = null; });
+  return snapPromise;
+}
+function snapRun(mode, fn) {
+  return snapIdb().then(d => new Promise((resolve, reject) => {
+    const tx = d.transaction(SNAP_ST, mode);
+    const req = fn(tx.objectStore(SNAP_ST));
+    tx.oncomplete = () => resolve(req && req.result);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  }));
+}
+const dbCounts = d => ({ vehicles: (d.vehicles || []).length, maint: (d.maint || []).length, trips: (d.trips || []).length, hours: (d.hours || []).length });
+async function snapCreate(reason, label, raw) {
+  const data = raw || JSON.stringify(DB);
+  let counts = {};
+  try { counts = dbCounts(raw ? JSON.parse(raw) : DB); } catch (e) { /* повреждённые данные тоже сохраняются как есть */ }
+  const rec = { id: uid('s'), at: new Date().toISOString(), reason, label: label || SNAP_REASONS[reason] || reason,
+                auto: reason !== 'manual', size: data.length, counts, schema: SCHEMA_VERSION, data };
+  await snapRun('readwrite', st => st.put(rec));
+  await snapPrune();
+  if (window.TST && window.TST.platform) window.TST.emit(window.TST.platform.EVENTS.SNAPSHOT, { reason });
+  return rec;
+}
+async function snapAll() { return (await snapRun('readonly', st => st.getAll())) || []; }
+async function snapList() {
+  return (await snapAll()).map(s => Object.assign({}, s, { data: undefined })).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+}
+async function snapPrune() {
+  const list = await snapList();
+  const kill = list.filter(s => s.auto).slice(SNAP_KEEP_AUTO).concat(list.filter(s => !s.auto).slice(SNAP_KEEP_MANUAL));
+  for (const s of kill) await snapRun('readwrite', st => st.delete(s.id));
+}
+async function snapAutoDaily() {
+  const hasData = DB.vehicles.length || DB.maint.length;
+  if (!hasData) return;
+  try {
+    const list = await snapList();
+    const last = list.find(s => s.reason === 'daily');
+    if (!last || Date.now() - new Date(last.at).getTime() > 20 * 3600 * 1000) await snapCreate('daily');
+  } catch (e) { /* IndexedDB недоступна — раздел «Сохранность данных» сообщит об этом */ }
+}
+async function snapRestore(id) {
+  let rec, parsed;
+  try { rec = await snapRun('readonly', st => st.get(id)); parsed = JSON.parse(rec.data); }
+  catch (e) { toast('danger', 'Точка восстановления повреждена', 'Не удалось прочитать сохранённые данные.'); return; }
+  const decision = await importReview(parsed, null, 'точка восстановления от ' + fmtStamp(rec.at), true);
+  if (!decision) return;
+  if (decision === 'repair') parsed = window.TST.platform.repair(normalizeDB(parsed)).db;
+  await snapCreate('rollback', 'Перед откатом к точке от ' + fmtStamp(rec.at)).catch(() => null);
+  DB = migrateDB(normalizeDB(parsed), parsed.version);
+  migrateCatalogLinks();
+  resetUiSelection();
+  saveDB({ replace: true });
+  toast('success', 'Данные восстановлены', `Состояние на ${fmtStamp(rec.at)}: ${DB.vehicles.length} ед. техники. Предыдущее состояние сохранено в точке «Перед откатом».`, 8000);
+  go('safety');
+}
+async function snapDownload(id) {
+  const rec = await snapRun('readonly', st => st.get(id)).catch(() => null);
+  if (!rec) return;
+  downloadBlob(new Blob([rec.data], { type: 'application/json' }), `tst_snapshot_${(rec.at || '').slice(0, 16).replace(/[:T]/g, '-')}.json`);
+  toast('info', 'Точка восстановления сохранена в файл', 'Файл принимается кнопкой «Восстановить из копии» (вложения в него не входят).');
+}
+async function snapDelete(id) {
+  const ok = await confirmDialog('Удалить точку восстановления?', 'Откатиться к этому состоянию будет нельзя.', 'Удалить');
+  if (!ok) return;
+  await snapRun('readwrite', st => st.delete(id)).catch(() => null);
+  fillSafetyAsync();
+}
+
+/* Вложения, на которые ссылается хоть что-нибудь: текущие записи ТО,
+   корзина и точки восстановления. Если точки прочитать не удалось —
+   исключение: тогда очистка вложений не выполняется вовсе */
+async function referencedFileIds() {
+  const used = new Set();
+  const take = list => (list || []).forEach(m => (m && m.docs || []).forEach(d => d && used.add(d.id)));
+  take(DB.maint);
+  (DB.trash || []).forEach(t => take(t.records && t.records.maint));
+  if ('indexedDB' in window) {
+    const all = await snapAll();
+    all.forEach(s => { try { take(JSON.parse(s.data).maint); } catch (e) { /* повреждённая точка — пропускаем */ } });
+  }
+  return used;
+}
+
+/* --- Проверка перед восстановлением ------------------------------------
+   Показывает, что именно будет загружено, и результат проверки
+   целостности. Возвращает Promise: false — отмена, 'restore', 'repair' */
+function importReview(parsed, files, sourceName, isSnapshot) {
+  const P = window.TST && window.TST.platform;
+  let cand, rep;
+  try { cand = normalizeDB(parsed); rep = P ? P.checkIntegrity(cand) : { errors: [], warnings: [], fixable: 0 }; }
+  catch (e) { rep = { errors: [{ text: 'Структура данных не распознана' }], warnings: [], fixable: 0 }; cand = blankDB(); }
+  const ver = Number(parsed && parsed.version) || 1;
+  const verText = ver > SCHEMA_VERSION ? `версия данных ${ver} новее программы (${SCHEMA_VERSION}) — неизвестные поля сохранятся, но могут не отображаться`
+    : ver < SCHEMA_VERSION ? `версия данных ${ver} — структура будет обновлена до версии ${SCHEMA_VERSION}` : `версия данных ${ver} — совпадает с программой`;
+  const row = (label, k) => `<tr><td>${label}</td><td class="f-td-num">${fmtNum((DB[k] || []).length, 0)}</td><td class="f-td-num"><b>${fmtNum((cand[k] || []).length, 0)}</b></td></tr>`;
+  const list = (arr, cls) => arr.slice(0, 8).map(x => `<li class="${cls}">${esc(x.text)}${x.id ? ` <span class="f-td-muted qr-mono">${esc(x.id)}</span>` : ''}</li>`).join('') +
+    (arr.length > 8 ? `<li class="f-td-muted">… и ещё ${arr.length - 8}</li>` : '');
+  return new Promise(resolve => {
+    const m = openModal(`
+      <div class="f-modal-head">
+        <div>
+          <div class="f-modal-title">${isSnapshot ? 'Откат к точке восстановления' : 'Проверка резервной копии'}</div>
+          <div class="f-modal-sub">${esc(sourceName || '')} · ${esc(verText)}</div>
+        </div>
+        <button type="button" class="f-modal-close" data-close aria-label="Закрыть">${FI.x(16)}</button>
+      </div>
+      <div class="f-modal-body">
+        <table class="f-table sf-cmp"><thead><tr><th>Записи</th><th class="f-td-num">Сейчас</th><th class="f-td-num">Будет загружено</th></tr></thead><tbody>
+          ${row('Единицы техники', 'vehicles')}${row('Записи ТО и ремонтов', 'maint')}${row('Путевые листы', 'trips')}${row('Показания моточасов', 'hours')}${row('Элементы корзины', 'trash')}
+        </tbody></table>
+        ${files ? `<p class="f-hint">Вложений в копии: ${files.length}. Уже сохранённые вложения не удаляются.</p>` : isSnapshot ? '<p class="f-hint">Вложения в точку восстановления не входят — сохранённые файлы останутся на месте.</p>' : '<p class="f-hint">Копия в формате JSON — вложений в ней нет, сохранённые файлы останутся.</p>'}
+        <div class="sf-check ${rep.errors.length ? 'is-bad' : rep.warnings.length ? 'is-warn' : 'is-ok'}">
+          <b>${rep.errors.length ? `Ошибки целостности: ${rep.errors.length}` : 'Связи и идентификаторы в порядке'}${rep.warnings.length ? ` · замечаний: ${rep.warnings.length}` : ''}</b>
+          ${rep.errors.length || rep.warnings.length ? `<ul class="sf-issues">${list(rep.errors, 'is-err')}${list(rep.warnings, 'is-warn')}</ul>` : ''}
+          ${rep.fixable ? '<p class="f-hint">«Исправить и загрузить» удалит записи без связанной техники и заменит повторяющиеся идентификаторы новыми.</p>' : ''}
+        </div>
+        <p class="f-hint">Текущие данные будут заменены. Перед заменой автоматически создаётся точка восстановления — вернуться можно в разделе «Сохранность данных».</p>
+      </div>
+      <div class="f-modal-foot">
+        <button type="button" class="f-btn" data-close>Отмена</button>
+        ${rep.fixable ? `<button type="button" class="f-btn f-btn-primary" data-dec="repair">Исправить и загрузить</button>` : ''}
+        <button type="button" class="f-btn ${rep.fixable ? 'f-btn-danger' : 'f-btn-primary'}" data-dec="restore">${rep.errors.length ? 'Загрузить без исправления' : 'Загрузить'}</button>
+      </div>`, { onClose: () => resolve(false) });
+    m.root.querySelectorAll('[data-dec]').forEach(b => b.addEventListener('click', () => { resolve(b.dataset.dec); m.close(); }));
+  });
+}
+
+/* --- Проверка и исправление текущей базы --- */
+async function integrityFix() {
+  const P = window.TST.platform;
+  const { db, fixes } = P.repair(DB);
+  if (!fixes.length) { toast('info', 'Исправлять нечего', 'Автоматически исправимых ошибок не найдено.'); return; }
+  const ok = await confirmDialog('Исправить ошибки целостности?', `Будет выполнено исправлений: ${fixes.length}. Перед исправлением создаётся точка восстановления.`, 'Исправить');
+  if (!ok) return;
+  await snapCreate('repair').catch(() => null);
+  DB = normalizeDB(db);
+  db.vehicles.forEach(v => recomputeHours(v.id));
+  saveDB({ replace: true });
+  ui.safety.report = P.checkIntegrity(DB);
+  ui.safety.fixes = fixes;
+  rerender();
+  toast('success', 'Ошибки исправлены', `Исправлений: ${fixes.length}.`);
+}
+
+/* =========================================================================
+   РАЗДЕЛ «СОХРАННОСТЬ ДАННЫХ»
+   ========================================================================= */
+function renderSafety() {
+  const P = window.TST && window.TST.platform;
+  const b = backupInfo();
+  const rep = ui.safety.report || (P ? P.checkIntegrity(DB) : null);
+  ui.safety.report = rep;
+  const trash = (DB.trash || []).slice().sort((a, x) => (x.at || '').localeCompare(a.at || ''));
+  const hist = (DB.history || []).slice().reverse().filter(e => !ui.safety.hq || (e.name + ' ' + historyText(e)).toLowerCase().includes(ui.safety.hq.toLowerCase())).slice(0, 150);
+  const mods = P ? P.modules() : [];
+  const tests = ui.safety.tests;
+  const testFor = id => tests ? tests.filter(t => t.module === id) : null;
+  return `
+    <div class="f-page-head">
+      <div>
+        <div class="f-page-title" role="heading" aria-level="1">Сохранность данных</div>
+        <div class="f-page-sub">Резервные копии, точки восстановления, корзина, журнал изменений, проверка целостности и состав платформы</div>
+      </div>
+      <div class="f-page-actions">
+        <button type="button" class="f-btn" data-act="help-safety">${FI.doc(15)}<span>Как это работает</span></button>
+      </div>
+    </div>
+    ${newerData ? `<div class="f-panel sf-alert is-bad"><b>Данные созданы более новой версией программы</b> (структура ${newerData.from}, программа понимает ${newerData.to}). Работать можно, но новые разделы данных не отображаются. Обновите файл программы.</div>` : ''}
+    ${lastMigration ? `<div class="f-panel sf-alert is-ok"><b>Структура данных обновлена</b> с версии ${lastMigration.from} до ${lastMigration.to}. Прежнее состояние сохранено в точке восстановления «Перед обновлением структуры данных».</div>` : ''}
+
+    <div class="f-stats">
+      <div class="f-stat ${b.due ? 'sf-due' : ''}"><div class="f-stat-label">Резервная копия</div>
+        <div class="f-stat-value sf-sm">${b.last ? (b.daysAgo <= 0 ? 'сегодня' : b.daysAgo + ' ' + plural(b.daysAgo, 'день', 'дня', 'дней') + ' назад') : 'не создавалась'}</div>
+        <div class="f-hint">напоминание каждые ${b.remind} ${plural(b.remind, 'день', 'дня', 'дней')}</div></div>
+      <div class="f-stat"><div class="f-stat-label">Точки восстановления</div><div class="f-stat-value" id="sfSnapCount">…</div><div class="f-hint">автоматически: ежедневно и перед опасными операциями</div></div>
+      <div class="f-stat"><div class="f-stat-label">В корзине</div><div class="f-stat-value">${trash.length}</div><div class="f-hint">хранится ${trashDays()} ${plural(trashDays(), 'день', 'дня', 'дней')}</div></div>
+      <div class="f-stat"><div class="f-stat-label">Целостность</div>
+        <div class="f-stat-value" style="color:var(--st-${rep && rep.errors.length ? 'overdue' : rep && rep.warnings.length ? 'soon' : 'ok'}-text)">${rep ? (rep.errors.length ? rep.errors.length + ' ' + plural(rep.errors.length, 'ошибка', 'ошибки', 'ошибок') : 'в порядке') : '—'}</div>
+        <div class="f-hint">${rep ? 'замечаний: ' + rep.warnings.length : ''}</div></div>
+    </div>
+
+    <div class="f-panel">
+      <div class="f-panel-title">Резервная копия на внешний носитель</div>
+      <p class="f-hint">Единственная защита от поломки компьютера или переустановки браузера — копия вне этого компьютера (флешка, сетевой диск). ${esc(backupAgoText(b).replace(/^./, c => c.toUpperCase()))}.</p>
+      <div class="sf-actions">
+        <button type="button" class="f-btn f-btn-primary" data-act="backup-export">${FI.download(15)}<span>Создать резервную копию</span></button>
+        <button type="button" class="f-btn" data-act="backup-import">${FI.upload(15)}<span>Восстановить из копии</span></button>
+      </div>
+      <div class="f-info-grid" id="setStorageStatus" style="margin-top:12px"></div>
+      <button type="button" class="f-btn" id="setPersistBtn" data-act="persist-request" hidden style="margin-top:8px">Включить постоянное хранение</button>
+    </div>
+
+    <div class="f-panel">
+      <div class="f-panel-title">Точки восстановления</div>
+      <p class="f-hint">Снимки базы в этом браузере. Позволяют вернуться к состоянию до сбоя, ошибочного импорта или неудачного обновления. Хранится до ${SNAP_KEEP_AUTO} автоматических и ${SNAP_KEEP_MANUAL} ручных точек. Вложения в снимки не входят.</p>
+      <div class="sf-actions"><button type="button" class="f-btn" data-act="snap-create">${FI.save(15)}<span>Создать точку сейчас</span></button></div>
+      <div id="sfSnaps"><div class="f-hint">Загрузка…</div></div>
+    </div>
+
+    <div class="f-panel">
+      <div class="f-panel-title">Корзина</div>
+      <p class="f-hint">Удалённые карточки, записи ТО, путевые листы и показания хранятся ${trashDays()} ${plural(trashDays(), 'день', 'дня', 'дней')} и возвращаются вместе со связанными записями. Срок хранения задаётся в настройках.</p>
+      ${trash.length ? `
+        <div class="f-table-wrap"><div class="f-table-scroll"><table class="f-table f-table-stack">
+          <thead><tr><th>Удалено</th><th>Что</th><th class="f-td-num">Записей</th><th style="width:170px"></th></tr></thead>
+          <tbody>${trash.map(t => `<tr>
+            <td class="f-td-nowrap" data-label="Удалено">${esc(fmtStamp(t.at))}</td>
+            <td class="is-head"><div class="f-td-strong">${esc(t.title)}</div><div class="f-td-muted f-fit-sub">${esc(t.text)}</div></td>
+            <td class="f-td-num" data-label="Записей">${trashCount(t)}</td>
+            <td class="is-acts"><div class="sf-row-acts">
+              <button type="button" class="f-btn f-btn-sm" data-act="trash-restore" data-id="${t.id}">Восстановить</button>
+              <button type="button" class="f-icon-btn" data-act="trash-delete" data-id="${t.id}" title="Удалить навсегда" aria-label="Удалить навсегда">${FI.trash(15)}</button></div></td>
+          </tr>`).join('')}</tbody></table></div></div>
+        <div class="sf-actions" style="margin-top:10px"><button type="button" class="f-btn" data-act="trash-empty">${FI.trash(15)}<span>Очистить корзину</span></button></div>`
+      : '<div class="f-hint">Корзина пуста.</div>'}
+    </div>
+
+    <div class="f-panel">
+      <div class="f-panel-title">Проверка целостности</div>
+      <p class="f-hint">Связи между записями (ТО, путевые листы и моточасы ↔ техника), уникальность идентификаторов, обязательные поля, допустимые значения, повторы инвентарных, государственных и заводских номеров.</p>
+      <div class="sf-actions">
+        <button type="button" class="f-btn" data-act="integrity-run">${FI.gauge(15)}<span>Проверить сейчас</span></button>
+        ${rep && rep.fixable ? `<button type="button" class="f-btn f-btn-primary" data-act="integrity-fix">${FI.wrench(15)}<span>Исправить автоматически (${rep.fixable})</span></button>` : ''}
+      </div>
+      ${rep ? `<div class="sf-check ${rep.errors.length ? 'is-bad' : rep.warnings.length ? 'is-warn' : 'is-ok'}">
+        <b>${rep.errors.length ? 'Ошибок: ' + rep.errors.length : 'Ошибок нет'} · замечаний: ${rep.warnings.length}</b> <span class="f-td-muted">проверено ${esc(fmtStamp(rep.at))}</span>
+        ${rep.errors.length || rep.warnings.length ? `<ul class="sf-issues">${rep.errors.concat(rep.warnings).slice(0, 40).map(x => `<li class="${x.level === 'error' ? 'is-err' : 'is-warn'}">${esc(x.text)}${x.coll === 'vehicles' && getVehicle(x.id) ? ` — <button type="button" class="link-btn" data-act="open-vehicle" data-id="${esc(x.id)}">${esc(getVehicle(x.id).name)}</button>` : x.id ? ` <span class="f-td-muted qr-mono">${esc(x.id)}</span>` : ''}</li>`).join('')}</ul>` : ''}
+        ${ui.safety.fixes ? `<p class="f-hint">Последнее исправление: ${ui.safety.fixes.length} действий.</p>` : ''}
+      </div>` : ''}
+    </div>
+
+    <div class="f-panel">
+      <div class="f-panel-title">Журнал изменений карточек</div>
+      <p class="f-hint">Фиксируются: ${Object.values(HISTORY_FIELDS).join(', ')}; создание и удаление карточек. Хранится до ${HISTORY_MAX} последних записей.</p>
+      <input type="search" class="f-input" id="sfHistQ" placeholder="Поиск по технике или полю" value="${esc(ui.safety.hq || '')}" style="max-width:360px;margin-bottom:10px">
+      ${hist.length ? `<div class="f-table-wrap"><div class="f-table-scroll"><table class="f-table f-table-stack">
+        <thead><tr><th style="width:130px">Когда</th><th>Техника</th><th>Изменение</th></tr></thead>
+        <tbody>${hist.map(e => `<tr ${getVehicle(e.vehicleId) ? `class="is-clickable" data-act="open-vehicle" data-id="${esc(e.vehicleId)}"` : ''}>
+          <td class="f-td-nowrap" data-label="Когда">${esc(fmtStamp(e.at))}</td><td class="is-head">${esc(e.name || '—')}</td><td>${esc(historyText(e))}</td></tr>`).join('')}</tbody>
+      </table></div></div>` : '<div class="f-hint">Изменений пока нет.</div>'}
+    </div>
+
+    <div class="f-panel">
+      <div class="f-panel-title">Платформа и модули</div>
+      <p class="f-hint">Ядро платформы ${esc(P ? P.version : '—')} · структура данных версии ${SCHEMA_VERSION}${(DB.migrations || []).length ? ` · миграций выполнено: ${DB.migrations.length}` : ''}. Каждый модуль владеет своими данными и проверяется своими самотестами; самотесты работают на копиях данных и ничего не меняют.</p>
+      <div class="sf-actions"><button type="button" class="f-btn f-btn-primary" data-act="tests-run">${FI.gauge(15)}<span>Запустить самотесты</span></button>
+        ${tests ? `<span class="sf-tests-sum ${tests.some(t => !t.ok) ? 'is-bad' : 'is-ok'}">${tests.filter(t => t.ok).length} из ${tests.length} пройдено</span>` : ''}</div>
+      <div class="f-table-wrap"><div class="f-table-scroll"><table class="f-table f-table-stack">
+        <thead><tr><th>Модуль</th><th style="width:80px">Версия</th><th>Данные</th><th style="width:140px">Состояние</th><th>Самотесты</th></tr></thead>
+        <tbody>${mods.map(md => { const tr = testFor(md.id); return `<tr>
+          <td class="is-head"><div class="f-td-strong">${esc(md.name)}</div><div class="f-td-muted f-fit-sub">${esc(md.desc || '')}</div></td>
+          <td class="qr-mono" data-label="Версия">${esc(md.version)}</td>
+          <td class="f-td-muted" data-label="Данные">${esc((md.owns || []).join(', ') || '—')}</td>
+          <td data-label="Состояние">${esc(md.state)}</td>
+          <td data-label="Самотесты">${!md.tests.length ? '<span class="f-td-muted">нет</span>' : !tr ? `<span class="f-td-muted">${md.tests.length} ${plural(md.tests.length, 'тест', 'теста', 'тестов')}</span>` :
+            `<ul class="sf-tests">${tr.map(t => `<li class="${t.ok ? 'is-ok' : 'is-err'}">${t.ok ? '✓' : '✗'} ${esc(t.name)}${t.info ? ` <span class="f-td-muted">— ${esc(t.info)}</span>` : ''}</li>`).join('')}</ul>`}</td>
+        </tr>`; }).join('')}</tbody></table></div></div>
+    </div>`;
+}
+function bindSafety() {
+  const q = el('sfHistQ');
+  if (q) q.addEventListener('input', () => {
+    ui.safety.hq = q.value;
+    clearTimeout(bindSafety.t);
+    bindSafety.t = setTimeout(() => { const pos = q.selectionStart; renderView(); const n = el('sfHistQ'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250);
+  });
+  fillStorageStatus();
+  fillSafetyAsync();
+}
+async function fillSafetyAsync() {
+  const box = el('sfSnaps'), cnt = el('sfSnapCount');
+  if (!box) return;
+  let list;
+  try { list = await snapList(); }
+  catch (e) { box.innerHTML = '<div class="sf-check is-bad">Хранилище точек восстановления недоступно в этом браузере (IndexedDB отключена). Регулярно создавайте резервные копии на внешний носитель.</div>'; if (cnt) cnt.textContent = '—'; return; }
+  if (cnt) cnt.textContent = String(list.length);
+  box.innerHTML = list.length ? `<div class="f-table-wrap"><div class="f-table-scroll"><table class="f-table f-table-stack">
+    <thead><tr><th style="width:130px">Создана</th><th>Причина</th><th class="f-td-num">Техники</th><th class="f-td-num">Записей ТО</th><th class="f-td-num">Размер</th><th style="width:190px"></th></tr></thead>
+    <tbody>${list.map(s => `<tr>
+      <td class="f-td-nowrap" data-label="Создана">${esc(fmtStamp(s.at))}</td>
+      <td class="is-head">${esc(s.label)}${s.auto ? '' : ' <span class="f-badge">вручную</span>'}</td>
+      <td class="f-td-num" data-label="Техники">${s.counts && s.counts.vehicles != null ? s.counts.vehicles : '—'}</td>
+      <td class="f-td-num" data-label="Записей ТО">${s.counts && s.counts.maint != null ? s.counts.maint : '—'}</td>
+      <td class="f-td-num f-td-nowrap" data-label="Размер">${esc(fmtSize(s.size))}</td>
+      <td class="is-acts"><div class="sf-row-acts">
+        <button type="button" class="f-btn f-btn-sm" data-act="snap-restore" data-id="${s.id}">Вернуться</button>
+        <button type="button" class="f-icon-btn" data-act="snap-download" data-id="${s.id}" title="Сохранить в файл" aria-label="Сохранить в файл">${FI.download(15)}</button>
+        <button type="button" class="f-icon-btn" data-act="snap-delete" data-id="${s.id}" title="Удалить точку" aria-label="Удалить точку">${FI.trash(15)}</button></div></td>
+    </tr>`).join('')}</tbody></table></div></div>` : '<div class="f-hint">Точек восстановления пока нет — первая создаётся автоматически при запуске программы с данными.</div>';
+}
+
+/* Журнал изменений в карточке техники */
+function renderVehicleHistory(v) {
+  const list = (DB.history || []).filter(e => e.vehicleId === v.id).slice(-12).reverse();
+  if (!list.length) return '';
+  return `
+    <div class="f-panel">
+      <div class="f-panel-title">Журнал изменений карточки</div>
+      <ul class="sf-hist">${list.map(e => `<li><span class="f-td-muted f-td-nowrap">${esc(fmtStamp(e.at))}</span> ${esc(historyText(e))}</li>`).join('')}</ul>
+      <button type="button" class="link-btn" data-act="nav" data-key="safety">Весь журнал — «Сохранность данных»</button>
+    </div>`;
+}
+
+/* =========================================================================
+   27d. КОМАНДНЫЙ ПУНКТ — стартовый экран учёта
+   -------------------------------------------------------------------------
+   Состояние всего парка на одном экране. Каждое число — кнопка: открывает
+   перечень именно этих машин, из которого можно перейти в карточку,
+   провести ТО или сформировать задание (печатная форма).
+
+   Техническая готовность: «неисправна» и «ремонт» — неготовая техника;
+   КТГ = (на учёте − неготовые) / на учёте, где «на учёте» — без списанной.
+   Норматив КТГ подразделения — средний по группам эксплуатации его техники
+   (Настройки → нормативы КТГ); если группа не указана — норматив не считается.
+   ========================================================================= */
+const CP_NOT_READY = new Set(['Ремонт', 'Неисправна']);
+const CP_RANGES = { today: { label: 'Сегодня', days: 0 }, week: { label: 'Неделя', days: 7 }, month: { label: 'Месяц', days: 30 } };
+
+function commandStats() {
+  const active = DB.vehicles.filter(v => v.status !== 'Списано');
+  const st = new Map(active.map(v => [v.id, computeStatus(v)]));
+  const lvl = l => active.filter(v => st.get(v.id).level === l);
+  const unitsMap = new Map();
+  active.forEach(v => {
+    const name = (v.unit || '').trim() || 'Подразделение не указано';
+    if (!unitsMap.has(name)) unitsMap.set(name, []);
+    unitsMap.get(name).push(v);
+  });
+  const units = Array.from(unitsMap.keys()).sort((a, b) => a.localeCompare(b, 'ru')).map(name => {
+    const list = unitsMap.get(name);
+    const notReady = list.filter(v => CP_NOT_READY.has(v.status));
+    const grouped = list.filter(v => v.expGroup && DB.settings.ktgByGroup[v.expGroup] != null);
+    const norm = grouped.length ? grouped.reduce((s, v) => s + Number(DB.settings.ktgByGroup[v.expGroup]), 0) / grouped.length : null;
+    const ktg = list.length ? (list.length - notReady.length) / list.length : null;
+    return { name, list, ready: list.filter(v => v.status === 'В эксплуатации'), faulty: list.filter(v => v.status === 'Неисправна'),
+             repair: list.filter(v => v.status === 'Ремонт'), overdue: list.filter(v => st.get(v.id).level === 'overdue'),
+             ktg, norm, below: ktg != null && norm != null && ktg + 1e-9 < norm };
+  });
+  const notReadyAll = active.filter(v => CP_NOT_READY.has(v.status)).length;
+  return {
+    active, st, units,
+    total: active.length,
+    ready: active.filter(v => v.status === 'В эксплуатации'),
+    faulty: active.filter(v => v.status === 'Неисправна'),
+    repair: active.filter(v => v.status === 'Ремонт'),
+    stored: active.filter(v => v.status === 'На хранении' || v.status === 'Консервация'),
+    ktg: active.length ? (active.length - notReadyAll) / active.length : null,
+    overdue: lvl('overdue'), urgent: lvl('urgent'), soon: lvl('soon'), none: lvl('none'),
+    stale: active.filter(hoursStale)
+  };
+}
+
+/* Работы в окне дат: плановые ТО по сроку. «Сегодня» — срок наступил
+   (включая просроченные), «Неделя»/«Месяц» — до 7/30 дней вперёд */
+function commandCalendar(S, range) {
+  const today = todayISO();
+  const end = addDays(today, CP_RANGES[range].days);
+  return S.active
+    .map(v => ({ v, st: S.st.get(v.id) }))
+    .filter(x => x.st.nextDate && x.st.nextDate <= end && x.st.level !== 'retired')
+    .sort((a, b) => a.st.nextDate.localeCompare(b.st.nextDate) || a.v.name.localeCompare(b.v.name, 'ru'));
+}
+
+/* Перечень по ключу кнопки */
+function commandList(key) {
+  const S = commandStats();
+  const m = /^u(\d+)-(\w+)$/.exec(key);
+  if (m) {
+    const u = S.units[Number(m[1])];
+    if (!u) return null;
+    const kinds = { all: ['вся техника', u.list], ready: ['исправная', u.ready], faulty: ['неисправная', u.faulty], repair: ['в ремонте', u.repair], overdue: ['ТО просрочено', u.overdue] };
+    const k = kinds[m[2]] || kinds.all;
+    return { title: `${u.name}: ${k[0]}`, list: k[1], task: m[2] === 'overdue' };
+  }
+  if (/^cal-/.test(key)) {
+    const r = key.slice(4);
+    if (!CP_RANGES[r]) return null;
+    return { title: `Работы по ТО — ${CP_RANGES[r].label.toLowerCase()}`, list: commandCalendar(S, r).map(x => x.v), task: true };
+  }
+  const map = {
+    total: ['Вся техника на учёте', S.active], ready: ['Исправная техника', S.ready], faulty: ['Неисправная техника', S.faulty],
+    repair: ['Техника в ремонте', S.repair], stored: ['На хранении и консервации', S.stored],
+    overdue: ['ТО просрочено', S.overdue, true], urgent: ['Требуется ТО', S.urgent, true], soon: ['Скоро ТО', S.soon, true],
+    none: ['Интервал ТО не задан', S.none], stale: [`Моточасы не обновлялись ${DB.settings.hoursStaleDays} и более дней`, S.stale]
+  };
+  const x = map[key];
+  return x ? { title: x[0], list: x[1], task: !!x[2] } : null;
+}
+
+const cpPct = k => k == null ? '—' : fmtNum(k * 100, 0) + ' %';
+const cpBtn = (key, value, label, opts) => `
+  <button type="button" class="f-stat is-clickable cp-tile ${opts && opts.cls || ''}" data-act="cp-list" data-list="${key}" ${value ? '' : 'data-empty="1"'}>
+    <div class="f-stat-label">${opts && opts.dot ? `<span class="f-dot f-lvl-${opts.dot}"></span>` : ''}${esc(label)}</div>
+    <div class="f-stat-value"${opts && opts.color ? ` style="color:var(--st-${opts.color}-text)"` : ''}>${value}</div>
+    ${opts && opts.hint ? `<div class="f-hint">${esc(opts.hint)}</div>` : ''}
+  </button>`;
+const cpNum = (key, n) => n ? `<button type="button" class="cp-num" data-act="cp-list" data-list="${key}">${n}</button>` : '<span class="cp-num is-zero">0</span>';
+
+function renderCommand() {
+  const S = commandStats();
+  const range = ui.cp.range;
+  const cal = commandCalendar(S, range);
+  const today = todayISO();
+  const b = backupInfo();
+  const P = window.TST && window.TST.platform;
+  const rep = P ? P.checkIntegrity(DB) : null;
+  const ktgNorm = S.units.some(u => u.norm != null);
+  return `
+    <div class="f-page-head">
+      <div>
+        <div class="f-page-title" role="heading" aria-level="1">Командный пункт</div>
+        <div class="f-page-sub">Состояние парка технических средств тыла на ${fmtDate(today)} · каждое число открывает перечень техники</div>
+      </div>
+      <div class="f-page-actions">
+        <button type="button" class="f-btn" data-act="cp-report">${FI.pdf(15)}<span>Доклад о состоянии парка</span></button>
+      </div>
+    </div>
+
+    <div class="cp-section-title">Техническое состояние</div>
+    <div class="f-stats cp-stats">
+      ${cpBtn('total', S.total, 'На учёте', { hint: 'без списанной техники' })}
+      ${cpBtn('ready', S.ready.length, 'Исправна', { color: 'ok', dot: 'ok', hint: 'в эксплуатации' })}
+      ${cpBtn('faulty', S.faulty.length, 'Неисправна', { color: S.faulty.length ? 'overdue' : '', dot: 'overdue' })}
+      ${cpBtn('repair', S.repair.length, 'В ремонте', { color: S.repair.length ? 'urgent' : '', dot: 'urgent' })}
+      ${cpBtn('stored', S.stored.length, 'Хранение и консервация')}
+      <div class="f-stat cp-ktg"><div class="f-stat-label">КТГ парка</div>
+        <div class="f-stat-value">${cpPct(S.ktg)}</div><div class="f-hint">(на учёте − неисправна − в ремонте) / на учёте</div></div>
+    </div>
+
+    <div class="cp-section-title">Техническое обслуживание</div>
+    <div class="f-stats cp-stats">
+      ${cpBtn('overdue', S.overdue.length, 'ТО просрочено', { color: S.overdue.length ? 'overdue' : '', dot: 'overdue' })}
+      ${cpBtn('urgent', S.urgent.length, 'Требуется ТО', { color: S.urgent.length ? 'urgent' : '', dot: 'urgent' })}
+      ${cpBtn('soon', S.soon.length, 'Скоро ТО', { color: S.soon.length ? 'soon' : '', dot: 'soon' })}
+      ${cpBtn('none', S.none.length, 'Интервал не задан', { dot: 'none' })}
+      ${cpBtn('stale', S.stale.length, 'Моточасы не обновлялись', { hint: `${DB.settings.hoursStaleDays} и более дней` })}
+    </div>
+
+    <div class="cp-grid">
+      <div class="f-panel cp-units">
+        <div class="f-panel-title">Готовность по подразделениям</div>
+        ${S.units.length ? `<div class="f-table-wrap"><div class="f-table-scroll"><table class="f-table f-table-stack cp-table">
+          <thead><tr><th>Подразделение</th><th class="f-td-num">Всего</th><th class="f-td-num">Исправна</th><th class="f-td-num">Неиспр.</th><th class="f-td-num">Ремонт</th><th class="f-td-num">ТО просроч.</th><th style="width:110px">КТГ${ktgNorm ? ' / норматив' : ''}</th></tr></thead>
+          <tbody>${S.units.map((u, i) => `<tr>
+            <td class="f-td-strong is-head">${esc(u.name)}</td>
+            <td class="f-td-num" data-label="Всего">${cpNum('u' + i + '-all', u.list.length)}</td>
+            <td class="f-td-num" data-label="Исправна">${cpNum('u' + i + '-ready', u.ready.length)}</td>
+            <td class="f-td-num" data-label="Неисправна">${cpNum('u' + i + '-faulty', u.faulty.length)}</td>
+            <td class="f-td-num" data-label="Ремонт">${cpNum('u' + i + '-repair', u.repair.length)}</td>
+            <td class="f-td-num" data-label="ТО просрочено">${cpNum('u' + i + '-overdue', u.overdue.length)}</td>
+            <td data-label="КТГ"><div class="cp-ktg-cell ${u.below ? 'is-below' : ''}"><span>${cpPct(u.ktg)}${u.norm != null ? ' / ' + cpPct(u.norm) : ''}</span>
+              <div class="cp-bar"><i style="width:${Math.round((u.ktg || 0) * 100)}%"></i>${u.norm != null ? `<b style="left:${Math.round(u.norm * 100)}%" title="Норматив"></b>` : ''}</div></div></td>
+          </tr>`).join('')}</tbody></table></div></div>
+          ${S.units.some(u => u.below) ? '<p class="f-hint" style="color:var(--st-overdue-text)">Красным отмечены подразделения с КТГ ниже норматива.</p>' : ''}`
+        : '<div class="f-hint">Техники на учёте нет.</div>'}
+      </div>
+
+      <div class="f-panel cp-cal">
+        <div class="cp-cal-head">
+          <div class="f-panel-title">Календарь работ</div>
+          <div class="f-tabs cp-tabs" role="tablist">${Object.keys(CP_RANGES).map(k => `<button type="button" class="f-tab ${k === range ? 'is-active' : ''}" data-act="cp-range" data-range="${k}" role="tab" aria-selected="${k === range}">${CP_RANGES[k].label}</button>`).join('')}</div>
+        </div>
+        ${cal.length ? `<div class="cp-cal-list">${cal.slice(0, 40).map(({ v, st }) => {
+          const late = st.nextDate < today;
+          return `<div class="cp-cal-row is-clickable" data-act="open-vehicle" data-id="${v.id}">
+            <div class="cp-cal-date ${late ? 'is-late' : st.nextDate === today ? 'is-today' : ''}"><b>${fmtDate(st.nextDate).slice(0, 5)}</b><span>${late ? 'просрочено' : st.nextDate === today ? 'сегодня' : new Date(toDate(st.nextDate)).toLocaleDateString('ru-RU', { weekday: 'short' })}</span></div>
+            <div class="cp-cal-main"><div class="f-td-strong">${esc(nextMaintKind(v))} · ${esc(v.name)}</div>
+              <div class="f-td-muted f-fit-sub">${esc([v.regNumber, v.unit].filter(Boolean).join(' · ') || '—')}</div></div>
+            ${levelBadge(st.level)}
+            <button type="button" class="f-icon-btn" data-act="add-maint" data-id="${v.id}" title="Провести ТО" aria-label="Провести ТО">${FI.wrench(15)}</button>
+          </div>`; }).join('')}</div>
+          <div class="sf-actions" style="margin-top:10px">
+            <button type="button" class="f-btn" data-act="cp-list" data-list="cal-${range}">${FI.list(15)}<span>Перечень (${cal.length})</span></button>
+            <button type="button" class="f-btn f-btn-primary" data-act="cp-task" data-list="cal-${range}">${FI.pdf(15)}<span>Сформировать задание</span></button>
+          </div>`
+        : `<div class="f-hint">${range === 'today' ? 'На сегодня плановых работ нет.' : 'В этом периоде плановых ТО по сроку нет.'} Сроки по моточасам — в разделе «Ближайшие ТО».</div>`}
+      </div>
+    </div>
+
+    <div class="f-panel cp-safety ${b.due || (rep && rep.errors.length) ? 'is-due' : ''}">
+      <div class="cp-safety-row">
+        <div><div class="f-panel-title">Сохранность данных</div>
+          <div class="f-hint">${esc(backupAgoText(b).replace(/^./, c => c.toUpperCase()))}${b.due ? ' — пора сохранить копию на внешний носитель' : ''} · в корзине: ${(DB.trash || []).length} · проверка целостности: ${rep ? (rep.errors.length ? rep.errors.length + ' ' + plural(rep.errors.length, 'ошибка', 'ошибки', 'ошибок') : 'ошибок нет') : '—'}</div></div>
+        <div class="sf-actions">
+          <button type="button" class="f-btn ${b.due ? 'f-btn-primary' : ''}" data-act="backup-export">${FI.download(15)}<span>Резервная копия</span></button>
+          <button type="button" class="f-btn" data-act="nav" data-key="safety">Подробнее</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* Перечень техники по нажатию на число */
+function commandListModal(key) {
+  const L = commandList(key);
+  if (!L) return;
+  const rows = L.list.slice().sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  const m = openModal(`
+    <div class="f-modal-head">
+      <div><div class="f-modal-title">${esc(L.title)}</div><div class="f-modal-sub">Единиц техники: ${rows.length} · на ${fmtDate(todayISO())}</div></div>
+      <button type="button" class="f-modal-close" data-close aria-label="Закрыть">${FI.x(16)}</button>
+    </div>
+    <div class="f-modal-body">
+      ${rows.length ? `<div class="f-table-wrap"><div class="f-table-scroll"><table class="f-table f-table-stack">
+        <thead><tr><th>Техника</th><th>Подразделение</th><th>Статус</th><th>Состояние ТО</th><th>Очередное ТО</th></tr></thead>
+        <tbody>${rows.map(v => { const st = computeStatus(v); return `<tr class="is-clickable" data-cp-open="${v.id}">
+          <td class="is-head"><div class="f-td-strong">${esc(v.name)}</div>${v.regNumber ? `<span class="f-plate f-fit-sub">${esc(v.regNumber)}</span>` : ''}</td>
+          <td data-label="Подразделение">${esc(v.unit || '—')}</td><td data-label="Статус">${esc(v.status || '—')}</td>
+          <td data-label="Состояние ТО">${levelBadge(st.level)}</td>
+          <td class="f-td-nowrap" data-label="Очередное ТО">${st.level === 'none' || st.level === 'retired' ? '—' : esc(nextMaintKind(v)) + (st.nextDate ? ' до ' + fmtDate(st.nextDate) : '')}</td>
+        </tr>`; }).join('')}</tbody></table></div></div>` : '<div class="f-hint">Таких единиц техники нет.</div>'}
+    </div>
+    <div class="f-modal-foot">
+      <button type="button" class="f-btn" data-close>Закрыть</button>
+      ${rows.length ? `<button type="button" class="f-btn f-btn-primary" data-cp-task>${FI.pdf(15)}<span>${L.task ? 'Сформировать задание на ТО' : 'Печать перечня'}</span></button>` : ''}
+    </div>`);
+  m.root.addEventListener('click', e => {
+    const r = e.target.closest('[data-cp-open]');
+    if (r) { m.close(); go('vehicle', r.dataset.cpOpen); return; }
+    if (e.target.closest('[data-cp-task]')) { m.close(); commandTask(key); }
+  });
+}
+
+/* Задание на проведение ТО / перечень техники — печатная форма */
+function commandTask(key) {
+  const L = commandList(key);
+  if (!L || !L.list.length) { toast('info', 'Нет техники', 'Перечень пуст — задание не сформировано.'); return; }
+  const rows = L.list.slice().sort((a, b) => (computeStatus(a).nextDate || '9').localeCompare(computeStatus(b).nextDate || '9') || a.name.localeCompare(b.name, 'ru'));
+  const body = L.task ? `<table>
+    <thead><tr><th style="width:22pt">№</th><th>Техника, гос. номер</th><th>Подразделение</th><th>Вид работ</th><th>Срок</th><th>Ответственный</th><th style="width:70pt">Отметка о выполнении</th></tr></thead>
+    <tbody>${rows.map((v, i) => { const st = computeStatus(v); return `<tr><td>${i + 1}</td><td>${esc(v.name)}${v.regNumber ? ', ' + esc(v.regNumber) : ''}</td><td>${esc(v.unit || '—')}</td>
+      <td>${esc(st.level === 'none' ? 'Определить интервал ТО' : nextMaintKind(v))}</td><td>${st.nextDate ? fmtDate(st.nextDate) : '—'}${st.remainingHours != null ? ` / ${fmtNum(st.nextHours, 0)} мото·ч` : ''}</td>
+      <td>${esc(v.responsible || '')}</td><td></td></tr>`; }).join('')}</tbody></table>`
+    : `<table><thead><tr><th style="width:22pt">№</th><th>Техника</th><th>Гос. номер</th><th>Инв. номер</th><th>Подразделение</th><th>Статус</th><th>Состояние ТО</th></tr></thead>
+    <tbody>${rows.map((v, i) => `<tr><td>${i + 1}</td><td>${esc(v.name)}</td><td>${esc(v.regNumber || '—')}</td><td>${esc(v.invNumber || '—')}</td><td>${esc(v.unit || '—')}</td><td>${esc(v.status || '—')}</td><td>${esc(LEVELS[computeStatus(v).level].label)}</td></tr>`).join('')}</tbody></table>`;
+  printCustom(L.task ? 'ЗАДАНИЕ' : 'ПЕРЕЧЕНЬ', `${L.task ? 'на проведение технического обслуживания: ' : ''}${/^[А-ЯЁA-Z][а-яёa-z]/.test(L.title) ? L.title.charAt(0).toLowerCase() + L.title.slice(1) : L.title} (на ${fmtDate(todayISO())})`, body,
+    L.task ? '<span>Задание выдал: _______________________</span><span>Задание получил: _______________________</span><span>«____» _______________ 20____ г.</span>'
+           : '<span>Составил: _______________________</span><span>«____» _______________ 20____ г.</span>');
+}
+
+/* Доклад о состоянии парка */
+function commandReport() {
+  const S = commandStats();
+  if (!S.total) { toast('info', 'Нет данных', 'Техники на учёте нет.'); return; }
+  const body = `
+    <table><tbody>
+      <tr><td>На учёте (без списанной)</td><td class="p-num">${S.total}</td></tr>
+      <tr><td>Исправна (в эксплуатации)</td><td class="p-num">${S.ready.length}</td></tr>
+      <tr><td>Неисправна</td><td class="p-num">${S.faulty.length}</td></tr>
+      <tr><td>В ремонте</td><td class="p-num">${S.repair.length}</td></tr>
+      <tr><td>На хранении и консервации</td><td class="p-num">${S.stored.length}</td></tr>
+      <tr><td><b>Коэффициент технической готовности</b></td><td class="p-num"><b>${cpPct(S.ktg)}</b></td></tr>
+      <tr><td>ТО просрочено / требуется / скоро</td><td class="p-num">${S.overdue.length} / ${S.urgent.length} / ${S.soon.length}</td></tr>
+    </tbody></table>
+    <h3 style="margin:12pt 0 6pt;font-size:11pt">Готовность по подразделениям</h3>
+    <table><thead><tr><th>Подразделение</th><th class="p-num">Всего</th><th class="p-num">Исправна</th><th class="p-num">Неисправна</th><th class="p-num">Ремонт</th><th class="p-num">КТГ</th><th class="p-num">Норматив</th></tr></thead>
+    <tbody>${S.units.map(u => `<tr><td>${esc(u.name)}</td><td class="p-num">${u.list.length}</td><td class="p-num">${u.ready.length}</td><td class="p-num">${u.faulty.length}</td><td class="p-num">${u.repair.length}</td><td class="p-num">${cpPct(u.ktg)}</td><td class="p-num">${u.norm != null ? cpPct(u.norm) : '—'}</td></tr>`).join('')}</tbody></table>
+    ${S.overdue.length ? `<h3 style="margin:12pt 0 6pt;font-size:11pt">Техника с просроченным ТО</h3>
+    <table><thead><tr><th>Техника</th><th>Подразделение</th><th>Вид ТО</th><th>Срок</th></tr></thead>
+    <tbody>${S.overdue.map(v => { const st = S.st.get(v.id); return `<tr><td>${esc(v.name)}${v.regNumber ? ', ' + esc(v.regNumber) : ''}</td><td>${esc(v.unit || '—')}</td><td>${esc(nextMaintKind(v))}</td><td>${st.nextDate ? fmtDate(st.nextDate) : '—'}</td></tr>`; }).join('')}</tbody></table>` : ''}`;
+  printCustom('ДОКЛАД', `о состоянии парка технических средств тыла на ${fmtDate(todayISO())}`, body,
+    '<span>Докладывает: _______________________</span><span>«____» _______________ 20____ г.</span>');
+}
+
+/* =========================================================================
+   27e. МОДУЛИ УЧЁТА В РЕЕСТРЕ ПЛАТФОРМЫ
+   -------------------------------------------------------------------------
+   Логические границы модулей внутри файла: кто владеет какими данными,
+   от кого зависит, какой версии и чем проверяется. Самотесты работают
+   на временной базе (withTestDB): реальная база подменяется на время
+   теста, сохранение в хранилище в это время заблокировано
+   ========================================================================= */
+let testDepth = 0;
+function withTestDB(tmp, fn) {
+  const saved = DB, savedBase = baseJSON;
+  DB = normalizeDB(tmp);
+  testDepth++;
+  try { return fn(); } finally { testDepth--; DB = saved; baseJSON = savedBase; }
+}
+function testFixture() {
+  const t = todayISO();
+  const iv = { byHours: true, byDate: true, hours: 250, days: 180 };
+  return {
+    version: SCHEMA_VERSION,
+    vehicles: [
+      { id: 'v_test_aaaa01', name: 'Тест-кухня 1', status: 'В эксплуатации', unit: '1 рота', expGroup: 'Строевая', regDate: addDays(t, -400), currentHours: 1000, interval: iv },
+      { id: 'v_test_aaaa02', name: 'Тест-кухня 2', status: 'Ремонт', unit: '1 рота', expGroup: 'Строевая', regDate: addDays(t, -30), currentHours: 0, interval: iv },
+      { id: 'v_test_aaaa03', name: 'Тест-кухня 3', status: 'Неисправна', unit: '2 рота', regDate: addDays(t, -10), currentHours: 0, interval: iv },
+      { id: 'v_test_aaaa04', name: 'Тест-кухня 4', status: 'В эксплуатации', unit: '2 рота', regDate: addDays(t, -5), currentHours: 0, interval: iv }
+    ],
+    maint: [{ id: 'm_test_aaaa01', vehicleId: 'v_test_aaaa01', kind: 'ТО-1', date: addDays(t, -200), hours: 700 }],
+    hours: [
+      { id: 'h_test_aaaa01', vehicleId: 'v_test_aaaa01', date: addDays(t, -200), value: 700, maintId: 'm_test_aaaa01' },
+      { id: 'h_test_aaaa02', vehicleId: 'v_test_aaaa01', date: addDays(t, -2), value: 1000 }
+    ],
+    trips: [], norms: [], catalogEdits: [], trash: [], history: [], settings: DB.settings
+  };
+}
+
+function registerFleetModules() {
+  const P = window.TST && window.TST.platform;
+  if (!P) return;
+  const A = P.assert;
+  defineFleetModel();
+
+  P.register({ id: 'catalog', name: 'Справочник ТСТ', version: '1.4.0', owns: ['catalogEdits', 'norms'], depends: ['platform'],
+    desc: 'Образцы техники, регламенты ТО, нормативная база',
+    tests: [{ name: 'Справочник загружен и отвечает по идентификатору', run() {
+      const c = CAT();
+      A(c && typeof c.get === 'function', 'API справочника недоступен');
+      const any = c.match('КП-130') || c.match('АЦ');
+      return any ? 'найдена позиция ' + any : 'справочник доступен';
+    } }] });
+
+  P.register({ id: 'park', name: 'Парк техники', version: '1.5.0', owns: ['vehicles'], depends: ['platform', 'catalog'],
+    desc: 'Карточки техники, постоянные идентификаторы, массовые операции',
+    tests: [
+      { name: 'Новый идентификатор техники уникален', run() {
+        return withTestDB(testFixture(), () => {
+          const seen = new Set(DB.vehicles.map(v => v.id));
+          for (let i = 0; i < 300; i++) { const id = uniqueVehicleId(); A(!seen.has(id) && P.ids.valid(id), 'повтор или неверный id ' + id); seen.add(id); DB.vehicles.push({ id, name: 'x' }); }
+          return '300 идентификаторов без повторов';
+        });
+      } },
+      { name: 'Повреждённые данные приводятся к корректной структуре', run() {
+        const d = normalizeDB({ vehicles: 'мусор', maint: null, settings: 5 });
+        A(Array.isArray(d.vehicles) && Array.isArray(d.maint) && Array.isArray(d.trash) && d.settings.defaultHours > 0, 'структура не восстановлена');
+        return true;
+      } }
+    ] });
+
+  P.register({ id: 'maint', name: 'Техническое обслуживание', version: '1.6.0', owns: ['maint'], depends: ['park'],
+    desc: 'Журнал ТО, расчёт сроков и состояния по моточасам и календарю',
+    tests: [{ name: 'Срок ТО рассчитывается по моточасам и календарю', run() {
+      return withTestDB(testFixture(), () => {
+        const s1 = computeStatus(getVehicle('v_test_aaaa01'));
+        A(s1.level === 'overdue', 'ожидалось «ТО просрочено», получено ' + s1.level);
+        const s4 = computeStatus(getVehicle('v_test_aaaa04'));
+        A(s4.level === 'ok', 'ожидалось «Норма», получено ' + s4.level);
+        return 'просрочено и норма определены верно';
+      });
+    } }] });
+
+  P.register({ id: 'repairs', name: 'Ремонты и готовность', version: '1.0.0', owns: [], depends: ['park', 'maint'],
+    desc: 'Статусы «Неисправна» и «Ремонт», записи о ремонтах в журнале ТО, КТГ',
+    tests: [{ name: 'КТГ учитывает неисправную технику и ремонт', run() {
+      return withTestDB(testFixture(), () => {
+        const S = commandStats();
+        A(S.total === 4 && S.faulty.length === 1 && S.repair.length === 1, 'неверный подсчёт состояний');
+        A(Math.abs(S.ktg - 0.5) < 1e-9, 'КТГ парка ' + S.ktg + ', ожидалось 0,5');
+        return 'КТГ = 50 % при 2 неготовых из 4';
+      });
+    } }] });
+
+  P.register({ id: 'trips', name: 'Путевые листы и моточасы', version: '1.3.0', owns: ['trips', 'hours'], depends: ['park'],
+    desc: 'Выходы техники, показания счётчика, наработка',
+    tests: [{ name: 'Приросты и текущие моточасы пересчитываются', run() {
+      return withTestDB(testFixture(), () => {
+        recomputeHours('v_test_aaaa01');
+        const v = getVehicle('v_test_aaaa01');
+        A(v.currentHours === 1000, 'текущие моточасы ' + v.currentHours);
+        A(DB.hours.find(h => h.id === 'h_test_aaaa02').delta === 300, 'неверный прирост');
+        return true;
+      });
+    } }] });
+
+  P.register({ id: 'warehouse', name: 'Склад (ЗИП, ГСМ)', version: '0.0.0', state: 'запланирован', owns: [], depends: ['park'],
+    desc: 'Место для будущего модуля: собственная коллекция данных и самотесты добавятся при его разработке' });
+
+  P.register({ id: 'documents', name: 'Документы и печать', version: '1.4.0', owns: [], depends: ['park', 'maint', 'trips'],
+    desc: 'Печатные формы, отчёты, окно предпросмотра',
+    tests: [{ name: 'Отчёт «Перечень техники» формируется', run() {
+      return withTestDB(testFixture(), () => {
+        const spec = captureDocQuiet('report-vehicles');
+        A(spec && spec.title, 'документ не сформирован');
+        return 'документ: ' + spec.title;
+      });
+    } }] });
+
+  P.register({ id: 'analytics', name: 'Командный пункт', version: '1.0.0', owns: [], depends: ['park', 'maint', 'repairs'],
+    desc: 'Стартовый экран: состояние парка, КТГ по подразделениям, календарь работ',
+    tests: [{ name: 'Перечни по нажатию на числа совпадают со счётчиками', run() {
+      return withTestDB(testFixture(), () => {
+        const S = commandStats();
+        ['overdue', 'faulty', 'repair', 'total'].forEach(k => { const L = commandList(k); A(L && L.list.length === (k === 'total' ? S.total : S[k].length), 'перечень ' + k + ' не совпадает'); });
+        const u = S.units.findIndex(x => x.name === '1 рота');
+        A(commandList('u' + u + '-repair').list.length === 1, 'перечень подразделения не совпадает');
+        return true;
+      });
+    } }] });
+
+  P.register({ id: 'qr', name: 'QR-маркировка', version: '1.2.0', owns: [], depends: ['park'],
+    desc: 'Постоянные QR-коды, наклейки, сканирование без интернета',
+    tests: [{ name: 'Код читается обратно, чужие коды отклоняются', run() {
+      return withTestDB(testFixture(), () => {
+        const v = getVehicle('v_test_aaaa01');
+        ['vcard', 'text'].forEach(enc => { const r = qrParse(qrPayload(v, 'basic', todayISO(), enc)); A(r.ok && r.id === v.id, 'не разобран код вида ' + enc); });
+        A(!qrParse('TST:1:<img src=x>').ok && !qrParse('https://example.com').ok, 'принят чужой код');
+        return true;
+      });
+    } }] });
+
+  P.register({ id: 'safety', name: 'Сохранность данных', version: '1.0.0', owns: ['trash', 'history'], depends: ['platform'],
+    desc: 'Точки восстановления, корзина, журнал изменений, проверка перед импортом, миграции',
+    tests: [
+      { name: 'Миграция структуры данных 1 → ' + SCHEMA_VERSION, run() {
+        const keepNewer = newerData, keepLast = lastMigration;
+        try {
+          const old = { version: 1, vehicles: [{ id: 'v_old_000001', name: 'Старая' }] };
+          const d = migrateDB(normalizeDB(old), 1);
+          A(d.version === SCHEMA_VERSION && Array.isArray(d.trash) && Array.isArray(d.history) && d.vehicles.length === 1, 'миграция не выполнена');
+          const nd = migrateDB(normalizeDB({ version: 99, vehicles: [], zzz: 1 }), 99);
+          A(nd.version === 99 && nd.zzz === 1, 'данные новой версии изменены');
+          return true;
+        } finally { newerData = keepNewer; lastMigration = keepLast; }
+      } },
+      { name: 'Журнал фиксирует изменение важного поля', run() {
+        const a = [{ id: 'v_x_000001', name: 'А', invNumber: '1' }], b = [{ id: 'v_x_000001', name: 'А', invNumber: '2' }, { id: 'v_x_000002', name: 'Б' }];
+        const d = historyDiff(a, b, new Date().toISOString());
+        A(d.some(e => e.action === 'edit' && e.field === 'invNumber' && e.from === '1' && e.to === '2'), 'правка не найдена');
+        A(d.some(e => e.action === 'create' && e.vehicleId === 'v_x_000002'), 'создание не найдено');
+        return true;
+      } },
+      { name: 'Удалённая техника возвращается из корзины со связанными записями', run() {
+        return withTestDB(testFixture(), () => {
+          const v = getVehicle('v_test_aaaa01');
+          const removed = { vehicles: [v], maint: DB.maint.filter(m => m.vehicleId === v.id), hours: DB.hours.filter(h => h.vehicleId === v.id), trips: [] };
+          removeVehicle(v, []);
+          const id = trashPush('тест', '', removed);
+          A(!getVehicle(v.id) && DB.trash.length === 1, 'запись не попала в корзину');
+          const r = trashApply(DB, DB.trash[0]);
+          A(getVehicle(v.id) && DB.maint.length === 1 && DB.hours.length === 2 && !DB.trash.length, 'восстановлено не всё');
+          return 'возвращено записей: ' + r.restored + (id ? '' : '');
+        });
+      } },
+      { name: 'Проверка перед импортом находит записи без техники', run() {
+        const f = testFixture();
+        f.trips.push({ id: 't_test_orphan1', vehicleId: 'v_net_takoi1', date: todayISO() });
+        const rep = P.checkIntegrity(normalizeDB(f));
+        A(rep.errors.some(x => x.coll === 'trips'), 'сирота не найдена');
+        A(P.checkIntegrity(P.repair(normalizeDB(f)).db).errors.length === 0, 'исправление не помогло');
+        return true;
+      } }
+    ] });
+}
+
+/* =========================================================================
    28a. ПУБЛИЧНЫЙ API МОДУЛЯ — window.TST.fleet
    Только чтение сводок и переходы; изменение данных — через формы модуля
    ========================================================================= */
@@ -14668,6 +16033,8 @@ const FLEET_API = {
   deleteNorm,
   printChecklist,
   openPrint: () => openPrintWindow(),
+  openView(view) { if (!NAV.some(n => n.key === view)) return; ui.view = view; window.TST.setWorkspace('fleet'); },
+  commandSummary() { const S = commandStats(); return { total: S.total, ready: S.ready.length, faulty: S.faulty.length, repair: S.repair.length, ktg: S.ktg }; },
   qrPayload(id, level, format) {
     const v = getVehicle(id);
     if (!v) return null;
@@ -14709,7 +16076,13 @@ const FLEET_API = {
    29. ИНИЦИАЛИЗАЦИЯ МОДУЛЯ
    ========================================================================= */
 function initFleet() {
+  registerFleetModules();
   loadDB();
+  if (lastMigration) saveDB();          // обновлённая структура сохраняется сразу
+  trashPurgeOld();
+  setTimeout(snapAutoDaily, 4000);
+  if (newerData) setTimeout(() => toast('warning', 'Данные из более новой версии программы',
+    `Структура данных ${newerData.from}, программа понимает ${newerData.to}. Неизвестные сведения сохранятся, но могут не отображаться — обновите файл программы.`, 12000), 1500);
 
   // Первый запуск — наполняем демонстрационными записями
   if (!DB.seeded && !DB.vehicles.length) seedDemo();
@@ -14758,10 +16131,7 @@ function initFleet() {
   });
 
   // Закрытие вкладки: откладывать стирание вложений больше некому
-  window.addEventListener('pagehide', () => {
-    pendingFileDeletes.forEach(id => fileDel(id));
-    pendingFileDeletes.clear();
-  });
+  window.addEventListener('pagehide', () => { pendingFileDeletes.clear(); });
   setTimeout(cleanupOrphanFiles, UNDO_MS + 7000);
 
   // Колокол уведомлений
@@ -14842,7 +16212,8 @@ if (document.readyState === 'loading') {
           ${stat(s.urgent+s.soon,'ТО в ближайшее время','urgent')}
           ${stat(s.ok,'ТО в норме','ok')}
         </div>
-        <p class="overview-fleet-note">Всего на учёте: ${s.total.toLocaleString('ru-RU')}${s.noNorm?` · <b style="color:var(--st-urgent-text)">без норматива ТО: ${s.noNorm}</b>`:''}</p>
+        <p class="overview-fleet-note">Всего на учёте: ${s.total.toLocaleString('ru-RU')}${F.commandSummary&&F.commandSummary().ktg!=null?` · КТГ ${Math.round(F.commandSummary().ktg*100)} %`:''}${s.noNorm?` · <b style="color:var(--st-urgent-text)">без норматива ТО: ${s.noNorm}</b>`:''}</p>
+        ${F.openView?'<button type="button" class="link-btn" data-overview-command>Командный пункт →</button>':''}
       </div>
       <div class="overview-fleet-list">
         <h3>Ближайшие ТО</h3>
@@ -14880,6 +16251,7 @@ if (document.readyState === 'loading') {
     });
     document.querySelectorAll('[data-overview-go]').forEach(b=>b.addEventListener('click',()=>TST.setWorkspace(b.dataset.overviewGo)));
     document.getElementById('overviewFleet')?.addEventListener('click',e=>{
+      if(e.target.closest('[data-overview-command]')&&TST.fleet){TST.fleet.openView('command');return;}
       const b=e.target.closest('[data-overview-vehicle]'); if(b&&TST.fleet)TST.fleet.openVehicle(b.dataset.overviewVehicle);
     });
     document.getElementById('overviewDate').textContent=new Intl.DateTimeFormat('ru-RU',{dateStyle:'long'}).format(new Date());
@@ -15649,12 +17021,14 @@ function buildHelp() {
       p('Программа работает без подключения к сети. Данные хранятся только в этом браузере на этом компьютере; перенос и сохранность обеспечиваются резервной копией (раздел 9).', 'Настройки → Сохранность данных')]),
     h3('1.1 Разделы модуля'),
     tbl(['Раздел', 'Назначение'], [
+      ['Командный пункт', 'Стартовый экран: состояние всего парка, КТГ по подразделениям, ТО и календарь работ. Каждое число открывает перечень этих машин (раздел 12).'],
       ['Парк техники', 'Реестр зарегистрированной техники: поиск, фильтры, сортировка, таблица или карточки, групповые действия; переход в карточку единицы техники.'],
       ['Ближайшие ТО', 'Техника, требующая внимания: просроченные, требующие и приближающиеся ТО, давно не обновлявшиеся моточасы.'],
       ['Путевые листы', 'Ежедневный учёт выходов техники с показаниями счётчика на начало и конец выхода.'],
       ['Планирование', 'Группы эксплуатации и КТГ, наличие моторесурса, потребность в ТО и трудозатратах, фонд времени ремонтного подразделения, экономика.'],
       ['Документы', 'Годовой план, план-график ТО на месяц, заявка на материалы и специалистов, акты.'],
       ['Отчёты', 'Табличные отчёты с предпросмотром, выгрузкой в Excel и печатью.'],
+      ['Сохранность данных', 'Резервные копии, точки восстановления, корзина, журнал изменений, проверка целостности, модули и самотесты (раздел 12).'],
       ['Настройки', 'Интервалы ТО по умолчанию, пороги цветовой индикации, напоминания, резервная копия, управление данными.']]),
     h3('1.2 Связь со справочником'),
     p('Единица техники привязывается к позиции справочника («Тип по справочнику» в карточке). Тогда в карточке доступен регламент ТО из учебного пособия: перечень работ, личный состав, инструмент, материалы и нормативная трудоёмкость. Из справочника видно, сколько техники этого типа стоит на учёте и в каком она состоянии.'),
@@ -15932,6 +17306,34 @@ function buildHelp() {
     ul(['«Проверить QR-код» — проверяет, что идентификатор корректен и уникален, содержимое разбирается обратно в ту же запись, модуль не меньше нормы; в Chrome и Edge код дополнительно распознаётся с изображения.',
       'Раздел «QR-маркировка» показывает по каждой единице: «Наклейка актуальна», «Не печаталась», «Устарела», «Ошибка идентификатора».',
       'Резервная копия сохраняет идентификаторы и отметки о печати; после восстановления на другом компьютере старые наклейки остаются действительными.'])
+  ]);
+  /* 12 */
+  sec('s12', 'Раздел 12. Командный пункт и сохранность данных', [
+    E('div', { class: 'ref-lead' }, [
+      p('«Командный пункт» — стартовый экран учёта. «Сохранность данных» защищает реестр от потери: данные хранятся только в этом браузере на этом компьютере, поэтому программа сама делает снимки и хранит удалённое.')]),
+    h3('12.1 Командный пункт'),
+    ul(['Техническое состояние: на учёте (без списанной), исправна (статус «В эксплуатации»), неисправна, в ремонте, хранение и консервация, КТГ парка.',
+      'КТГ = (на учёте − неисправна − в ремонте) / на учёте. Норматив подразделения — средний норматив КТГ по группам эксплуатации его техники (Планирование → Группы и КТГ); техника без группы в норматив не входит.',
+      'Техническое обслуживание: просрочено, требуется, скоро, интервал не задан, моточасы не обновлялись дольше заданного в настройках срока.',
+      'Календарь работ: плановые ТО по календарному сроку — на сегодня (включая просроченные), на неделю, на месяц. Сроки по моточасам показывает раздел «Ближайшие ТО».',
+      'Каждое число — кнопка: открывается перечень этих машин. Из перечня можно открыть карточку или «Сформировать задание» — печатную форму со сроками, ответственными и графой отметки о выполнении.',
+      '«Доклад о состоянии парка» — печатная сводка: состояние, КТГ по подразделениям, техника с просроченным ТО.']),
+    h3('12.2 Как защищены данные'),
+    tbl(['Механизм', 'Что делает'], [
+      ['Резервная копия (ZIP)', 'Полная копия с вложениями. Единственная защита от поломки компьютера — храните её вне компьютера. Напоминание — в командном пункте, обзоре и при входе.'],
+      ['Точки восстановления', 'Снимки базы в браузере: ежедневно и автоматически перед восстановлением из копии, очисткой данных, обновлением структуры, исправлением ошибок, откатом и очисткой корзины. Хранится до 20 автоматических и 20 ручных. Вложения в снимки не входят, но не удаляются, пока на них ссылается хоть одна точка.'],
+      ['Корзина', 'Удалённые карточки, записи ТО, путевые листы и показания хранятся заданное в настройках число дней (по умолчанию 30) и возвращаются вместе со связанными записями.'],
+      ['Журнал изменений', 'Кто бы ни правил карточку, сохраняются прежнее и новое значение важных полей: наименование, номера, подразделение, ответственный, статус, группа, тип по справочнику, даты. Последние изменения видны в карточке техники.'],
+      ['Проверка перед импортом', 'Перед восстановлением из копии или откатом показывается, сколько записей будет загружено, и результат проверки целостности. Ошибки можно исправить автоматически.'],
+      ['Версия структуры данных', 'При обновлении программы данные переводятся на новую структуру автоматически; перед этим создаётся точка восстановления. Данные из более новой версии программы не понижаются — показывается предупреждение.']]),
+    h3('12.3 Восстановление после сбоя'),
+    ol(['Ошибочно удалили — «Сохранность данных» → «Корзина» → «Восстановить».',
+      'Ошибочно восстановили не ту копию или обновление прошло неудачно — «Точки восстановления» → «Вернуться» к точке «Перед восстановлением из копии» или «Перед обновлением структуры данных».',
+      'Браузер очищен или компьютер заменён — откройте программу и «Восстановить из копии» последний ZIP-файл.',
+      'Проверка целостности нашла ошибки — «Исправить автоматически» (перед исправлением создаётся точка восстановления).']),
+    h3('12.4 Модули платформы'),
+    p('Программа разделена на модули: справочник, парк, ТО, ремонты и готовность, путевые листы и моточасы, склад (запланирован), документы, командный пункт, QR-маркировка, сохранность данных. Каждый модуль владеет своими данными, имеет версию и самотесты. «Запустить самотесты» проверяет модули на копиях данных — реальные данные при этом не меняются.'),
+    p('Идентификатор записи: <вид>_<время>_<случайная часть> (например, v_… — техника, m_… — запись ТО). Он присваивается один раз и не меняется: на нём держатся связи, журнал изменений и QR-код.')
   ]);
   sections.forEach(x => { x.text = x.el.textContent; });
   return sections;
