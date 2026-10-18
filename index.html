@@ -13969,6 +13969,8 @@ function onWorkspace({ ws }) {
    Формат содержимого (версия схемы 1):
      <сведения о технике>    — строки «Поле: значение» для чтения камерой
      TST:1:<id>              — последняя строка, машиночитаемая
+   Вид кода по умолчанию — карточка контакта vCard (см. QR_ENCS): сведения
+   в FN и NOTE, служебная строка — последней строкой NOTE.
    Служебная строка стоит в конце намеренно: текст, начинающийся с «TST:»,
    камера iPhone принимает за ссылку с неизвестной схемой и сообщает
    «Нет пригодных данных». Поэтому код всегда начинается с обычного текста.
@@ -13979,8 +13981,10 @@ function onWorkspace({ ws }) {
    Ответственное лицо в код не включается: наклейку видит любой человек.
    ========================================================================= */
 const QR_SCHEME = 1;
-// Раскладка содержимого: 2 — служебная строка в конце (1 — была первой, не читалась камерой iPhone)
-const QR_LAYOUT = 2;
+// Раскладка содержимого: 3 — карточка контакта и коррекция L при нехватке места;
+// 2 — текст со служебной строкой в конце; 1 — служебная строка первой. Наклейки
+// раскладок 1–2 камера iPhone не показывает полностью — их нужно перепечатать
+const QR_LAYOUT = 3;
 const QR_PREFIX = 'TST';
 const QR_ID_RE = /^[A-Za-z0-9_-]{4,64}$/;
 const QR_LEVELS = {
@@ -14025,10 +14029,42 @@ function qrDataLines(v, level) {
   }
   return lines;
 }
-function qrPayload(v, level, date) {
+/* Вид кода. «Карточка контакта» (vCard) — камера iPhone показывает
+   обычный текст в QR-коде лишь фрагментом (например, номер, принятый
+   за телефон), а карточку контакта открывает целиком и без интернета;
+   Android показывает её так же. «Обычный текст» — для сканеров и Android. */
+const QR_ENCS = {
+  vcard: { label: 'Карточка контакта (iPhone и Android)' },
+  text:  { label: 'Обычный текст (Android, сканеры)' }
+};
+const QR_ENC_KEY = 'tst-qr-enc';
+function qrEnc() { try { const e = localStorage.getItem(QR_ENC_KEY); return QR_ENCS[e] ? e : 'vcard'; } catch (e) { return 'vcard'; } }
+function qrSetEnc(e) { if (!QR_ENCS[e]) return; try { localStorage.setItem(QR_ENC_KEY, e); } catch (x) {} }
+const qrVEsc = t => String(t).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+function qrPayload(v, level, date, enc) {
   const tag = QR_PREFIX + ':' + QR_SCHEME + ':' + v.id;
+  const lines = level === 'id' ? [] : qrDataLines(v, level).concat(['Сведения на ' + fmtDate(date || todayISO())]);
+  if ((enc || qrEnc()) === 'vcard') {
+    const name = level === 'id' ? 'Регламент-ТСТ' : qrOneLine(v.name, 70);
+    const note = lines.filter(l => !/^Наименование: /.test(l)).concat([tag]).join('\n');
+    // Только N (без дублирующего FN) — иначе основные сведения не помещаются в наклейку 50 × 50
+    return ['BEGIN:VCARD', 'VERSION:3.0', 'N:' + qrVEsc(name), 'NOTE:' + qrVEsc(note), 'END:VCARD'].join('\r\n');
+  }
   if (level === 'id') return 'Регламент-ТСТ\n' + tag;
-  return qrDataLines(v, level).concat(['Сведения на ' + fmtDate(date || todayISO()), tag]).join('\n');
+  return lines.concat([tag]).join('\n');
+}
+/* vCard → текст «Поле: значение» (только N/FN и NOTE; остальное не используется) */
+function qrFromVCard(raw) {
+  const props = {};
+  raw.replace(/\n[ \t]/g, '').split('\n').forEach(l => {
+    const m = /^(N|FN|NOTE)(?:;[^:]*)?:(.*)$/i.exec(l);
+    if (m && !(m[1].toUpperCase() in props)) props[m[1].toUpperCase()] = m[2];
+  });
+  const unesc = t => t.replace(/\\([\\,;nN])/g, (x, c) => (c === 'n' || c === 'N') ? '\n' : c);
+  const note = unesc(props.NOTE || '');
+  const name = props.FN != null ? unesc(props.FN) : (props.N || '').split(/(?<!\\);/).map(unesc).filter(Boolean).join(' ');
+  const named = name && /^[^:\n]+: /m.test(note);   // у наклейки «только идентификатор» в имени — название программы
+  return (named ? 'Наименование: ' + name + '\n' : '') + note;
 }
 /* Контрольная сумма сведений (FNV-1a) — для признака «наклейка устарела» */
 function qrDigest(v, level) {
@@ -14048,7 +14084,7 @@ function qrState(v) {
   return { code: 'ok', label: 'Наклейка актуальна', date: q.issuedAt };
 }
 function qrMark(v, level, format) {
-  v.qr = { scheme: QR_SCHEME, layout: QR_LAYOUT, level, format: format || '', digest: qrDigest(v, level), issuedAt: new Date().toISOString() };
+  v.qr = { scheme: QR_SCHEME, layout: QR_LAYOUT, enc: qrEnc(), level, format: format || '', digest: qrDigest(v, level), issuedAt: new Date().toISOString() };
 }
 /* Наибольший состав данных, при котором модуль на наклейке не меньше нормы */
 function qrFit(v, level, format) {
@@ -14059,9 +14095,12 @@ function qrFit(v, level, format) {
   if (format !== '70x70' && i === 0) i = 1;
   for (; i < order.length; i++) {
     const text = qrPayload(v, order[i]);
-    const code = QR.encode(text, { ecl: 'M' });
-    const mm = f.qr / (code.size + 8);
-    if (mm >= QR_MIN_MODULE_MM || order[i] === 'id') return { level: order[i], text, code, moduleMm: mm, reduced: order[i] !== level };
+    // Сначала коррекция M (15 %); если сведения не помещаются — L (7 %), и лишь затем уменьшается состав
+    for (const ecl of order[i] === 'id' ? ['M'] : ['M', 'L']) {
+      const code = QR.encode(text, { ecl });
+      const mm = f.qr / (code.size + 8);
+      if (mm >= QR_MIN_MODULE_MM || order[i] === 'id') return { level: order[i], text, code, moduleMm: mm, reduced: order[i] !== level };
+    }
   }
 }
 
@@ -14071,6 +14110,14 @@ function qrParse(raw) {
   const text = String(raw == null ? '' : raw).replace(/^﻿/, '').replace(/\r\n?/g, '\n').trim();
   if (!text) return { ok: false, error: 'Пустое содержимое' };
   if (text.length > 3000) return { ok: false, error: 'Слишком длинное содержимое — это не QR-код программы' };
+  if (/^BEGIN:VCARD/i.test(text)) {
+    const conv = qrFromVCard(text).trim();
+    // Карточка склеена в одну строку (вставка в однострочное поле) — берётся только идентификатор
+    return /(?:^|\s)TST:/.test(conv) ? qrParseText(conv) : qrParseText(text.replace(/\\n/g, '\n'), true);
+  }
+  return qrParseText(text);
+}
+function qrParseText(text, noFields) {
   // Служебная метка TST:<версия>:<идентификатор> — отдельной строкой (в новых
   // наклейках последней, в первых выпусках — первой). Если строки склеены
   // (вставка в однострочное поле), идентификатор заканчивается на пробеле.
@@ -14083,7 +14130,7 @@ function qrParse(raw) {
   if (!QR_ID_RE.test(m[2])) return { ok: false, error: 'Повреждённый идентификатор в QR-коде', text };
   const fields = {};
   // Строки склеены — границы полей утрачены: сведения не сравниваются, только идентификатор
-  if (text.includes('\n')) text.split('\n').filter(l => !/^TST:/.test(l.trim())).forEach(l => { const i = l.indexOf(': '); if (i > 0) fields[l.slice(0, i).trim()] = l.slice(i + 2).trim(); });
+  if (!noFields && text.includes('\n')) text.split('\n').filter(l => !/^TST:/.test(l.trim())).forEach(l => { const i = l.indexOf(': '); if (i > 0) fields[l.slice(0, i).trim()] = l.slice(i + 2).trim(); });
   return { ok: true, id: m[2], fields, text };
 }
 
@@ -14112,11 +14159,13 @@ function qrShowModal(id) {
               <div class="f-hint" id="qrLevelHint"></div></div>
             <div><label class="f-fld-label" for="qrFormat">Формат наклейки</label>
               <select id="qrFormat" class="f-select">${Object.keys(QR_FORMATS).map(k => `<option value="${k}" ${k === format ? 'selected' : ''}>${esc(QR_FORMATS[k].label)}</option>`).join('')}</select></div>
+            <div><label class="f-fld-label" for="qrEnc">Вид кода</label>
+              <select id="qrEnc" class="f-select">${Object.keys(QR_ENCS).map(k => `<option value="${k}" ${k === qrEnc() ? 'selected' : ''}>${esc(QR_ENCS[k].label)}</option>`).join('')}</select></div>
           </div>
           <div class="qr-meta" id="qrMeta"></div>
         </div>
       </div>
-      <div class="f-fld-label" style="margin-top:14px">Содержимое кода (так его покажет камера смартфона)</div>
+      <div class="f-fld-label" style="margin-top:14px">Содержимое кода</div>
       <pre class="qr-text" id="qrText"></pre>
       <div class="f-hint" id="qrCheck"></div>
     </div>
@@ -14146,6 +14195,7 @@ function qrShowModal(id) {
   };
   r.querySelector('#qrLevel').addEventListener('change', draw);
   r.querySelector('#qrFormat').addEventListener('change', draw);
+  r.querySelector('#qrEnc').addEventListener('change', e => { qrSetEnc(e.target.value); draw(); });
   r.querySelector('#qrPng').addEventListener('click', () => { qrDownload(v, fit, 'png'); });
   r.querySelector('#qrSvgBtn').addEventListener('click', () => { qrDownload(v, fit, 'svg'); });
   r.querySelector('#qrCheckBtn').addEventListener('click', () => qrVerify(v, fit, r.querySelector('#qrCheck')));
@@ -14248,6 +14298,8 @@ function qrPrintModal(ids, init) {
           <select id="qpLevel" class="f-select">${Object.keys(QR_LEVELS).map(k => `<option value="${k}" ${k === (init.level || 'basic') ? 'selected' : ''}>${esc(QR_LEVELS[k].label)}</option>`).join('')}</select></div>
         <div><label class="f-fld-label" for="qpCopies">Экземпляров на единицу</label>
           <input id="qpCopies" class="f-input" type="number" min="1" max="20" value="1"></div>
+        <div><label class="f-fld-label" for="qpEnc">Вид кода</label>
+              <select id="qpEnc" class="f-select">${Object.keys(QR_ENCS).map(k => `<option value="${k}" ${k === qrEnc() ? 'selected' : ''}>${esc(QR_ENCS[k].label)}</option>`).join('')}</select></div>
       </div>
       <div class="f-hint" id="qpInfo" style="margin-top:10px"></div>
       <div class="qr-preview" id="qpPreview" aria-label="Предварительный просмотр наклеек"></div>
@@ -14272,6 +14324,7 @@ function qrPrintModal(ids, init) {
     r.querySelector('#qpPreview').innerHTML = sheet.pages.slice(0, 2).join('');
   };
   ['#qpFormat', '#qpMedia', '#qpLevel', '#qpCopies'].forEach(s => r.querySelector(s).addEventListener('change', draw));
+  r.querySelector('#qpEnc').addEventListener('change', e => { qrSetEnc(e.target.value); draw(); });
   r.querySelector('#qpPrint').addEventListener('click', () => {
     const o = read();
     qrPrint(ids, o);
@@ -15847,7 +15900,7 @@ function buildHelp() {
       p('Каждая единица техники при постановке на учёт получает постоянный идентификатор (например, v_mgq2k3x9_a1b2c3d). Он не меняется при правке наименования, подразделения, моточасов и других сведений и сохраняется в резервной копии. QR-код строится из этого идентификатора — повторная печать даёт тот же код.'),
       p('Программа работает без интернета: QR-коды формируются встроенным генератором, наклейки печатаются через окно печати браузера.', 'раздел «QR-маркировка»')]),
     h3('11.1 Что записано в QR-коде'),
-    p('Сначала — сведения обычным текстом «Поле: значение», последняя строка — служебная: TST:1:<идентификатор> (TST — программа, 1 — версия формата). Код намеренно начинается с обычного текста: строку, начинающуюся с «TST:», камера iPhone принимает за ссылку и сообщает «Нет пригодных данных». Ответственное лицо, пароли и другие закрытые сведения в код не записываются: наклейку может прочитать любой человек.'),
+    p('По умолчанию код оформлен как карточка контакта (vCard): имя — наименование техники, в заметке — номера, очередное ТО, дата «Сведения на …» и последней строкой служебная метка TST:1:<идентификатор> (TST — программа, 1 — версия формата). Так сделано потому, что камера iPhone показывает обычный текст из QR-кода лишь фрагментом (например, один номер, принятый за телефон), а карточку контакта открывает целиком и без интернета. Вид «Обычный текст» (строки «Поле: значение») выбирается в окнах «QR-код техники» и «Печать QR-наклеек» — он удобен для Android и сканеров. Ответственное лицо, пароли и другие закрытые сведения в код не записываются: наклейку может прочитать любой человек.'),
     tbl(['Состав данных', 'Что входит', 'Где применять'], [
       ['Только идентификатор', 'Регламент-ТСТ и строка TST:1:<идентификатор>', 'Самый надёжный код. Сведения открываются в программе, где есть база (сценарий 2)'],
       ['Основные сведения', 'наименование, инв. №, гос. №, зав. №, очередное ТО, дата формирования', 'Наклейки 50 × 50 и 60 × 40 мм. Читаются камерой любого смартфона (сценарий 1)'],
@@ -15871,8 +15924,8 @@ function buildHelp() {
       'Проверьте напечатанную наклейку камерой смартфона, затем наклейте её на ровную чистую поверхность без бликов.']),
     tbl(['Формат', 'Размер QR-кода'], qrFm),
     h3('11.4 Сканирование'),
-    ul(['Android: откройте «Камеру» (или Google Объектив) и наведите на код — появится текст; нажмите на него, чтобы прочитать полностью и скопировать.',
-      'iPhone: «Пункт управления» → «Сканер кодов» (или приложение «Камера») — текст кода показывается на экране; для длинного текста удобнее «Сканер кодов». Если на iPhone появляется «Нет пригодных данных», наклейка напечатана в первом выпуске программы (код начинался с TST:) — перепечатайте её.',
+    ul(['Android: откройте «Камеру» (или Google Объектив) и наведите на код — появится контакт с наименованием техники (для вида «Обычный текст» — сам текст); нажмите, чтобы прочитать сведения полностью. Сохранять контакт не нужно.',
+      'iPhone: приложение «Камера» → нажмите жёлтую плашку «Контакт» под кодом — откроется карточка: наименование и заметка со сведениями. Сохранять контакт не нужно — нажмите «Отменить». Если камера показывает только цифры или «Нет пригодных данных», наклейка напечатана в виде «Обычный текст» или в первом выпуске программы — перепечатайте её в виде «Карточка контакта».',
       'Любое приложение — сканер QR-кодов, работающее без сети, тоже подходит. Работу конкретной модели смартфона проверьте заранее на напечатанной наклейке.',
       'Наводите камеру с расстояния 10–20 см, держите код целиком в кадре, избегайте бликов от плёнки и лампы.']),
     h3('11.5 Проверка и обслуживание'),
