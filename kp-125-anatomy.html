@@ -1,0 +1,495 @@
+<title>Анатомия КП-125</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=PT+Sans:ital,wght@0,400;0,700;1,400&family=PT+Mono&display=swap">
+<style>
+/* Layout: технический чертёж — схема-разрез во всю ширину, под ней карточка узла и спецификация; штамп ГОСТ внизу */
+:root {
+  --paper: #e9e6d6;
+  --sheet: #f3f1e5;
+  --ink: #23271c;
+  --muted: #5d6250;
+  --line: #9a9c84;
+  --olive: #4f5b2e;
+  --olive-2: #6b7a3c;
+  --metal: #c9cbbd;
+  --metal-dark: #8e9180;
+  --fire: #d2551b;
+  --fire-2: #f0a63a;
+  --steam: #6c8ea3;
+  --water: #9fbccb;
+  --soup: #c9933f;
+  --fuel: #7a4f1f;
+  --focus: #d2551b;
+  --display: "Russo One", "Arial Narrow", Impact, sans-serif;
+  --body: "PT Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --mono: "PT Mono", "Courier New", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #171a12; --sheet: #1f2318; --ink: #e4e4d2; --muted: #a3a78f; --line: #4c5240;
+    --olive: #8b9b55; --olive-2: #6f7d40; --metal: #3b4033; --metal-dark: #6f7564;
+    --fire: #f07a3a; --fire-2: #f5b450; --steam: #8fb3c8; --water: #3e6578; --soup: #a8782f;
+    --fuel: #c08a4c; --focus: #f5b450; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #171a12; --sheet: #1f2318; --ink: #e4e4d2; --muted: #a3a78f; --line: #4c5240;
+  --olive: #8b9b55; --olive-2: #6f7d40; --metal: #3b4033; --metal-dark: #6f7564;
+  --fire: #f07a3a; --fire-2: #f5b450; --steam: #8fb3c8; --water: #3e6578; --soup: #a8782f;
+  --fuel: #c08a4c; --focus: #f5b450; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 1; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.15rem; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+header { display: grid; gap: 12px; }
+header .lead { max-width: 62ch; font-size: 1.08rem; color: var(--ink); }
+header .lead b { color: var(--olive); }
+
+.sheet { background: var(--sheet); border: 1.5px solid var(--ink); position: relative; }
+.sheet-head { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.toggle { display: inline-flex; border: 1.5px solid var(--ink); }
+.toggle button {
+  font: inherit; font-family: var(--mono); font-size: .85rem; padding: 7px 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer;
+}
+.toggle button + button { border-left: 1.5px solid var(--ink); }
+.toggle button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
+.toggle button:focus-visible, .chip:focus-visible, .part:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.readout { display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--mono); font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.readout b { color: var(--ink); font-weight: 400; }
+.diagram { overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 680px; height: auto; }
+.hint { padding: 8px 16px 12px; font-size: .85rem; color: var(--muted); border-top: 1px dashed var(--line); }
+
+/* SVG */
+.st { stroke: var(--ink); stroke-width: 2; }
+.thin { stroke: var(--ink); stroke-width: 1.2; }
+.f-metal { fill: var(--metal); }
+.f-dark { fill: var(--metal-dark); }
+.f-olive { fill: var(--olive); }
+.f-olive2 { fill: var(--olive-2); }
+.f-sheet { fill: var(--sheet); }
+.f-paper { fill: var(--paper); }
+.f-none { fill: none; }
+.f-water { fill: var(--water); }
+.f-soup { fill: var(--soup); }
+.f-fuel { fill: var(--fuel); }
+.f-ink { fill: var(--ink); }
+.hatch { fill: url(#hatch); }
+.lbl { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
+.ground { stroke: var(--ink); stroke-width: 1.5; }
+.part { cursor: pointer; }
+.part:hover .hl, .part.active .hl { stroke: var(--fire); stroke-width: 3; }
+.badge circle { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.5; }
+.badge text { font-family: var(--mono); font-size: 13px; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.part.active .badge circle, .part:hover .badge circle { fill: var(--ink); }
+.part.active .badge text, .part:hover .badge text { fill: var(--sheet); }
+.leader { stroke: var(--ink); stroke-width: 1; fill: none; }
+
+.flame { fill: var(--fire); transform-box: fill-box; transform-origin: 50% 100%; animation: flick 0.9s ease-in-out infinite alternate; }
+.flame.core { fill: var(--fire-2); animation-duration: .6s; }
+@keyframes flick { from { transform: scaleY(.85) scaleX(1.05); } to { transform: scaleY(1.12) scaleX(.94); } }
+.gas { stroke: var(--fire); stroke-width: 2.2; fill: none; stroke-dasharray: 8 10; animation: flow 1.4s linear infinite; opacity: .85; }
+@keyframes flow { to { stroke-dashoffset: -36; } }
+.smoke { stroke: var(--metal-dark); stroke-width: 2; fill: none; stroke-dasharray: 6 8; animation: flow 2s linear infinite; }
+.steam { stroke: var(--steam); stroke-width: 2; fill: none; stroke-linecap: round; animation: rise 2.4s ease-in infinite; }
+.steam.d2 { animation-delay: .8s; } .steam.d3 { animation-delay: 1.6s; }
+@keyframes rise { 0% { opacity: 0; transform: translateY(8px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px); } }
+.fuelline { stroke: var(--fuel); stroke-width: 3; fill: none; transition: opacity .3s; }
+.fuelflow { stroke: var(--fire-2); stroke-width: 1.5; fill: none; stroke-dasharray: 3 7; animation: flow 1s linear infinite; }
+.logs { transition: opacity .3s; }
+body.solid .liquid-only { opacity: .18; }
+body.solid .fuelflow { animation: none; opacity: 0; }
+body:not(.solid) .logs { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .flame, .gas, .smoke, .steam, .fuelflow { animation: none; }
+}
+
+/* Detail + spec */
+.split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--sheet); border: 1.5px solid var(--ink); padding: 18px 20px; display: grid; gap: 10px; min-width: 0; }
+.card .pos { font-family: var(--mono); font-size: .8rem; color: var(--fire); letter-spacing: .1em; text-transform: uppercase; }
+.card .spec { font-family: var(--mono); font-size: .9rem; border-top: 1px dashed var(--line); padding-top: 10px; color: var(--muted); }
+.card .spec b { color: var(--ink); font-weight: 400; }
+.chips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); border: 1.5px solid var(--ink); background: var(--sheet); }
+.chips li { border-bottom: 1px solid var(--line); }
+.chips li:nth-child(odd) { border-right: 1px solid var(--line); }
+.chip { display: flex; gap: 10px; align-items: baseline; width: 100%; text-align: left; font: inherit; font-size: .92rem; background: transparent; border: 0; color: var(--ink); padding: 8px 12px; cursor: pointer; }
+.chip span { font-family: var(--mono); color: var(--muted); min-width: 2ch; font-variant-numeric: tabular-nums; }
+.chip:hover, .chip[aria-current="true"] { background: var(--paper); }
+.chip[aria-current="true"] span { color: var(--fire); }
+@media (max-width: 420px) { .chips { grid-template-columns: minmax(0,1fr); } .chips li:nth-child(odd) { border-right: 0; } }
+
+/* Process */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0; border: 1.5px solid var(--ink); background: var(--sheet); counter-reset: s; }
+.steps li { padding: 16px 18px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 6px; align-content: start; counter-increment: s; }
+.steps li::before { content: "Этап " counter(s); font-family: var(--mono); font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--fire); }
+.steps h3 { font-size: 1.02rem; }
+.steps p { font-size: .93rem; color: var(--muted); }
+
+.section { display: grid; gap: 14px; }
+.section > p { max-width: 68ch; }
+
+table { width: 100%; border-collapse: collapse; font-size: .93rem; background: var(--sheet); border: 1.5px solid var(--ink); }
+.tbl { overflow-x: auto; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-weight: 400; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+td.v { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.note { font-size: .88rem; color: var(--muted); max-width: 72ch; }
+
+/* ГОСТ title block */
+.stamp { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr) minmax(0,1fr); border: 1.5px solid var(--ink); font-family: var(--mono); font-size: .78rem; background: var(--sheet); max-width: 560px; margin-left: auto; }
+.stamp div { padding: 6px 10px; border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.stamp div:nth-child(3n) { border-right: 0; }
+.stamp div:nth-last-child(-n+3) { border-bottom: 0; }
+.stamp .big { font-family: var(--display); font-size: 1.05rem; }
+.stamp small { display: block; color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Кухня прицепная · КП-125 · схема устройства</div>
+    <h1>Анатомия КП-125</h1>
+    <p class="lead">Полевая кухня на одноосном прицепе. За один цикл готовит <b>обед из двух блюд на 125 человек</b> и даёт кипяток. Работает на дизтопливе или керосине через форсунки, а если их нет — на дровах и угле.</p>
+  </header>
+
+  <section class="sheet" aria-label="Схема-разрез кухни">
+    <div class="sheet-head">
+      <div class="toggle" role="group" aria-label="Вид топлива">
+        <button type="button" id="fuel-liquid" aria-pressed="true">Жидкое топливо</button>
+        <button type="button" id="fuel-solid" aria-pressed="false">Твёрдое топливо</button>
+      </div>
+      <div class="readout" aria-live="polite">
+        <span>Закипание: <b id="r-boil">55–65 мин</b></span>
+        <span>Расход: <b id="r-rate">7–10 кг/ч</b></span>
+        <span>Подача: <b id="r-feed">форсунки</b></span>
+      </div>
+    </div>
+    <div class="diagram">
+      <svg viewBox="0 0 1000 560" role="img" aria-labelledby="svg-title">
+        <title id="svg-title">Упрощённый продольный разрез кухни КП-125 с пронумерованными узлами</title>
+        <defs>
+          <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="8" height="8" class="f-dark"/>
+            <line x1="0" y1="0" x2="0" y2="8" class="thin"/>
+          </pattern>
+          <clipPath id="clip-k1"><rect x="196" y="206" width="158" height="122" rx="6"/></clipPath>
+          <clipPath id="clip-k2"><rect x="396" y="236" width="108" height="92" rx="6"/></clipPath>
+          <clipPath id="clip-k3"><rect x="546" y="206" width="158" height="122" rx="6"/></clipPath>
+        </defs>
+
+        <!-- ground -->
+        <line x1="0" y1="521" x2="1000" y2="521" class="ground"/>
+        <g class="thin">
+          <line x1="20" y1="521" x2="10" y2="533"/><line x1="80" y1="521" x2="70" y2="533"/><line x1="140" y1="521" x2="130" y2="533"/>
+          <line x1="860" y1="521" x2="850" y2="533"/><line x1="920" y1="521" x2="910" y2="533"/><line x1="980" y1="521" x2="970" y2="533"/>
+        </g>
+
+        <!-- 1 Дышло -->
+        <g class="part" data-id="drawbar" tabindex="0" role="button" aria-label="1 Дышло со сцепной петлёй">
+          <path class="st hl f-none" d="M150 410 L40 432"/>
+          <circle cx="30" cy="434" r="11" class="st hl f-none"/>
+          <g class="badge" transform="translate(70 395)"><circle r="12"/><text>1</text></g>
+        </g>
+
+        <!-- 2 Откидная стойка -->
+        <g class="part" data-id="stand" tabindex="0" role="button" aria-label="2 Откидная стойка">
+          <rect x="84" y="420" width="10" height="92" class="st hl f-dark"/>
+          <rect x="72" y="510" width="34" height="8" class="st f-dark"/>
+          <g class="badge" transform="translate(60 475)"><circle r="12"/><text>2</text></g>
+        </g>
+
+        <!-- 11 Топливные баки + 12 фильтр (rendered before chassis) -->
+        <g class="part liquid-only" data-id="tanks" tabindex="0" role="button" aria-label="11 Топливные баки">
+          <rect x="180" y="420" width="130" height="34" rx="16" class="st hl f-fuel"/>
+          <rect x="324" y="420" width="130" height="34" rx="16" class="st hl f-fuel"/>
+          <text x="245" y="442" class="lbl" text-anchor="middle" style="fill: var(--sheet)">48 л</text>
+          <text x="389" y="442" class="lbl" text-anchor="middle" style="fill: var(--sheet)">48 л</text>
+          <g class="badge" transform="translate(245 478)"><circle r="12"/><text>11</text></g>
+        </g>
+
+        <!-- 3 Шасси -->
+        <g class="part" data-id="chassis" tabindex="0" role="button" aria-label="3 Шасси прицепа">
+          <rect x="140" y="402" width="760" height="16" class="st hl f-olive"/>
+          <path d="M560 418 L540 450 L580 450 Z" class="st f-dark"/>
+          <circle cx="560" cy="470" r="50" class="st hl f-ink"/>
+          <circle cx="560" cy="470" r="30" class="st f-dark"/>
+          <circle cx="560" cy="470" r="7" class="st f-sheet"/>
+          <path d="M490 418 Q560 380 630 418" class="st f-none"/>
+          <g class="badge" transform="translate(640 500)"><circle r="12"/><text>3</text></g>
+        </g>
+
+        <!-- 16 Ящик для инструмента -->
+        <g class="part" data-id="toolbox" tabindex="0" role="button" aria-label="16 Ящик для инструмента">
+          <rect x="660" y="420" width="110" height="40" class="st hl f-olive2"/>
+          <line x1="660" y1="432" x2="770" y2="432" class="thin"/>
+          <rect x="705" y="438" width="20" height="6" class="thin f-sheet"/>
+          <g class="badge" transform="translate(790 470)"><circle r="12"/><text>16</text></g>
+        </g>
+
+        <!-- 4 Тепловой блок (корпус) -->
+        <g class="part" data-id="block" tabindex="0" role="button" aria-label="4 Тепловой блок">
+          <rect x="160" y="200" width="610" height="202" class="st hl f-olive"/>
+          <!-- cutaway window -->
+          <rect x="180" y="198" width="540" height="200" class="f-paper"/>
+          <rect x="180" y="198" width="540" height="200" class="thin f-none" stroke-dasharray="5 4"/>
+          <g class="badge" transform="translate(745 215)"><circle r="12"/><text>4</text></g>
+        </g>
+
+        <!-- gas flow (behind kettles) -->
+        <path class="gas" d="M270 385 C 180 360, 185 240, 270 195 M 450 385 C 380 360, 380 250, 450 225 M 625 385 C 720 360, 720 260, 700 200 L 790 200 L 812 180"/>
+        <path class="gas" d="M270 385 C 360 360, 360 240, 360 200 L 540 200 M450 385 C 520 360, 520 260, 540 205"/>
+
+        <!-- 9 Очаг -->
+        <g class="part" data-id="firebox" tabindex="0" role="button" aria-label="9 Очаг">
+          <rect x="190" y="340" width="520" height="54" class="st hl hatch"/>
+          <rect x="206" y="346" width="138" height="42" class="thin f-ink"/>
+          <rect x="400" y="346" width="100" height="42" class="thin f-ink"/>
+          <rect x="556" y="346" width="138" height="42" class="thin f-ink"/>
+          <!-- колосник -->
+          <g class="thin">
+            <line x1="206" y1="384" x2="344" y2="384" stroke-dasharray="4 3"/>
+            <line x1="400" y1="384" x2="500" y2="384" stroke-dasharray="4 3"/>
+            <line x1="556" y1="384" x2="694" y2="384" stroke-dasharray="4 3"/>
+          </g>
+          <!-- logs for solid mode -->
+          <g class="logs">
+            <rect x="225" y="372" width="60" height="10" rx="5" class="thin f-fuel"/><rect x="270" y="366" width="56" height="10" rx="5" class="thin f-fuel"/>
+            <rect x="415" y="372" width="70" height="10" rx="5" class="thin f-fuel"/>
+            <rect x="575" y="372" width="60" height="10" rx="5" class="thin f-fuel"/><rect x="620" y="366" width="56" height="10" rx="5" class="thin f-fuel"/>
+          </g>
+          <!-- flames -->
+          <path class="flame" d="M232 384 Q240 352 252 368 Q262 340 274 368 Q286 348 296 372 Q306 352 318 384 Z"/>
+          <path class="flame core" d="M252 384 Q262 366 274 378 Q286 362 298 384 Z"/>
+          <path class="flame" d="M416 384 Q426 356 438 370 Q450 346 462 370 Q474 356 484 384 Z"/>
+          <path class="flame core" d="M432 384 Q442 368 452 378 Q462 366 472 384 Z"/>
+          <path class="flame" d="M582 384 Q590 352 602 368 Q612 340 624 368 Q636 348 646 372 Q656 352 668 384 Z"/>
+          <path class="flame core" d="M602 384 Q612 366 624 378 Q636 362 648 384 Z"/>
+          <g class="badge" transform="translate(370 410)"><circle r="12"/><text>9</text></g>
+        </g>
+
+        <!-- 10 Форсунка + 12 фильтр-тройник + топливопровод -->
+        <g class="part liquid-only" data-id="burner" tabindex="0" role="button" aria-label="10 Форсунка">
+          <rect x="166" y="356" width="36" height="16" class="st hl f-metal"/>
+          <path d="M202 360 L214 364 L202 368 Z" class="f-ink"/>
+          <g class="badge" transform="translate(150 334)"><circle r="12"/><text>10</text></g>
+        </g>
+        <g class="part liquid-only" data-id="filter" tabindex="0" role="button" aria-label="12 Фильтр-тройник">
+          <path class="fuelline" d="M245 420 L245 396 L130 396 L130 364 L166 364"/>
+          <path class="fuelline" d="M389 420 L389 396 L245 396"/>
+          <path class="fuelflow" d="M389 418 L389 396 L245 396 M245 418 L245 396 L130 396 L130 364 L166 364"/>
+          <rect x="118" y="380" width="24" height="24" class="st hl f-metal"/>
+          <line x1="118" y1="392" x2="142" y2="392" class="thin"/>
+          <g class="badge" transform="translate(110 418)"><circle r="12"/><text>12</text></g>
+        </g>
+
+        <!-- 5 Котёл первых блюд -->
+        <g class="part" data-id="k1" tabindex="0" role="button" aria-label="5 Котёл для первых блюд">
+          <rect x="190" y="200" width="170" height="136" rx="8" class="st hl f-metal"/>
+          <g clip-path="url(#clip-k1)"><rect x="190" y="232" width="170" height="110" class="f-soup"/>
+            <path d="M190 232 Q215 226 240 232 T290 232 T340 232 T390 232" class="thin f-none"/></g>
+          <rect x="182" y="190" width="186" height="12" class="st f-dark"/>
+          <text x="275" y="290" class="lbl" text-anchor="middle" style="fill: var(--ink)">100 л</text>
+          <g class="badge" transform="translate(208 300)"><circle r="12"/><text>5</text></g>
+        </g>
+
+        <!-- 6 Котёл вторых блюд -->
+        <g class="part" data-id="k2" tabindex="0" role="button" aria-label="6 Котёл для вторых блюд">
+          <rect x="390" y="230" width="120" height="106" rx="8" class="st hl f-metal"/>
+          <g clip-path="url(#clip-k2)"><rect x="390" y="270" width="120" height="70" class="f-soup" style="opacity:.75"/>
+            <g class="f-sheet"><circle cx="410" cy="282" r="3"/><circle cx="430" cy="290" r="3"/><circle cx="455" cy="280" r="3"/><circle cx="480" cy="292" r="3"/><circle cx="440" cy="306" r="3"/><circle cx="470" cy="310" r="3"/></g></g>
+          <rect x="382" y="220" width="136" height="12" class="st f-dark"/>
+          <text x="450" y="322" class="lbl" text-anchor="middle" style="fill: var(--ink)">50 л</text>
+          <g class="badge" transform="translate(450 252)"><circle r="12"/><text>6</text></g>
+        </g>
+
+        <!-- 7 Кипятильник -->
+        <g class="part" data-id="k3" tabindex="0" role="button" aria-label="7 Кипятильник">
+          <rect x="540" y="200" width="170" height="136" rx="8" class="st hl f-metal"/>
+          <g clip-path="url(#clip-k3)"><rect x="540" y="226" width="170" height="116" class="f-water"/>
+            <g class="thin f-none"><circle cx="580" cy="300" r="4"/><circle cx="610" cy="270" r="3"/><circle cx="650" cy="290" r="5"/><circle cx="680" cy="255" r="3"/></g></g>
+          <rect x="532" y="190" width="186" height="12" class="st f-dark"/>
+          <text x="625" y="290" class="lbl" text-anchor="middle" style="fill: var(--ink)">100 л</text>
+          <g class="badge" transform="translate(692 300)"><circle r="12"/><text>7</text></g>
+        </g>
+
+        <!-- 8 Пароотводы -->
+        <g class="part" data-id="steamvents" tabindex="0" role="button" aria-label="8 Пароотводы">
+          <path class="st hl f-none" d="M235 190 L235 160 M450 220 L450 172 M665 190 L665 160"/>
+          <rect x="228" y="152" width="14" height="10" class="st f-metal"/>
+          <rect x="443" y="164" width="14" height="10" class="st f-metal"/>
+          <rect x="658" y="152" width="14" height="10" class="st f-metal"/>
+          <path class="steam" d="M235 146 q-6 -8 0 -16 q6 -8 0 -16"/>
+          <path class="steam d2" d="M450 158 q6 -8 0 -16 q-6 -8 0 -16"/>
+          <path class="steam d3" d="M665 146 q-6 -8 0 -16 q6 -8 0 -16"/>
+          <g class="badge" transform="translate(300 150)"><circle r="12"/><text>8</text></g>
+          <line x1="288" y1="152" x2="244" y2="158" class="leader"/>
+        </g>
+
+        <!-- 13 Жарочный шкаф -->
+        <g class="part" data-id="oven" tabindex="0" role="button" aria-label="13 Жарочный шкаф">
+          <rect x="770" y="250" width="110" height="152" class="st hl f-olive2"/>
+          <rect x="784" y="266" width="82" height="66" class="thin f-ink"/>
+          <line x1="790" y1="300" x2="860" y2="300" class="thin" style="stroke: var(--metal)"/>
+          <rect x="800" y="290" width="50" height="10" rx="3" class="f-soup"/>
+          <rect x="804" y="344" width="42" height="6" rx="3" class="thin f-metal"/>
+          <g class="badge" transform="translate(900 300)"><circle r="12"/><text>13</text></g>
+        </g>
+
+        <!-- 14 Дымоход -->
+        <g class="part" data-id="chimney" tabindex="0" role="button" aria-label="14 Дымоход">
+          <rect x="800" y="70" width="26" height="180" class="st hl f-dark"/>
+          <path d="M770 200 L800 200" class="st"/>
+          <path class="smoke" d="M813 240 L813 80"/>
+          <g class="badge" transform="translate(850 170)"><circle r="12"/><text>14</text></g>
+        </g>
+
+        <!-- 15 Дефлектор -->
+        <g class="part" data-id="deflector" tabindex="0" role="button" aria-label="15 Дефлектор">
+          <path d="M782 62 L844 62 L832 46 L794 46 Z" class="st hl f-metal"/>
+          <line x1="798" y1="62" x2="798" y2="70" class="thin"/><line x1="828" y1="62" x2="828" y2="70" class="thin"/>
+          <path class="smoke" d="M790 44 q-10 -14 4 -26 M838 44 q10 -14 -4 -26"/>
+          <g class="badge" transform="translate(870 54)"><circle r="12"/><text>15</text></g>
+        </g>
+
+        <!-- 17 Запасное колесо -->
+        <g class="part" data-id="spare" tabindex="0" role="button" aria-label="17 Запасное колесо">
+          <circle cx="132" cy="290" r="30" class="st hl f-ink"/>
+          <circle cx="132" cy="290" r="16" class="st f-dark"/>
+          <line x1="150" y1="290" x2="160" y2="290" class="st"/>
+          <g class="badge" transform="translate(100 248)"><circle r="12"/><text>17</text></g>
+        </g>
+
+        <text x="16" y="550" class="lbl">Упрощённый продольный разрез. Масштаб условный.</text>
+      </svg>
+    </div>
+    <p class="hint">Нажмите на узел на схеме или в спецификации ниже. Переключатель сверху показывает, чем отличается работа на жидком и твёрдом топливе.</p>
+  </section>
+
+  <div class="split">
+    <article class="card" id="detail" aria-live="polite">
+      <div class="pos" id="d-pos">Поз. 5</div>
+      <h2 id="d-name">Котёл для первых блюд</h2>
+      <p id="d-text"></p>
+      <p class="spec" id="d-spec"></p>
+    </article>
+    <nav aria-label="Спецификация узлов">
+      <ul class="chips" id="chips"></ul>
+    </nav>
+  </div>
+
+  <section class="section">
+    <div class="eyebrow">Как идёт работа</div>
+    <h2>От стоянки до раздачи</h2>
+    <ol class="steps">
+      <li><h3>Развёртывание</h3><p>Кухню отцепляют от тягача, опускают откидную стойку, выравнивают. Ставят дымоход с дефлектором и проверяют, что крышки котлов и пароотводы чистые.</p></li>
+      <li><h3>Заправка</h3><p>Котлы заполняют водой и закладкой. В баки заливают дизтопливо или керосин; при работе на дровах закладывают их в очаг на колосники.</p></li>
+      <li><h3>Розжиг</h3><p>Форсунку разогревают и подают топливо через фильтр-тройник. Пламя бьёт в очаг под котлами. На твёрдом топливе зола уходит в зольник.</p></li>
+      <li><h3>Нагрев</h3><p>Горячие газы обтекают днища и стенки котлов, проходят мимо жарочного шкафа и уходят в дымоход. Закипание занимает около часа на жидком топливе и до полутора часов на дровах.</p></li>
+      <li><h3>Варка</h3><p>Пламя убавляют до поддержания кипения. Лишний пар выходит через пароотводы на крышках, поэтому давление в котлах не растёт.</p></li>
+      <li><h3>Раздача</h3><p>Первое, второе и кипяток раздают из котлов. После раздачи котлы моют, очаг чистят через люк, топливную систему перекрывают.</p></li>
+    </ol>
+  </section>
+
+  <section class="section">
+    <div class="eyebrow">Основные данные</div>
+    <h2>Характеристики</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+        <tbody>
+          <tr><td>Производительность</td><td class="v">обед из 2 блюд на 125 чел.</td></tr>
+          <tr><td>Котёл для первых блюд, полная / рабочая</td><td class="v">112 / 100 л</td></tr>
+          <tr><td>Котёл для вторых блюд, полная / рабочая</td><td class="v">56 / 50 л</td></tr>
+          <tr><td>Кипятильник</td><td class="v">100 л</td></tr>
+          <tr><td>Топливные баки</td><td class="v">2 × 48 л</td></tr>
+          <tr><td>Время закипания, жидкое / твёрдое</td><td class="v">55–65 / 80–95 мин</td></tr>
+          <tr><td>Расход топлива, жидкое / твёрдое</td><td class="v">7–10 / 28–32 кг/ч</td></tr>
+          <tr><td>Шасси</td><td class="v">одноосный прицеп ИАПЗ-739К</td></tr>
+          <tr><td>Габариты, Д × Ш × В</td><td class="v">3700 × 1810 × 2328 мм</td></tr>
+          <tr><td>Собственная масса</td><td class="v">≈ 1110 кг</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Цифры собраны из открытых описаний кухни и каталогов поставщиков, а не из руководства по эксплуатации. Источники расходятся в числе котлов: у части модификаций (КП-125М) указывают два котла для первых блюд. Для точных значений сверяйтесь с формуляром конкретной кухни.</p>
+  </section>
+
+  <div class="stamp" aria-hidden="true">
+    <div><small>Изделие</small><span class="big">КП-125</span></div><div><small>Лист</small>1</div><div><small>Листов</small>1</div>
+    <div><small>Наименование</small>Кухня прицепная. Схема устройства</div><div><small>Масштаб</small>условн.</div><div><small>Позиций</small>17</div>
+  </div>
+</div>
+
+<script>
+const PARTS = [
+  { id: "drawbar", n: 1, name: "Дышло со сцепной петлёй", text: "Тяговая штанга прицепа. Петлёй кухня цепляется за крюк грузовика, трактора или УАЗа.", spec: "" },
+  { id: "stand", n: 2, name: "Откидная стойка", text: "Опора под переднюю часть, когда кухня отцеплена. В походе стойку поднимают и фиксируют.", spec: "" },
+  { id: "chassis", n: 3, name: "Шасси прицепа", text: "Одноосная рама с колёсами на рессорах и амортизаторах. Несёт тепловой блок, баки и ящик с инструментом.", spec: "Базовое шасси: <b>ИАПЗ-739К</b>" },
+  { id: "block", n: 4, name: "Тепловой блок", text: "Общий корпус, в который вставлены котлы и очаг. Стенки удерживают тепло и направляют горячие газы вокруг котлов к дымоходу.", spec: "" },
+  { id: "k1", n: 5, name: "Котёл для первых блюд", text: "Самый большой котёл, для супа, борща или щей. Съёмный, из нержавеющей стали, закрывается крышкой с пароотводом.", spec: "Полная / рабочая вместимость: <b>112 / 100 л</b>" },
+  { id: "k2", n: 6, name: "Котёл для вторых блюд", text: "Меньший котёл для каш, гарниров и тушёных блюд. Вторые блюда густые, поэтому котёл заполняют меньше и следят, чтобы не пригорало.", spec: "Полная / рабочая вместимость: <b>56 / 50 л</b>" },
+  { id: "k3", n: 7, name: "Кипятильник", text: "Котёл для кипятка: на чай, мытьё посуды и дозаправку других котлов горячей водой.", spec: "Вместимость: <b>100 л</b>" },
+  { id: "steamvents", n: 8, name: "Пароотводы", text: "Трубки на крышках котлов. Выпускают пар при кипении, чтобы крышки не срывало и давление внутри не росло.", spec: "" },
+  { id: "firebox", n: 9, name: "Очаг", text: "Топочное пространство под котлами. Для дров, угля, брикетов и пеллет есть колосник и зольник. Чистят очаг через дверцу люка.", spec: "" },
+  { id: "burner", n: 10, name: "Форсунка", text: "Горелка для жидкого топлива. Топливо распыляется и сгорает в очаге ровным пламенем, его можно убавлять после закипания.", spec: "Топливо: <b>дизельное, керосин</b>" },
+  { id: "tanks", n: 11, name: "Топливные баки", text: "Запас жидкого топлива на рабочий день. Баки висят под рамой и соединены с форсунками топливопроводом.", spec: "Ёмкость: <b>2 × 48 л</b>" },
+  { id: "filter", n: 12, name: "Фильтр-тройник", text: "Очищает топливо от грязи и воды и разводит поток от баков к форсункам. Без фильтра форсунки быстро забиваются.", spec: "" },
+  { id: "oven", n: 13, name: "Жарочный шкаф", text: "Духовка в задней части кухни. Её греют те же газы на пути к дымоходу: можно запекать, жарить и подогревать.", spec: "" },
+  { id: "chimney", n: 14, name: "Дымоход", text: "Вертикальная труба над задней частью кухни. Создаёт тягу и уводит дым от раздаточного места. На марше снимается.", spec: "" },
+  { id: "deflector", n: 15, name: "Дефлектор", text: "Колпак на трубе. Защищает от дождя и усиливает тягу при боковом ветре, чтобы пламя не задувало.", spec: "" },
+  { id: "toolbox", n: 16, name: "Ящик для инструмента", text: "Ключи, скребки, кочерга, запасные части форсунок и другой ЗИП кухни.", spec: "" },
+  { id: "spare", n: 17, name: "Запасное колесо", text: "Закреплено на передней части кухни на случай прокола в походе.", spec: "" },
+];
+const byId = Object.fromEntries(PARTS.map(p => [p.id, p]));
+const chips = document.getElementById("chips");
+PARTS.forEach(p => {
+  const li = document.createElement("li");
+  li.innerHTML = `<button type="button" class="chip" data-id="${p.id}"><span>${p.n}</span>${p.name}</button>`;
+  chips.appendChild(li);
+});
+function select(id) {
+  const p = byId[id]; if (!p) return;
+  document.getElementById("d-pos").textContent = "Поз. " + p.n;
+  document.getElementById("d-name").textContent = p.name;
+  document.getElementById("d-text").textContent = p.text;
+  const spec = document.getElementById("d-spec");
+  spec.innerHTML = p.spec; spec.hidden = !p.spec;
+  document.querySelectorAll(".part").forEach(g => g.classList.toggle("active", g.dataset.id === id));
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-current", c.dataset.id === id ? "true" : "false"));
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-id]"); if (t) select(t.dataset.id);
+});
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("part")) { e.preventDefault(); select(e.target.dataset.id); }
+});
+const FUEL = {
+  liquid: { boil: "55–65 мин", rate: "7–10 кг/ч", feed: "форсунки" },
+  solid: { boil: "80–95 мин", rate: "28–32 кг/ч", feed: "колосник, вручную" },
+};
+function setFuel(kind) {
+  document.body.classList.toggle("solid", kind === "solid");
+  document.getElementById("fuel-liquid").setAttribute("aria-pressed", kind === "liquid");
+  document.getElementById("fuel-solid").setAttribute("aria-pressed", kind === "solid");
+  const f = FUEL[kind];
+  document.getElementById("r-boil").textContent = f.boil;
+  document.getElementById("r-rate").textContent = f.rate;
+  document.getElementById("r-feed").textContent = f.feed;
+}
+document.getElementById("fuel-liquid").addEventListener("click", () => setFuel("liquid"));
+document.getElementById("fuel-solid").addEventListener("click", () => setFuel("solid"));
+select("k1");
+</script>
