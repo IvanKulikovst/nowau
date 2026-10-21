@@ -1,0 +1,67 @@
+.kp-stage { position: relative; touch-action: pan-y; outline: none; }
+.kp-stage > svg, .kp-stage > canvas { display: block; width: 100%; height: auto; }
+.kp-stage > .kp-layer { position: absolute; inset: 0; height: 100% !important; pointer-events: none; }
+.kp-stage:focus-visible { box-shadow: 0 0 0 2px var(--anatomy-mid); border-radius: 6px; }
+
+/* топка изнутри: закопчённая футеровка, тёплая от пламени */
+.kp-cavity {
+  --kp-heat: 0;
+  --anatomy-paper: color-mix(in srgb, #4a453f, #8a4a24 calc(var(--kp-heat) * 30%));
+  --anatomy-face: color-mix(in srgb, #554f48, #9a5428 calc(var(--kp-heat) * 30%));
+  --anatomy-top: color-mix(in srgb, #5c564e, #a85c2c calc(var(--kp-heat) * 30%));
+  --anatomy-shade-0: color-mix(in srgb, #3a3631, #6e3a1c calc(var(--kp-heat) * 30%));
+  --anatomy-shade-1: color-mix(in srgb, #403b36, #7a4020 calc(var(--kp-heat) * 30%));
+  --anatomy-shade-2: color-mix(in srgb, #47423c, #864624 calc(var(--kp-heat) * 30%));
+  --anatomy-shade-3: color-mix(in srgb, #4e4842, #924c26 calc(var(--kp-heat) * 30%));
+  --anatomy-hi: color-mix(in srgb, #a19a90, #e0a070 calc(var(--kp-heat) * 55%));
+  --anatomy-mid: color-mix(in srgb, #7d776e, #c07a48 calc(var(--kp-heat) * 55%));
+  --anatomy-lo: #625c54;
+  --anatomy-faint: color-mix(in srgb, #5a544c, #8a5232 calc(var(--kp-heat) * 55%));
+}
+.iso[data-theme="dark"] .kp-cavity {
+  --anatomy-paper: color-mix(in srgb, #161412, #3a1a0a calc(var(--kp-heat) * 40%));
+  --anatomy-face: color-mix(in srgb, #1c1a17, #44200c calc(var(--kp-heat) * 40%));
+  --anatomy-top: color-mix(in srgb, #201d1a, #4c240e calc(var(--kp-heat) * 40%));
+  --anatomy-shade-0: #121110; --anatomy-shade-1: #151311; --anatomy-shade-2: #181614; --anatomy-shade-3: #1b1917;
+  --anatomy-hi: color-mix(in srgb, #8a8278, #ffb070 calc(var(--kp-heat) * 50%));
+  --anatomy-mid: color-mix(in srgb, #57524b, #c8763c calc(var(--kp-heat) * 50%));
+  --anatomy-lo: #3a3631;
+  --anatomy-faint: color-mix(in srgb, #2c2925, #5a2c14 calc(var(--kp-heat) * 50%));
+}
+
+.kp-logs { opacity: var(--kp-wood, 0); transition: opacity .6s var(--anatomy-ease); }
+
+/* без WebGL: плоские языки пламени */
+.kp-flame-fb { fill: #f08a2c; mix-blend-mode: multiply; opacity: 0; }
+.iso[data-theme="dark"] .kp-flame-fb { fill: #ff8a3c; mix-blend-mode: screen; }
+.kp-flame-fb.kp-liquid { opacity: calc(var(--kp-jet, 0) * .85); }
+.kp-flame-fb.kp-solid { opacity: calc(var(--kp-wood-fire, 0) * .6); }
+.kp-stage[data-gl] .kp-fallback { display: none; }
+
+.iso:not([data-theme="light"]) .kp-fire, .iso:not([data-theme="light"]) .kp-air { mix-blend-mode: screen; }
+.iso[data-theme="light"] .kp-air { mix-blend-mode: normal; }
+.iso:not([data-theme="light"]) .kp-air { mix-blend-mode: normal; }
+
+/* резина шин */
+.kp-rubber { --anatomy-paper: #55534f; --anatomy-face: #5d5b57; --anatomy-top: #64625e; --anatomy-shade-0: #42403d; --anatomy-shade-1: #4a4845; --anatomy-shade-2: #52504c; --anatomy-shade-3: #5a5854; --anatomy-lo: #7a7873; --anatomy-faint: #6c6a66; }
+.iso[data-theme="dark"] .kp-rubber { --anatomy-paper: #0c0c0c; --anatomy-face: #101010; --anatomy-top: #121212; --anatomy-shade-0: #080808; --anatomy-shade-1: #0a0a0a; --anatomy-shade-2: #0c0c0c; --anatomy-shade-3: #0e0e0e; --anatomy-lo: #2e2e2e; --anatomy-faint: #222; }
+
+/* котлы в топке: нержавейка, подсвеченная пламенем снизу */
+.kp-cavity .kp-kettle { --anatomy-paper: color-mix(in srgb, #a7a39c, #e09050 calc(var(--kp-heat) * 30%)); --anatomy-face: color-mix(in srgb, #b3afa8, #e89a58 calc(var(--kp-heat) * 30%)); --anatomy-top: #bdb9b2; --anatomy-shade-0: color-mix(in srgb, #8e8a83, #c06a30 calc(var(--kp-heat) * 35%)); --anatomy-shade-1: color-mix(in srgb, #99958e, #c87236 calc(var(--kp-heat) * 35%)); --anatomy-shade-2: color-mix(in srgb, #a4a099, #d07a3c calc(var(--kp-heat) * 35%)); --anatomy-shade-3: color-mix(in srgb, #afaba4, #d88242 calc(var(--kp-heat) * 35%)); --anatomy-hi: #57524b; --anatomy-faint: #8a857d; }
+.iso[data-theme="dark"] .kp-cavity .kp-kettle { --anatomy-paper: color-mix(in srgb, #2c2a27, #5a2a10 calc(var(--kp-heat) * 40%)); --anatomy-face: #33302c; --anatomy-top: #383531; --anatomy-shade-0: color-mix(in srgb, #23211f, #4a220c calc(var(--kp-heat) * 40%)); --anatomy-shade-1: color-mix(in srgb, #282624, #522610 calc(var(--kp-heat) * 40%)); --anatomy-shade-2: color-mix(in srgb, #2d2b28, #5a2a12 calc(var(--kp-heat) * 40%)); --anatomy-shade-3: color-mix(in srgb, #32302c, #622e14 calc(var(--kp-heat) * 40%)); --anatomy-hi: #b8b0a4; --anatomy-faint: #4a4640; }
+
+/* армейская олива: корпус, рама, крылья, навес */
+.kp-olive, .kp-inside {
+  --anatomy-paper: #727852; --anatomy-face: #7b8159; --anatomy-top: #899066;
+  --anatomy-shade-0: #5c6243; --anatomy-shade-1: #646a49; --anatomy-shade-2: #6c724f; --anatomy-shade-3: #747a56;
+  --anatomy-lit-top: #a2a878; --anatomy-lit-shade: #868c61;
+  --anatomy-hi: #22251a; --anatomy-mid: #3a3e2c; --anatomy-lo: #4a4f37; --anatomy-faint: #5b6045; --anatomy-dot: #22251a; --anatomy-lit: #0b0c08;
+}
+.kp-inside { --anatomy-paper: #5d6243; --anatomy-face: #646a49; --anatomy-top: #6c724f; --anatomy-shade-0: #494e35; --anatomy-shade-1: #50553a; --anatomy-shade-2: #575c40; --anatomy-shade-3: #5e6345; }
+.iso[data-theme="dark"] .kp-olive, .iso[data-theme="dark"] .kp-inside {
+  --anatomy-paper: #2b2e1f; --anatomy-face: #34382a; --anatomy-top: #3b3f2b;
+  --anatomy-shade-0: #222519; --anatomy-shade-1: #26291c; --anatomy-shade-2: #2a2d1f; --anatomy-shade-3: #2e3122;
+  --anatomy-lit-top: #4c5236; --anatomy-lit-shade: #3a3e2a;
+  --anatomy-hi: #d6d9c0; --anatomy-mid: #8b8f70; --anatomy-lo: #5d6147; --anatomy-faint: #444831; --anatomy-dot: #d6d9c0; --anatomy-lit: #ffffff;
+}
+.iso[data-theme="dark"] .kp-inside { --anatomy-paper: #222519; --anatomy-face: #282b1d; --anatomy-top: #2c2f20; }
