@@ -9,7 +9,7 @@
 | Модуль (`id`) | Владеет данными | Зависит от | Где в `index.html` |
 |---|---|---|---|
 | Ядро платформы (`platform`) | — | — | скрипт «ПЛАТФОРМА „РЕГЛАМЕНТ-ТС“ — window.TST.platform» |
-| Справочник ТСТ (`catalog`) | `catalogEdits`, `norms` | platform | скрипт справочника, `TST.catalog` |
+| Справочник ТС (`catalog`) | `catalogEdits`, `norms` | platform | скрипт справочника, `TST.catalog` |
 | Парк техники (`park`) | `vehicles` | catalog | модуль учёта, разделы 14–15, 20 |
 | Техническое обслуживание (`maint`) | `maint` | park | разделы 5, 17, 21 |
 | Ремонты и готовность (`repairs`) | — (статусы и записи ТО) | park, maint | раздел 17b, 27d |

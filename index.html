@@ -15801,7 +15801,7 @@ function registerFleetModules() {
   const A = P.assert;
   defineFleetModel();
 
-  P.register({ id: 'catalog', name: 'Справочник ТСТ', version: '1.4.0', owns: ['catalogEdits', 'norms'], depends: ['platform'],
+  P.register({ id: 'catalog', name: 'Справочник ТС', version: '1.4.0', owns: ['catalogEdits', 'norms'], depends: ['platform'],
     desc: 'Образцы техники, регламенты ТО, нормативная база',
     tests: [{ name: 'Справочник загружен и отвечает по идентификатору', run() {
       const c = CAT();
