@@ -3704,19 +3704,28 @@ function backupReminder() {
   return `<div class="note warn no-print"><b>Сделайте резервную копию:</b> ${why}. Данные в браузере могут быть утеряны при очистке истории или смене компьютера. <button class="btn sm" data-act="backup">Сохранить копию</button></div>`;
 }
 
+function demoRng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 /* =====================================================================
-   МОДУЛЬ 16. ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ (15 ВЫМЫШЛЕННЫХ КУРСАНТОВ)
+   МОДУЛЬ 16. ДЕМОНСТРАЦИОННЫЕ ДАННЫЕ (60 ВЫМЫШЛЕННЫХ КУРСАНТОВ)
    Все записи помечены demo: true и удаляются одной кнопкой. Генерация
    детерминирована (фиксированное зерно). В двух анкетах использованы
    наборы оценок контрольных примеров источников (S2 Прил. 3, S4 табл. 7).
    ===================================================================== */
-const DEMO_PEOPLE = [
-  ['Абрамов А.С.', '41 взвод', 4.6], ['Белов Д.И.', '41 взвод', 4.3], ['Васильев К.П.', '41 взвод', 4.0], ['Григорьев М.А.', '41 взвод', 3.6],
-  ['Дмитриев Н.О.', '41 взвод', 4.8], ['Егоров П.В.', '41 взвод', 3.1], ['Жуков Р.Е.', '41 взвод', 4.2], ['Зайцев С.Г.', '41 взвод', 4.5],
-  ['Ильин Т.Н.', '42 взвод', 3.9], ['Козлов У.Д.', '42 взвод', 4.4], ['Лебедев Ф.М.', '42 взвод', 2.8], ['Морозов Х.А.', '42 взвод', 4.1],
-  ['Никитин Ц.Р.', '42 взвод', 3.5], ['Орлов Ч.С.', '42 взвод', 4.7], ['Павлов Ш.Т.', '42 взвод', 3.8]
-];
-function demoRng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+/* 60 вымышленных курсантов: 4 взвода по 15 человек (41, 43 — экспериментальные; 42, 44 — контрольные) */
+const DEMO_SURNAMES = ['Абрамов', 'Белов', 'Васильев', 'Григорьев', 'Дмитриев', 'Егоров', 'Жуков', 'Зайцев', 'Ильин', 'Козлов', 'Лебедев', 'Морозов', 'Никитин', 'Орлов', 'Павлов',
+  'Романов', 'Сергеев', 'Тарасов', 'Ушаков', 'Фёдоров', 'Харитонов', 'Цветков', 'Чернов', 'Шестаков', 'Щербаков', 'Юдин', 'Яковлев', 'Алексеев', 'Богданов', 'Воробьёв',
+  'Гусев', 'Давыдов', 'Ершов', 'Журавлёв', 'Зуев', 'Исаев', 'Калинин', 'Лукин', 'Макаров', 'Назаров', 'Осипов', 'Попов', 'Родионов', 'Соболев', 'Титов',
+  'Уваров', 'Филиппов', 'Хохлов', 'Цыганов', 'Чистяков', 'Шаров', 'Широков', 'Андреев', 'Борисов', 'Виноградов', 'Голубев', 'Денисов', 'Ефимов', 'Захаров', 'Киселёв'];
+const DEMO_INITIALS = 'АБВГДЕИКЛМНОПРСТ';
+const DEMO_PEOPLE = (() => {
+  const r = demoRng(19820601);
+  return DEMO_SURNAMES.map((sn, i) => {
+    const ini = DEMO_INITIALS[Math.floor(r() * DEMO_INITIALS.length)] + '.' + DEMO_INITIALS[Math.floor(r() * DEMO_INITIALS.length)] + '.';
+    const ab = Math.round((2.7 + 2.2 * (r() + r()) / 2) * 10) / 10; /* способность 2,7…4,9, чаще около середины */
+    return [sn + ' ' + ini, (41 + Math.floor(i / 15)) + ' взвод', ab];
+  });
+})();
+const DEMO_EG = ['41 взвод', '43 взвод'];
 const hasDemo = () => state.objects.some(o => o.demo);
 function loadDemo() {
   const rnd = demoRng(20260522);
@@ -3724,11 +3733,11 @@ function loadDemo() {
   const pick = arr => arr[Math.floor(rnd() * arr.length)];
   const v13 = METHOD.COEF_SETS['src-vpk13'].items, v16 = METHOD.COEF_SETS['src-vpk16'].items, p5 = METHOD.COEF_SETS['src-psk5'].items;
   const CONTROL_EX = { 1: [4, 4, 5, 5, 4, 4, 5, 5, 5, 5, 5, 5, 4], 2: [4, 3, 5, 5, 4, 4, 3, 5, 4, 4, 4, 3, 4] }; /* S4 табл. 7; S2 Прил. 3 */
-  const organs = ['Центральный округ', 'Северо-Западный округ', 'Южный округ'];
+  const organs = ['Центральный округ', 'Северо-Западный округ', 'Южный округ', 'Уральский округ'];
   if (!state.controlRecords) state.controlRecords = []; if (!state.practiceReports) state.practiceReports = [];
   const objs = DEMO_PEOPLE.map(([name, group, ab], i) => {
     const o = { id: Store.uid(), demo: true, name, group, specialty: SPECIALTIES[0], year: '2023', notes: 'Демонстрационные данные (вымышленное лицо)', createdAt: Store.nowIso(),
-      applicant: { education: pick(['школа', 'школа', 'колледж', 'лицей', 'кадетский корпус / училище']), experience: i % 5 === 3 ? 'военная служба по контракту, 2 года' : '', flags: { commissariat: rnd() < 0.7, camp: rnd() < 0.3, service: i % 5 === 3, combat: i === 3 || i === 11 } } };
+      applicant: { education: pick(['школа', 'школа', 'колледж', 'лицей', 'кадетский корпус / училище']), experience: i % 5 === 3 ? 'военная служба по контракту, 2 года' : '', flags: { commissariat: rnd() < 0.7, camp: rnd() < 0.3, service: i % 5 === 3, combat: i % 9 === 3 } } };
     state.objects.push(o); return { o, ab, i };
   });
   const rec = (o, stage, semester, form, kind, markType, mark, extra = {}) => state.controlRecords.push({ id: Store.uid(), demo: true, objectId: o.id, stage, semester, date: extra.date || '', kind, type: 'external', methodFamily: extra.mf || '', method: '', form, block: (METHOD.CONTROL.forms.find(f => f.id === form) || {}).block || 'diagnostics', discipline: extra.disc || '', markType, mark, comps: extra.comps || [], note: '', createdAt: Store.nowIso() });
@@ -3747,33 +3756,33 @@ function loadDemo() {
     for (let k = 0; k < 18; k++) { const g = grade(ab, 0.1, 3); g0a.input.x[g] = (g0a.input.x[g] || 0) + 1; }
     for (let k = 0; k < 3; k++) { const g = grade(ab, 0, 3); g0a.input.y[g] = (g0a.input.y[g] || 0) + 1; }
     const r0 = Model.compute(g0a); g0a.result = r0.result; g0a.status = 'final'; g0a.finalizedAt = Store.nowIso(); state.assessments.push(g0a);
-    /* Анкеты войсковой практики 4 и 5 курса (ЭГ — 41 взвод — улучшение к 5 курсу) */
-    const eg = o.group === '41 взвод';
+    /* Анкеты войсковой практики 4 и 5 курса (ЭГ — 41 и 43 взвод — улучшение к 5 курсу) */
+    const eg = DEMO_EG.includes(o.group);
     const g4 = CONTROL_EX[i + 1] || v13.map(() => grade(ab, 0, 2));
     const m4 = Math.round(g4.reduce((s, v) => s + v, 0) / g4.length + (rnd() < 0.25 ? (rnd() < 0.5 ? -1 : 1) : 0));
     createAssessment('practice', o.id, { date: '2021-10-15', course: 4, evaluator: 'командир роты (демо)', evaluator2: 'руководитель практики (демо)', unit: 'в/ч 0000 (демо)' }, Object.fromEntries(v13.map((c, k) => [c.id, g4[k]])), { leader: String(Math.max(2, Math.min(5, m4))), commission: String(Math.max(2, Math.min(5, m4))) }, true);
-    if (i !== 14) {
+    if (i % 20 !== 19) { /* трое отчислены до 5 курса */
       const g5 = v13.map((c, k) => Math.max(1, Math.min(5, g4[k] + (eg ? (rnd() < 0.45 ? 1 : 0) : (rnd() < 0.2 ? 1 : rnd() < 0.15 ? -1 : 0)))));
       const m5 = Math.max(2, Math.min(5, Math.round(g5.reduce((s, v) => s + v, 0) / g5.length)));
       createAssessment('practice', o.id, { date: '2022-05-16', course: 5, evaluator: 'командир роты (демо)', evaluator2: 'руководитель практики (демо)', unit: 'в/ч 0000 (демо)' }, Object.fromEntries(v13.map((c, k) => [c.id, g5[k]])), { leader: String(m5), commission: String(rnd() < 0.2 ? Math.max(2, Math.min(5, m5 + 1)) : m5) }, true);
     }
     /* Отзывы на выпускников: 1 год — 12 чел., 2 года — 6 чел. */
-    const hdr = { gradYear: '2023', rank: 'лейтенант', position: 'командир взвода', primaryPosition: 'командир взвода', organ: organs[i % 3], city: '—', unitNo: '0000 (демо)' };
-    if (i < 12) {
+    const hdr = { gradYear: '2023', rank: 'лейтенант', position: 'командир взвода', primaryPosition: 'командир взвода', organ: organs[i % 4], city: '—', unitNo: '0000 (демо)' };
+    if (i % 5 !== 4) { /* отзыв после 1 года — 48 чел. */
       const gg = Object.fromEntries([...v16, ...p5].map(c => [c.id, grade(ab, -0.2)]));
       const a = createAssessment('graduate', o.id, { date: '2023-12-01', period: 1, evaluator: 'командир роты (демо)', header: hdr, signers: { direct: 'капитан (демо)' } }, gg, { pskEnabled: true }, true);
       a.input.qualities = Object.fromEntries(METHOD.PERSONAL_QUALITIES.map(q => [q.id, grade(ab)])); a.input.conclusion = ab >= 4.4 ? METHOD.CONCLUSIONS[1] : ab >= 3.2 ? METHOD.CONCLUSIONS[2] : METHOD.CONCLUSIONS[3];
     }
-    if (i < 6) createAssessment('graduate', o.id, { date: '2024-12-01', period: 2, evaluator: 'командир роты (демо)', header: hdr }, Object.fromEntries([...v16, ...p5].map(c => [c.id, grade(ab, 0.1)])), { pskEnabled: true }, true);
+    if (i % 5 < 2) createAssessment('graduate', o.id, { date: '2024-12-01', period: 2, evaluator: 'командир роты (демо)', header: hdr }, Object.fromEntries([...v16, ...p5].map(c => [c.id, grade(ab, 0.1)])), { pskEnabled: true }, true);
   }
-  /* Учебный план (контрольный пример S5, табл. 4) с семестрами и матрицей ВПК; прогноз g для 41 взвода */
+  /* Учебный план (контрольный пример S5, табл. 4) с семестрами и матрицей ВПК; прогноз g для 41 и 42 взводов */
   const ids = Array.from({ length: 6 }, () => Store.uid());
   const rows = [[100, 80, [], 1, ['ВПК-1', 'ВПК-3']], [100, 70, [], 1, ['ВПК-2', 'ВПК-9']], [120, 90, [0], 2, ['ВПК-4', 'ВПК-5']], [80, 50, [0], 2, ['ВПК-6', 'ВПК-8']], [100, 80, [1], 2, ['ВПК-11', 'ВПК-12']], [90, 70, [3, 4], 3, ['ВПК-10', 'ВПК-13', 'ВПК-16']]];
   const cur = { id: Store.uid(), demo: true, name: 'Демо: учебный план D1–D6 (S5, табл. 4)', createdAt: Store.nowIso(), updatedAt: Store.nowIso(), note: 'Демонстрационные данные на основе контрольного примера S5, табл. 4.',
     disciplines: rows.map((r, k) => ({ id: ids[k], name: 'D' + (k + 1), T1: r[0], T2: r[1], m: 0.8, preds: r[2].map(q => ids[q]), semester: r[3], T1min: 40, T2min: 20, final: k === 5, comps: r[4] })),
     opt: { limits: { 1: 380, 2: 520, 3: 160 }, useGamma: true, gamma: 3, students: 'typical', g0: 0.75, c: 0.5, iterations: 2000, seed: 1 } };
   state.curricula.push(cur);
-  for (const { o, i } of objs.filter(x => x.o.group === '41 взвод')) {
+  for (const { o } of objs.filter(x => ['41 взвод', '42 взвод'].includes(x.o.group))) {
     const g0 = state.assessments.find(a => a.type === 'g0' && a.objectId === o.id).result.g0;
     const ab = Object.fromEntries(ids.map(id => [id, { c: Math.round((0.2 + rnd() * 0.6) * 10) / 10 }]));
     const a = Model.newAssessment(state, 'trajectory', o.id); a.meta.date = '2019-06-30';
@@ -3781,7 +3790,7 @@ function loadDemo() {
     a.snapshot = Model.snapshot(state, 'trajectory', a.meta, a.input);
     const r = Model.compute(a); if (r.ok) { a.result = r.result; a.status = 'final'; a.finalizedAt = Store.nowIso(); state.assessments.push(a); }
   }
-  state.practiceReports.push({ id: Store.uid(), demo: true, group: '41 взвод', course: 4, date: '2021-10-20', author: 'руководитель практики (демо)', createdAt: Store.nowIso(), chars: {}, docs: { 0: true, 1: true },
+  for (const grp of DEMO_EG) state.practiceReports.push({ id: Store.uid(), demo: true, group: grp, course: 4, date: '2021-10-20', author: 'руководитель практики (демо)', createdAt: Store.nowIso(), chars: {}, docs: { 0: true, 1: true },
     items: { where: 'в/ч 0000 (демо), обязанности командира взвода', program: 'Программа войсковой практики выполнена в полном объёме (демонстрационный текст).' } });
   persist();
 }
@@ -3799,14 +3808,14 @@ function demoCard() {
   return `<div class="card"><h2>Учебный режим и демонстрационные данные</h2>
   <p>${demo ? '<b>Сейчас включён учебный режим</b> — работа идёт в отдельном хранилище, рабочие данные не затрагиваются.' : 'Учебный режим открывает отдельное хранилище для обучения: рабочие данные в нём не видны и не изменяются.'}</p>
   <div class="row">${demo ? '<button class="btn" data-act="mode-main">Вернуться к рабочим данным</button>' : '<button class="btn" data-act="mode-demo">Перейти в учебный режим</button>'}
-  ${hasDemo() ? '<button class="btn danger" data-act="demo-remove">Удалить демонстрационные данные</button>' : '<button class="btn primary" data-act="demo-load">Загрузить демонстрационные данные (15 человек)</button>'}</div>
-  <p class="hint">Демонстрационные данные: 15 вымышленных курсантов двух взводов (41 — экспериментальный, 42 — контрольный); сведения абитуриентов; журнал контроля по всем этапам (ЕГЭ, профотбор, зачёты, экзамены, летучки, курсовые, нормативы, ТСЗ, ГИА); g₀; анкеты войсковой практики 4 и 5 курса (в двух использованы оценки контрольных примеров источников); отзывы после 1 года (12 чел.) и 2 лет службы (6 чел.); учебный план с матрицей ВПК; прогноз g для 41 взвода; отчёт о практике. Все записи помечены как демонстрационные и удаляются одной кнопкой.</p></div>`;
+  ${hasDemo() ? '<button class="btn danger" data-act="demo-remove">Удалить демонстрационные данные</button>' : '<button class="btn primary" data-act="demo-load">Загрузить демонстрационные данные (60 человек)</button>'}</div>
+  <p class="hint">Демонстрационные данные: 60 вымышленных курсантов четырёх взводов по 15 человек (41 и 43 — экспериментальные, 42 и 44 — контрольные); сведения абитуриентов; журнал контроля по всем этапам (ЕГЭ, профотбор, зачёты, экзамены, летучки, курсовые, нормативы, ТСЗ, ГИА, диплом); g₀; анкеты войсковой практики 4 курса (60) и 5 курса (57 — трое отчислены); отзывы после 1 года (48 чел.) и 2 лет службы (24 чел.) по четырём округам; учебный план с матрицей ВПК; прогноз g для 41 и 42 взводов; отчёты о практике 41 и 43 взводов. В двух анкетах использованы оценки контрольных примеров источников. Все записи помечены как демонстрационные и удаляются одной кнопкой.</p></div>`;
 }
 actions['demo-load'] = async () => {
   if (Store.mode() !== 'demo') { const c = await dialog('Загрузить демонстрационные данные?', '<p>Рекомендуется загружать их в учебном режиме, чтобы не смешивать с рабочими данными. В основном режиме записи будут помечены как демонстрационные и удаляются одной кнопкой.</p>', [{ label: 'Отмена', value: null }, { label: 'В основной режим', value: 'main' }, { label: 'Перейти в учебный и загрузить', value: 'demo', cls: 'primary' }]);
     if (!c) return; if (c === 'demo') { persist(); Store.setMode('demo'); state = Store.load(); modeBanner(); } }
   if (hasDemo()) { toast('Демонстрационные данные уже загружены', true); return; }
-  loadDemo(); toast('Демонстрационные данные загружены: 15 человек'); location.hash = '#/'; render();
+  loadDemo(); toast('Демонстрационные данные загружены: 60 человек'); location.hash = '#/'; render();
 };
 actions['demo-remove'] = async () => { if (!await confirmDlg('Удалить демонстрационные данные?', 'Будут удалены все записи, помеченные как демонстрационные (без корзины). Остальные данные не затрагиваются.', 'Удалить', true)) return; removeDemo(); toast('Демонстрационные данные удалены'); render(); };
 

@@ -15,11 +15,11 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   await page.goto(url + '#/data'); await page.click('[data-act=demo-load]'); await page.click('#dlgFoot .primary'); await page.waitForTimeout(400);
   assert(await page.isVisible('#modeBanner'), 'учебный режим: баннер показан');
   const d = await st(DEMO), m = await st(MAIN);
-  assert(d.objects.length === 15 && d.objects.every(o => o.demo), 'демо: 15 вымышленных курсантов в учебном хранилище');
+  assert(d.objects.length === 60 && d.objects.every(o => o.demo) && new Set(d.objects.map(o => o.name)).size === 60 && new Set(d.objects.map(o => o.group)).size === 4, 'демо: 60 разных вымышленных курсантов (4 взвода) в учебном хранилище');
   assert(m.objects.length === 1 && m.objects[0].name === 'Рабочий Р.Р.', 'рабочие данные не затронуты');
   const types = t => d.assessments.filter(a => a.type === t && a.status === 'final').length;
-  assert(types('practice') === 29 && types('graduate') === 18 && types('g0') === 15 && types('trajectory') === 8 && d.controlRecords.length === 15 * 14, `демо: практика ${types('practice')}, отзывы ${types('graduate')}, g₀ ${types('g0')}, траектории ${types('trajectory')}, журнал ${d.controlRecords.length}`);
-  const ab = d.objects.find(o => o.name === 'Абрамов А.С.'), be = d.objects.find(o => o.name === 'Белов Д.И.');
+  assert(types('practice') === 117 && types('graduate') === 72 && types('g0') === 60 && types('trajectory') === 30 && d.controlRecords.length === 60 * 14, `демо: практика ${types('practice')}, отзывы ${types('graduate')}, g₀ ${types('g0')}, траектории ${types('trajectory')}, журнал ${d.controlRecords.length}`);
+  const ab = d.objects.find(o => o.name.startsWith('Абрамов ')), be = d.objects.find(o => o.name.startsWith('Белов '));
   const p4 = id => d.assessments.find(a => a.type === 'practice' && a.meta.course === 4 && a.objectId === id).result.vpk;
   assert(p4(ab.id).meanPsfk.toFixed(3) === '0.289' && p4(be.id).meanPsfk.toFixed(3) === '0.251', 'демо: контрольные примеры источников внутри (0,289 и 0,251)');
 
@@ -28,7 +28,8 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   assert((await page.textContent('#main')).includes('Группы риска:'), 'главная: предупреждение о группах риска');
   await page.goto(url + '#/risk'); await page.waitForTimeout(80);
   const rk = await page.textContent('#main');
-  assert(rk.includes('Лебедев Ф.М.') && /критично|внимание/.test(rk), 'группы риска: слабый курсант выявлен');
+  const weakest = d.assessments.filter(a => a.type === 'practice' && a.meta.course === 4).sort((x, y) => x.result.vpk.meanPsfk - y.result.vpk.meanPsfk)[0];
+  assert(rk.includes(d.objects.find(o => o.id === weakest.objectId).name) && /критично|внимание/.test(rk), 'группы риска: слабый курсант выявлен');
 
   // профиль
   await page.goto(url + '#/object/' + ab.id + '/profile'); await page.waitForTimeout(80);
