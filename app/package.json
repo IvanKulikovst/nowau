@@ -1,0 +1,55 @@
+{
+  "name": "reglament-ts",
+  "productName": "Регламент-ТС",
+  "version": "1.0.0",
+  "description": "Автоматизированная система учёта и контроля технических средств тыла",
+  "main": "main.js",
+  "author": "Регламент-ТС",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "prepare-www": "node scripts/prepare-www.js",
+    "start": "npm run prepare-www && electron .",
+    "test": "node test/storage.test.js",
+    "dist": "npm run prepare-www && electron-builder --win --x64 --publish never",
+    "dist:dir": "npm run prepare-www && electron-builder --win --x64 --dir --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.15.0"
+  },
+  "build": {
+    "appId": "ru.reglament.ts",
+    "productName": "Регламент-ТС",
+    "copyright": "Регламент-ТС",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "storage.js", "build/icon.png", "www/index.html", "package.json"],
+    "asar": true,
+    "electronLanguages": ["ru", "en-US"],
+    "compression": "normal",
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Регламент-ТС",
+      "uninstallDisplayName": "Регламент-ТС",
+      "deleteAppDataOnUninstall": false,
+      "language": "1049",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "artifactName": "Reglament-TS-Setup-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "Reglament-TS-Portable-${version}.exe"
+    }
+  }
+}

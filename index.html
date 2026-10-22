@@ -2895,6 +2895,7 @@ button.cp-tile[data-empty] .f-stat-value{opacity:.55}
 .mc-row input:checked+span{color:var(--text-secondary)}
 .mc-badge{margin-top:4px;font-size:12px;font-weight:700;color:var(--st-urgent-text)}
 .mc-badge.is-full{color:var(--st-ok-text)}
+.is-native #setStorageStatus,.is-native #setPersistBtn{display:none!important}
 </style>
 <style id="krpd-print-styles">
 /* =====================================================================
@@ -9239,7 +9240,7 @@ function normalizeDB(parsed) {
 
 function loadDB() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = NATIVE() ? NATIVE().initialDb : localStorage.getItem(LS_KEY);   // в приложении основной источник — файл db.json
     const parsedRaw = raw ? JSON.parse(raw) : null;
     // Старая структура переводится на текущую (перед этим — точка восстановления)
     DB = parsedRaw ? migrateDB(normalizeDB(parsedRaw), parsedRaw.version, raw) : blankDB();
@@ -9327,7 +9328,7 @@ function saveDB(opts) {
   if (!(opts && opts.replace)) recordHistory();
   let merged = false;
   try {
-    if (!(opts && opts.replace)) {
+    if (!(opts && opts.replace) && !NATIVE()) {      // слияние с другой вкладкой нужно только в браузере
       const stored = localStorage.getItem(LS_KEY);
       if (stored && stored !== lastRaw) {
         DB = mergeDB(JSON.parse(baseJSON || 'null') || blankDB(), DB, normalizeDB(JSON.parse(stored)));
@@ -9335,7 +9336,7 @@ function saveDB(opts) {
       }
     }
     const raw = JSON.stringify(DB);
-    localStorage.setItem(LS_KEY, raw);
+    if (NATIVE()) nativeSaveDb(raw); else localStorage.setItem(LS_KEY, raw);
     lastRaw = raw;
     baseJSON = raw;
     pendingExternal = false;
@@ -9382,15 +9383,17 @@ function idbRun(mode, fn) {
 }
 
 function filePut(rec) {
+  nativeFilePut(rec);
   return idbRun('readwrite', st => st.put(rec))
     .catch(() => { memFiles.set(rec.id, rec); });
 }
 function fileGet(id) {
   return idbRun('readonly', st => st.get(id))
-    .then(r => r || memFiles.get(id) || null)
-    .catch(() => memFiles.get(id) || null);
+    .then(r => r || memFiles.get(id) || nativeFileGet(id) || null)
+    .catch(() => memFiles.get(id) || nativeFileGet(id) || null);
 }
 function fileDel(id) {
+  nativeFileDel(id);
   return idbRun('readwrite', st => st.delete(id))
     .catch(() => { memFiles.delete(id); });
 }
@@ -10088,6 +10091,7 @@ async function cleanupOrphanFiles() {
   idbRun('readonly', st => st.getAllKeys())
     .then(keys => (keys || []).forEach(k => { if (!used.has(k)) fileDel(k); }))
     .catch(() => {});
+  nativeFileList().then(ids => ids.forEach(k => { if (!used.has(k)) nativeFileDel(k); }));
 }
 
 /* =========================================================================
@@ -13037,8 +13041,7 @@ function renderSettings() {
       <div class="f-hint" style="margin-top:10px">Точки восстановления, корзина, журнал изменений и проверка целостности — в разделе
         <button type="button" class="link-btn" data-act="nav" data-key="safety">«Сохранность данных»</button>.</div>
       <div class="f-hint" style="margin-top:10px">
-        Данные хранятся только в этом браузере на этом компьютере. Программу можно открывать в нескольких вкладках —
-        изменения синхронизируются между ними автоматически.
+        ${NATIVE() ? 'Данные хранятся в файлах в папке данных приложения на этом компьютере (Сохранность данных → Файлы данных приложения).' : 'Данные хранятся только в этом браузере на этом компьютере. Программу можно открывать в нескольких вкладках — изменения синхронизируются между ними автоматически.'}
       </div>
     </div>
 
@@ -14152,6 +14155,8 @@ function onFleetClick(e) {
     case 'cp-task':      commandTask(node.dataset.list); break;
     case 'cp-range':     ui.cp.range = node.dataset.range; renderView(); break;
     case 'cp-report':    commandReport(); break;
+    case 'native-open':  if (NATIVE()) NATIVE().openDataDir(); break;
+    case 'native-choose': nativeChooseDir(); break;
     case 'season':       commandListModal('season'); break;
     case 'snap-create':  snapCreate('manual').then(() => { toast('success', 'Точка восстановления создана', fmtStamp(new Date().toISOString())); fillSafetyAsync(); })
                            .catch(() => toast('danger', 'Не удалось создать точку', 'Хранилище браузера недоступно или переполнено.')); break;
@@ -15269,6 +15274,7 @@ async function snapCreate(reason, label, raw) {
   const rec = { id: uid('s'), at: new Date().toISOString(), reason, label: label || SNAP_REASONS[reason] || reason,
                 auto: reason !== 'manual', size: data.length, counts, schema: SCHEMA_VERSION, data };
   await snapRun('readwrite', st => st.put(rec));
+  nativeSnapPut(rec);
   await snapPrune();
   if (window.TST && window.TST.platform) window.TST.emit(window.TST.platform.EVENTS.SNAPSHOT, { reason });
   return rec;
@@ -15280,7 +15286,7 @@ async function snapList() {
 async function snapPrune() {
   const list = await snapList();
   const kill = list.filter(s => s.auto).slice(SNAP_KEEP_AUTO).concat(list.filter(s => !s.auto).slice(SNAP_KEEP_MANUAL));
-  for (const s of kill) await snapRun('readwrite', st => st.delete(s.id));
+  for (const s of kill) { await snapRun('readwrite', st => st.delete(s.id)); nativeSnapDel(s.id); }
 }
 async function snapAutoDaily() {
   const hasData = DB.vehicles.length || DB.maint.length;
@@ -15316,6 +15322,7 @@ async function snapDelete(id) {
   const ok = await confirmDialog('Удалить точку восстановления?', 'Откатиться к этому состоянию будет нельзя.', 'Удалить');
   if (!ok) return;
   await snapRun('readwrite', st => st.delete(id)).catch(() => null);
+  nativeSnapDel(id);
   fillSafetyAsync();
 }
 
@@ -15434,7 +15441,7 @@ function renderSafety() {
 
     <div class="f-panel">
       <div class="f-panel-title">Резервная копия на внешний носитель</div>
-      <p class="f-hint">Единственная защита от поломки компьютера или переустановки браузера — копия вне этого компьютера (флешка, сетевой диск). ${esc(backupAgoText(b).replace(/^./, c => c.toUpperCase()))}.</p>
+      <p class="f-hint">${NATIVE() ? 'Папка данных защищает от очистки браузера и переустановки программы, но не от поломки компьютера: храните копию вне него' : 'Единственная защита от поломки компьютера или переустановки браузера — копия вне этого компьютера'} (флешка, сетевой диск). ${esc(backupAgoText(b).replace(/^./, c => c.toUpperCase()))}.</p>
       <div class="sf-actions">
         <button type="button" class="f-btn f-btn-primary" data-act="backup-export">${FI.download(15)}<span>Создать резервную копию</span></button>
         <button type="button" class="f-btn" data-act="backup-import">${FI.upload(15)}<span>Восстановить из копии</span></button>
@@ -15443,9 +15450,11 @@ function renderSafety() {
       <button type="button" class="f-btn" id="setPersistBtn" data-act="persist-request" hidden style="margin-top:8px">Включить постоянное хранение</button>
     </div>
 
+    ${renderNativeStorage()}
+
     <div class="f-panel">
       <div class="f-panel-title">Точки восстановления</div>
-      <p class="f-hint">Снимки базы в этом браузере. Позволяют вернуться к состоянию до сбоя, ошибочного импорта или неудачного обновления. Хранится до ${SNAP_KEEP_AUTO} автоматических и ${SNAP_KEEP_MANUAL} ручных точек. Вложения в снимки не входят.</p>
+      <p class="f-hint">${NATIVE() ? 'Снимки базы хранятся в папке данных (snapshots).' : 'Снимки базы в этом браузере.'} Позволяют вернуться к состоянию до сбоя, ошибочного импорта или неудачного обновления. Хранится до ${SNAP_KEEP_AUTO} автоматических и ${SNAP_KEEP_MANUAL} ручных точек. Вложения в снимки не входят.</p>
       <div class="sf-actions"><button type="button" class="f-btn" data-act="snap-create">${FI.save(15)}<span>Создать точку сейчас</span></button></div>
       <div id="sfSnaps"><div class="f-hint">Загрузка…</div></div>
     </div>
@@ -16227,6 +16236,104 @@ function seasonTask() {
 }
 
 /* =========================================================================
+   27g. ПРИЛОЖЕНИЕ ДЛЯ WINDOWS (Electron): ХРАНЕНИЕ В ФАЙЛАХ
+   -------------------------------------------------------------------------
+   Когда программа запущена внутри приложения, доступен мост window.TSTNative
+   (app/preload.js). Тогда основное хранилище — файлы в папке данных:
+   db.json (записи), files/ (вложения), snapshots/ (точки восстановления),
+   backups/ (суточные копии). localStorage браузера для записей не
+   используется, поэтому очистка профиля и лимит localStorage не страшны.
+   В обычном браузере моста нет, и всё работает как раньше.
+   ========================================================================= */
+const NATIVE = () => (window.TSTNative && window.TSTNative.isNative) ? window.TSTNative : null;
+let nativeSaveWarned = false;
+const nativeWarn = (what, e) => console.warn('[ТСТ] приложение: ' + what, e);
+
+function nativeSaveDb(raw) {
+  const N = NATIVE();
+  if (!N) return;
+  N.saveDb(raw).then(() => { nativeSaveWarned = false; }).catch(e => {
+    nativeWarn('не удалось записать файл данных', e);
+    if (!nativeSaveWarned) {
+      nativeSaveWarned = true;
+      toast('danger', 'Данные не записаны в файл',
+        `Не удалось записать файл в папку данных (${N.dataDir}). Проверьте место на диске и права доступа, затем сохраните резервную копию.`, 12000);
+    }
+  });
+}
+function nativeFilePut(rec) {
+  const N = NATIVE();
+  if (!N || !rec || !rec.blob) return;
+  rec.blob.arrayBuffer()
+    .then(buf => N.putFile(rec.id, { name: rec.name || '', type: rec.type || '' }, new Uint8Array(buf)))
+    .catch(e => nativeWarn('вложение не записано', e));
+}
+function nativeFileGet(id) {
+  const N = NATIVE();
+  if (!N) return null;
+  return N.getFile(id).then(r => r ? { id, name: r.meta.name || '', type: r.meta.type || '', size: r.meta.size || r.bytes.length,
+    blob: new Blob([r.bytes], { type: r.meta.type || '' }) } : null).catch(() => null);
+}
+function nativeFileDel(id) { const N = NATIVE(); if (N) N.delFile(id).catch(e => nativeWarn('вложение не удалено', e)); }
+function nativeFileList() { const N = NATIVE(); return N ? N.listFiles().catch(() => []) : Promise.resolve([]); }
+function nativeSnapPut(rec) { const N = NATIVE(); if (N && rec) N.putSnapshot(rec.id, rec).catch(e => nativeWarn('точка не записана', e)); }
+function nativeSnapDel(id) { const N = NATIVE(); if (N) N.delSnapshot(id).catch(e => nativeWarn('точка не удалена', e)); }
+
+/* Точки восстановления: файлы ↔ IndexedDB приложения (в обе стороны) */
+async function nativeSync() {
+  const N = NATIVE();
+  if (!N) return;
+  try {
+    const files = await N.listSnapshots();
+    const mine = await snapAll().catch(() => []);
+    const haveIdb = new Set(mine.map(s => s.id)), haveFile = new Set(files.map(s => s.id));
+    for (const rec of files) if (!haveIdb.has(rec.id)) await snapRun('readwrite', st => st.put(rec));
+    for (const rec of mine) if (!haveFile.has(rec.id)) await N.putSnapshot(rec.id, rec);
+    if (files.some(s => !haveIdb.has(s.id)) && window.TST && window.TST.workspace === 'fleet' && ui.view === 'safety') fillSafetyAsync();
+  } catch (e) { nativeWarn('синхронизация точек восстановления', e); }
+}
+function nativeInit() {
+  const N = NATIVE();
+  if (!N) return;
+  document.documentElement.classList.add('is-native');
+  if (N.recovered) {
+    const r = N.recovered;
+    setTimeout(() => toast('warning', 'Файл данных восстановлен из копии',
+      r.from ? `Основной файл был ${r.reason}. Загружена суточная копия ${r.from}; повреждённый файл сохранён в папке данных.`
+             : `Основной файл повреждён, исправных копий нет. Повреждённый файл сохранён в папке данных (${r.corruptFile || ''}); восстановите данные из резервной копии ZIP.`, 15000), 1500);
+  }
+  setTimeout(nativeSync, 600);
+}
+
+function renderNativeStorage() {
+  const N = NATIVE();
+  if (!N) return '';
+  return `
+    <div class="f-panel">
+      <div class="f-panel-title">Файлы данных приложения</div>
+      <p class="f-hint">Приложение хранит данные в обычных файлах: очистка браузера, переустановка приложения или смена профиля Windows их не затрагивают. Папку целиком можно копировать на флешку или другой компьютер.</p>
+      <div class="f-info-grid">
+        <div><div class="f-info-k">Папка данных</div><div class="f-info-v qr-mono" style="word-break:break-all">${esc(N.dataDir)}</div></div>
+        <div><div class="f-info-k">Версия приложения</div><div class="f-info-v">${esc(N.version)}</div></div>
+      </div>
+      <div class="sf-actions" style="margin-top:12px">
+        <button type="button" class="f-btn" data-act="native-open">${FI.file(15)}<span>Открыть папку данных</span></button>
+        <button type="button" class="f-btn" data-act="native-choose">${FI.upload(15)}<span>Сменить папку…</span></button>
+      </div>
+      <div class="f-hint" style="margin-top:10px">Внутри: <b>db.json</b> — записи учёта, <b>backups</b> — суточные копии (последние 14), <b>files</b> — вложения, <b>snapshots</b> — точки восстановления. Если db.json окажется повреждённым, приложение само возьмёт последнюю исправную копию.</div>
+    </div>`;
+}
+async function nativeChooseDir() {
+  const N = NATIVE();
+  if (!N) return;
+  const ok = await confirmDialog('Сменить папку данных?', 'Выберите новую папку: если в ней уже есть данные приложения, будут использованы они, иначе текущие данные будут скопированы туда. Приложение перезапустится. Старая папка останется нетронутой.', 'Выбрать папку');
+  if (!ok) return;
+  const r = await N.chooseDataDir().catch(e => ({ ok: false, error: e.message }));
+  if (r && r.ok) toast('success', 'Папка данных изменена', `${r.dir}${r.copied ? ' — данные скопированы' : ' — найдены существующие данные'}. Приложение перезапускается…`, 6000);
+  else if (r && r.error) toast('danger', 'Не удалось сменить папку', r.error);
+}
+
+/* =========================================================================
    28a. ПУБЛИЧНЫЙ API МОДУЛЯ — window.TST.fleet
    Только чтение сводок и переходы; изменение данных — через формы модуля
    ========================================================================= */
@@ -16358,6 +16465,7 @@ const FLEET_API = {
 function initFleet() {
   registerFleetModules();
   loadDB();
+  nativeInit();
   if (lastMigration) saveDB();          // обновлённая структура сохраняется сразу
   trashPurgeOld();
   setTimeout(snapAutoDaily, 4000);
@@ -16514,11 +16622,11 @@ if (document.readyState === 'loading') {
     const b=F.backupInfo();
     if(!b.hasData&&!b.last){ box.innerHTML=''; return; }
     const ago=F.backupAgoText(b);
-    const persist=b.persistSupported&&!b.persisted?' Постоянное хранение браузера не включено (Настройки учёта).':'';
+    const persist=!window.TSTNative&&b.persistSupported&&!b.persisted?' Постоянное хранение браузера не включено (Настройки учёта).':'';
     box.innerHTML=`<div class="overview-backup ${b.due?'is-due':''}">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       <div class="overview-backup-text"><b>${esc(ago.charAt(0).toUpperCase()+ago.slice(1))}</b>
-        <span>Данные учёта хранятся только в этом браузере — сохраните копию на флешку или сетевой диск.${esc(persist)}</span></div>
+        <span>${window.TSTNative?'Данные учёта хранятся в файлах на этом компьютере — сохраните копию на флешку или сетевой диск.':'Данные учёта хранятся только в этом браузере — сохраните копию на флешку или сетевой диск.'}${esc(persist)}</span></div>
       <button type="button" class="link-btn" data-overview-backup>Сохранить копию</button>
     </div>`;
   }
@@ -17620,7 +17728,10 @@ function buildHelp() {
     p('В настройках задаются даты перевода всей техники на летний и зимний режим и число дней, за которое нужно напоминать. Даты задаются приказом или решением командира; значения по умолчанию (15 апреля и 15 октября) — лишь начальная подстановка, их нужно проверить. За заданное число дней до даты в колоколе, при входе в учёт и в «Пункте управления» появляется напоминание: сколько машин ещё не прошли сезонное обслуживание. Напоминание остаётся 60 дней после даты с пометкой «просрочено», затем снимается.'),
     ul(['СО засчитывается, если в журнале ТО есть запись вида «Сезонное обслуживание (СО)» с отметкой сезона (летний или зимний) в пределах 120 дней от даты.',
       'Не учитываются списанная техника и техника на хранении и консервации.',
-      'Плитка «Сезонное ТО не проведено» в «Пункте управления» открывает перечень машин, из него можно сформировать печатное «Задание на проведение сезонного обслуживания».'])
+      'Плитка «Сезонное ТО не проведено» в «Пункте управления» открывает перечень машин, из него можно сформировать печатное «Задание на проведение сезонного обслуживания».']),
+    h3('12.7 Приложение для Windows и файлы данных'),
+    p('В установленном приложении данные хранятся не в браузере, а в обычных файлах — в папке «Документы\\Регламент-ТС» (переносная версия — рядом с программой). Основной файл db.json, суточные копии (последние 14), вложения и точки восстановления лежат в подпапках; всю папку можно скопировать на флешку или на другой компьютер. Если db.json окажется повреждённым, приложение само возьмёт последнюю исправную суточную копию, а повреждённый файл сохранит рядом. Папку данных можно открыть и сменить в разделе «Сохранность данных → Файлы данных приложения».'),
+    p('Данные из обычного браузера переносятся один раз: в браузере — «Создать резервную копию», в приложении — «Восстановить из копии».')
   ]);
   sections.forEach(x => { x.text = x.el.textContent; });
   return sections;
