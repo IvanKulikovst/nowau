@@ -7,7 +7,7 @@ const { chromium } = pw;
 const OUT = process.argv[2] || path.join(__dirname, 'out');
 fs.mkdirSync(OUT, { recursive: true });
 const PAGE_URL = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.html')).href;
-// Функциональная проверка платформы, сохранности данных и командного пункта
+// Функциональная проверка платформы, сохранности данных и пункта управления
 const LS = 'spravochnik-tst-fleet-v1';
 const res = [];
 const check = (name, ok, info) => { res.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : '')); };
@@ -148,7 +148,7 @@ const check = (name, ok, info) => { res.push(ok); console.log((ok ? 'PASS ' : 'F
   const tr = await p.evaluate(() => document.querySelector('.sf-tests-sum')?.textContent || '');
   check('Самотесты модулей пройдены и не изменили базу', /16 из 16/.test(tr) && raw0 === raw1, tr);
 
-  // 9. Командный пункт: числа совпадают с перечнями, перечень → карточка, задание печатается
+  // 9. Пункт управления: числа совпадают с перечнями, перечень → карточка, задание печатается
   await load('#fleet/command');
   const tiles = await p.evaluate(() => [...document.querySelectorAll('[data-act="cp-list"].cp-tile')].map(b => [b.dataset.list, Number(b.querySelector('.f-stat-value').textContent)]));
   let allOk = true; const info = [];
@@ -158,7 +158,7 @@ const check = (name, ok, info) => { res.push(ok); console.log((ok ? 'PASS ' : 'F
     if (rows !== n) { allOk = false; info.push(`${key}: ${n}≠${rows}`); }
     await closeModals();
   }
-  check('Каждое число командного пункта открывает перечень ровно из этих машин', allOk && tiles.length >= 10, info.join('; ') || `${tiles.length} показателей`);
+  check('Каждое число пункта управления открывает перечень ровно из этих машин', allOk && tiles.length >= 10, info.join('; ') || `${tiles.length} показателей`);
   const units = await p.evaluate(() => [...document.querySelectorAll('.cp-table [data-act="cp-list"]')].map(b => [b.dataset.list, Number(b.textContent)]));
   let uOk = true;
   for (const [key, n] of units) { await act('cp-list', null, { list: key }); await p.waitForTimeout(100); const rows = await p.evaluate(() => document.querySelectorAll('.f-modal-backdrop [data-cp-open]').length); if (rows !== n) uOk = false; await closeModals(); }

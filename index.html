@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="application-name" content="Регламент-ТСТ">
-<meta name="description" content="Автоматизированная система учёта и контроля «Регламент-ТСТ»: офлайн-справочник регламентов технического обслуживания и учёт эксплуатации технических средств служб тыла.">
+<meta name="application-name" content="Регламент-ТС">
+<meta name="description" content="Автоматизированная система учёта и контроля «Регламент-ТС»: офлайн-справочник регламентов технического обслуживания и учёт эксплуатации технических средств служб тыла.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a5fe0'/%3E%3Ccircle cx='16' cy='16' r='5' fill='none' stroke='white' stroke-width='2.4'/%3E%3Cpath d='M16 5v4M16 23v4M5 16h4M23 16h4' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <meta name="format-detection" content="telephone=no">
 <meta name="mobile-web-app-capable" content="yes">
@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<title>Регламент-ТСТ — автоматизированная система учёта и контроля</title>
+<title>Регламент-ТС — автоматизированная система учёта и контроля</title>
 <style>
 /* =====================================================================
    СБРОС СТИЛЕЙ (минимальный normalize)
@@ -2802,7 +2802,7 @@ html.is-app[data-theme="dark"] body::after  { opacity: 1; background: rgba(8, 12
   .f-navbar, .sidebar, .header, .f-modal, .f-toast { background: var(--bg-elev); }
 }
 
-/* ---------- Командный пункт ---------- */
+/* ---------- Пункт управления ---------- */
 .cp-section-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin:4px 2px 8px}
 .cp-stats{margin-bottom:18px}
 button.cp-tile{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%;border:1px solid var(--g-border);display:block}
@@ -3500,7 +3500,7 @@ html.is-app #landing { display: none !important; }
     <div class="ld-page">
         <header class="ld-header">
             <nav class="ld-nav" aria-label="Разделы стартовой страницы">
-                <span class="ld-brand" aria-hidden="true"><i></i>Регламент-ТСТ</span>
+                <span class="ld-brand" aria-hidden="true"><i></i>Регламент-ТС</span>
                 <span class="ld-nav-sep" aria-hidden="true"></span>
                 <button type="button" class="ld-nav-link active" data-target="home">Главная</button>
                 <button type="button" class="ld-nav-link" data-target="product">Продукт</button>
@@ -3517,12 +3517,8 @@ html.is-app #landing { display: none !important; }
             <div class="ld-hero-copy">
                 <span class="ld-eyebrow ld-anim" style="--i:0">Автоматизированная система учёта и контроля</span>
                 <h1 class="ld-headline">
-                    <span class="ld-headline-line ld-anim" style="--i:1">Регламент<span style="font-family:var(--ld-sans);font-weight:300">-</span>ТСТ</span>
-                    <span class="ld-headline-line ld-anim" style="--i:2">техника служб тыла</span>
+                    <span class="ld-headline-line ld-anim" style="--i:1">Регламент<span style="font-family:var(--ld-sans);font-weight:300">-</span>ТС</span>
                 </h1>
-                <p class="ld-subtitle ld-anim" style="--i:3">
-                    Регламенты технического обслуживания и учёт эксплуатации техники тыла в одном офлайн-приложении: найдите нужную карту ТО или проверьте сроки за пару касаний.
-                </p>
                 <div class="ld-actions ld-anim" style="--i:4">
                     <button type="button" class="ld-cta" data-open-app="overview">
                         <span>Открыть центр управления</span>
@@ -3665,7 +3661,7 @@ html.is-app #landing { display: none !important; }
       </svg>
     </div>
     <div>
-      <div class="brand-title">Регламент-ТСТ</div>
+      <div class="brand-title">Регламент-ТС</div>
       <div class="brand-subtitle">Автоматизированная система учёта и контроля</div>
     </div>
   </div>
@@ -3738,7 +3734,7 @@ html.is-app #landing { display: none !important; }
 <section class="overview-root" id="overviewRoot" role="main" aria-label="Обзор системы">
   <div class="overview-shell">
     <section class="overview-hero">
-      <div><div class="overview-eyebrow">Центр управления</div><h1 class="overview-title">Регламент-ТСТ</h1></div>
+      <div><div class="overview-eyebrow">Центр управления</div><h1 class="overview-title">Регламент-ТС</h1></div>
       <div class="overview-date" id="overviewDate"></div>
     </section>
     <div id="overviewBackup"></div>
@@ -3864,7 +3860,7 @@ const TST = window.TST = (() => {
       const prev = current;
       current = ws;
       document.body.dataset.ws = ws;
-      document.title = (WS_TITLES[ws] || 'Справочник') + ' — Регламент-ТСТ';
+      document.title = (WS_TITLES[ws] || 'Справочник') + ' — Регламент-ТС';
       document.querySelectorAll('[data-ws-btn]').forEach(b => {
         const on = b.dataset.wsBtn === ws;
         b.classList.toggle('is-active', on);
@@ -8684,7 +8680,7 @@ const QR = (() => {
 </script>
 <script>
 /* =========================================================================
-   ПЛАТФОРМА «РЕГЛАМЕНТ-ТСТ» — window.TST.platform
+   ПЛАТФОРМА «РЕГЛАМЕНТ-ТС» — window.TST.platform
    -------------------------------------------------------------------------
    Ядро модульной архитектуры внутри одного офлайн-файла. Ничего не рисует
    и не хранит само — задаёт правила, по которым работают модули:
@@ -9835,7 +9831,7 @@ function exportPdf(report) {
   emitPrint({
     key: 'report-' + report.key, file: report.file, sheet: report.sheet,
     title: report.title,
-    subtitle: 'АСУК «Регламент-ТСТ» · Учёт технических средств тыла',
+    subtitle: 'АСУК «Регламент-ТС» · Учёт технических средств тыла',
     meta: 'Всего записей: ' + data.length,
     bodyHtml: `<table${report.columns.length > 9 ? ' class="dense"' : ''}><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`,
     footHtml: null
@@ -9958,7 +9954,7 @@ const FI = {
    9. СОСТОЯНИЕ ИНТЕРФЕЙСА МОДУЛЯ
    ========================================================================= */
 const ui = {
-  view: 'command',     // стартовый экран — командный пункт
+  view: 'command',     // стартовый экран — пункт управления
   vehicleId: null,
   vehicleTab: 'info',
   park: {
@@ -10347,7 +10343,7 @@ function options(list, selected, placeholder) {
    13. НАВИГАЦИЯ МОДУЛЯ
    ========================================================================= */
 const NAV = [
-  { key: 'command',   label: 'Командный пункт',         icon: FI.gauge },
+  { key: 'command',   label: 'Пункт управления',         icon: FI.gauge },
   { key: 'park',      label: 'Парк техники',            icon: FI.truck },
   { key: 'dashboard', label: 'Ближайшие ТО',            icon: FI.alert },
   { key: 'trips',     label: 'Путевые листы',           icon: FI.route },
@@ -13883,7 +13879,7 @@ async function backupExport() {
     const pkg = { format: BACKUP_FORMAT, version: 2, createdAt, files: manifest, db: DB };
     files.unshift({ name: 'backup.json', data: utf8(JSON.stringify(pkg, null, 1)) });
     files.push({ name: 'ПРОЧТИТЕ.txt', data: utf8(
-      'Резервная копия программы «Регламент-ТСТ» (модуль учёта техники).\r\n' +
+      'Резервная копия программы «Регламент-ТС» (модуль учёта техники).\r\n' +
       'Создана: ' + fmtDate(todayISO()) + '\r\n\r\n' +
       'Восстановление: Технические средства тыла → Настройки → «Восстановить из копии» — выберите этот ZIP-файл целиком, распаковывать его не нужно.\r\n' +
       'Содержимое: backup.json — карточки, журнал ТО, моточасы, путевые листы, нормативы и настройки; папка files — прикреплённые документы.\r\n') });
@@ -14445,12 +14441,12 @@ function qrPayload(v, level, date, enc) {
   const tag = QR_PREFIX + ':' + QR_SCHEME + ':' + v.id;
   const lines = level === 'id' ? [] : qrDataLines(v, level).concat(['Сведения на ' + fmtDate(date || todayISO())]);
   if ((enc || qrEnc()) === 'vcard') {
-    const name = level === 'id' ? 'Регламент-ТСТ' : qrOneLine(v.name, 70);
+    const name = level === 'id' ? 'Регламент-ТС' : qrOneLine(v.name, 70);
     const note = lines.filter(l => !/^Наименование: /.test(l)).concat([tag]).join('\n');
     // Только N (без дублирующего FN) — иначе основные сведения не помещаются в наклейку 50 × 50
     return ['BEGIN:VCARD', 'VERSION:3.0', 'N:' + qrVEsc(name), 'NOTE:' + qrVEsc(note), 'END:VCARD'].join('\r\n');
   }
-  if (level === 'id') return 'Регламент-ТСТ\n' + tag;
+  if (level === 'id') return 'Регламент-ТС\n' + tag;
   return lines.concat([tag]).join('\n');
 }
 /* vCard → текст «Поле: значение» (только N/FN и NOTE; остальное не используется) */
@@ -14523,7 +14519,7 @@ function qrParseText(text, noFields) {
   // (вставка в однострочное поле), идентификатор заканчивается на пробеле.
   // Две разные метки в одном коде — признак подделки: такой код отклоняется.
   const tags = [...text.matchAll(/(?:^|\s)TST:(\d{1,3}):(\S*)/g)];
-  if (!tags.length) return { ok: false, error: 'Это не QR-код программы «Регламент-ТСТ»: нет служебной строки TST:', text };
+  if (!tags.length) return { ok: false, error: 'Это не QR-код программы «Регламент-ТС»: нет служебной строки TST:', text };
   if (new Set(tags.map(t => t[1] + ':' + t[2])).size > 1) return { ok: false, error: 'В коде несколько разных идентификаторов — код отклонён', text };
   const m = tags[0];
   if (Number(m[1]) !== QR_SCHEME) return { ok: false, error: 'Неподдерживаемая версия формата QR-кода: ' + m[1], text };
@@ -15611,7 +15607,7 @@ function renderCommand() {
   return `
     <div class="f-page-head">
       <div>
-        <div class="f-page-title" role="heading" aria-level="1">Командный пункт</div>
+        <div class="f-page-title" role="heading" aria-level="1">Пункт управления</div>
         <div class="f-page-sub">Состояние парка технических средств тыла на ${fmtDate(today)} · каждое число открывает перечень техники</div>
       </div>
       <div class="f-page-actions">
@@ -15879,7 +15875,7 @@ function registerFleetModules() {
       });
     } }] });
 
-  P.register({ id: 'analytics', name: 'Командный пункт', version: '1.0.0', owns: [], depends: ['park', 'maint', 'repairs'],
+  P.register({ id: 'analytics', name: 'Пункт управления', version: '1.0.0', owns: [], depends: ['park', 'maint', 'repairs'],
     desc: 'Стартовый экран: состояние парка, КТГ по подразделениям, календарь работ',
     tests: [{ name: 'Перечни по нажатию на числа совпадают со счётчиками', run() {
       return withTestDB(testFixture(), () => {
@@ -16213,7 +16209,7 @@ if (document.readyState === 'loading') {
           ${stat(s.ok,'ТО в норме','ok')}
         </div>
         <p class="overview-fleet-note">Всего на учёте: ${s.total.toLocaleString('ru-RU')}${F.commandSummary&&F.commandSummary().ktg!=null?` · КТГ ${Math.round(F.commandSummary().ktg*100)} %`:''}${s.noNorm?` · <b style="color:var(--st-urgent-text)">без норматива ТО: ${s.noNorm}</b>`:''}</p>
-        ${F.openView?'<button type="button" class="link-btn" data-overview-command>Командный пункт →</button>':''}
+        ${F.openView?'<button type="button" class="link-btn" data-overview-command>Пункт управления →</button>':''}
       </div>
       <div class="overview-fleet-list">
         <h3>Ближайшие ТО</h3>
@@ -16831,7 +16827,7 @@ function openPrintWin(opts) {
     paperEl = paperFromSpec(spec, readDoc());
     rebuild();
   }
-  function headerText() { return (R.org.value.trim() || 'Регламент-ТСТ') + ' · ' + (spec ? spec.title.replace(/\s+/g, ' ') : '') + ' · ' + nowStr().slice(0, 10); }
+  function headerText() { return (R.org.value.trim() || 'Регламент-ТС') + ' · ' + (spec ? spec.title.replace(/\s+/g, ' ') : '') + ' · ' + nowStr().slice(0, 10); }
   function rebuild() {
     if (!paperEl) return;
     const g = geom();
@@ -16932,7 +16928,7 @@ function openPrintWin(opts) {
     const body = docName() + (spec.subtitle ? '\n' + spec.subtitle : '') + (d.org ? '\nОрганизация: ' + d.org : '') + '\nСформировано: ' + nowStr() +
       '\n\nФайл документа (PDF, Word или Excel) прикрепите вручную: почтовая программа не принимает вложения от веб-страницы.';
     logPrint(docName(), 'email', d.org); drawLog();
-    location.href = 'mailto:?subject=' + encodeURIComponent('Регламент-ТСТ: ' + docName()) + '&body=' + encodeURIComponent(body);
+    location.href = 'mailto:?subject=' + encodeURIComponent('Регламент-ТС: ' + docName()) + '&body=' + encodeURIComponent(body);
   }
   function close() {
     if (!PW) return;
@@ -17017,11 +17013,11 @@ function buildHelp() {
   /* 1 */
   sec('s1', 'Раздел 1. Общие сведения о модуле учёта', [
     E('div', { class: 'ref-lead' }, [
-      p('Модуль «Технические средства тыла» автоматизированной системы учёта и контроля «Регламент-ТСТ» ведёт электронный учёт техники служб тыла: карточки единиц техники, журнал технического обслуживания (ТО), показания счётчиков моточасов, путевые листы, планирование эксплуатации и ремонта, печатные документы и отчёты.'),
+      p('Модуль «Технические средства тыла» автоматизированной системы учёта и контроля «Регламент-ТС» ведёт электронный учёт техники служб тыла: карточки единиц техники, журнал технического обслуживания (ТО), показания счётчиков моточасов, путевые листы, планирование эксплуатации и ремонта, печатные документы и отчёты.'),
       p('Программа работает без подключения к сети. Данные хранятся только в этом браузере на этом компьютере; перенос и сохранность обеспечиваются резервной копией (раздел 9).', 'Настройки → Сохранность данных')]),
     h3('1.1 Разделы модуля'),
     tbl(['Раздел', 'Назначение'], [
-      ['Командный пункт', 'Стартовый экран: состояние всего парка, КТГ по подразделениям, ТО и календарь работ. Каждое число открывает перечень этих машин (раздел 12).'],
+      ['Пункт управления', 'Стартовый экран: состояние всего парка, КТГ по подразделениям, ТО и календарь работ. Каждое число открывает перечень этих машин (раздел 12).'],
       ['Парк техники', 'Реестр зарегистрированной техники: поиск, фильтры, сортировка, таблица или карточки, групповые действия; переход в карточку единицы техники.'],
       ['Ближайшие ТО', 'Техника, требующая внимания: просроченные, требующие и приближающиеся ТО, давно не обновлявшиеся моточасы.'],
       ['Путевые листы', 'Ежедневный учёт выходов техники с показаниями счётчика на начало и конец выхода.'],
@@ -17276,7 +17272,7 @@ function buildHelp() {
     h3('11.1 Что записано в QR-коде'),
     p('По умолчанию код оформлен как карточка контакта (vCard): имя — наименование техники, в заметке — номера, очередное ТО, дата «Сведения на …» и последней строкой служебная метка TST:1:<идентификатор> (TST — программа, 1 — версия формата). Так сделано потому, что камера iPhone показывает обычный текст из QR-кода лишь фрагментом (например, один номер, принятый за телефон), а карточку контакта открывает целиком и без интернета. Вид «Обычный текст» (строки «Поле: значение») выбирается в окнах «QR-код техники» и «Печать QR-наклеек» — он удобен для Android и сканеров. Ответственное лицо, пароли и другие закрытые сведения в код не записываются: наклейку может прочитать любой человек.'),
     tbl(['Состав данных', 'Что входит', 'Где применять'], [
-      ['Только идентификатор', 'Регламент-ТСТ и строка TST:1:<идентификатор>', 'Самый надёжный код. Сведения открываются в программе, где есть база (сценарий 2)'],
+      ['Только идентификатор', 'Регламент-ТС и строка TST:1:<идентификатор>', 'Самый надёжный код. Сведения открываются в программе, где есть база (сценарий 2)'],
       ['Основные сведения', 'наименование, инв. №, гос. №, зав. №, очередное ТО, дата формирования', 'Наклейки 50 × 50 и 60 × 40 мм. Читаются камерой любого смартфона (сценарий 1)'],
       ['Расширенные сведения', 'плюс марка, подразделение, год выпуска, дата постановки, моточасы, последнее ТО, состояние', 'Только наклейка 70 × 70 мм']]),
     p('Если выбранный состав не помещается в наклейку с надёжным размером модуля (не менее ' + nf(D.qrMinModule || 0.5, 1) + ' мм), программа автоматически уменьшает состав и предупреждает об этом. Порог получен испытаниями: код с модулем 0,3 мм в имитации снимка камерой не читается.'),
@@ -17308,10 +17304,10 @@ function buildHelp() {
       'Резервная копия сохраняет идентификаторы и отметки о печати; после восстановления на другом компьютере старые наклейки остаются действительными.'])
   ]);
   /* 12 */
-  sec('s12', 'Раздел 12. Командный пункт и сохранность данных', [
+  sec('s12', 'Раздел 12. Пункт управления и сохранность данных', [
     E('div', { class: 'ref-lead' }, [
-      p('«Командный пункт» — стартовый экран учёта. «Сохранность данных» защищает реестр от потери: данные хранятся только в этом браузере на этом компьютере, поэтому программа сама делает снимки и хранит удалённое.')]),
-    h3('12.1 Командный пункт'),
+      p('«Пункт управления» — стартовый экран учёта. «Сохранность данных» защищает реестр от потери: данные хранятся только в этом браузере на этом компьютере, поэтому программа сама делает снимки и хранит удалённое.')]),
+    h3('12.1 Пункт управления'),
     ul(['Техническое состояние: на учёте (без списанной), исправна (статус «В эксплуатации»), неисправна, в ремонте, хранение и консервация, КТГ парка.',
       'КТГ = (на учёте − неисправна − в ремонте) / на учёте. Норматив подразделения — средний норматив КТГ по группам эксплуатации его техники (Планирование → Группы и КТГ); техника без группы в норматив не входит.',
       'Техническое обслуживание: просрочено, требуется, скоро, интервал не задан, моточасы не обновлялись дольше заданного в настройках срока.',
@@ -17320,7 +17316,7 @@ function buildHelp() {
       '«Доклад о состоянии парка» — печатная сводка: состояние, КТГ по подразделениям, техника с просроченным ТО.']),
     h3('12.2 Как защищены данные'),
     tbl(['Механизм', 'Что делает'], [
-      ['Резервная копия (ZIP)', 'Полная копия с вложениями. Единственная защита от поломки компьютера — храните её вне компьютера. Напоминание — в командном пункте, обзоре и при входе.'],
+      ['Резервная копия (ZIP)', 'Полная копия с вложениями. Единственная защита от поломки компьютера — храните её вне компьютера. Напоминание — в пункте управления, обзоре и при входе.'],
       ['Точки восстановления', 'Снимки базы в браузере: ежедневно и автоматически перед восстановлением из копии, очисткой данных, обновлением структуры, исправлением ошибок, откатом и очисткой корзины. Хранится до 20 автоматических и 20 ручных. Вложения в снимки не входят, но не удаляются, пока на них ссылается хоть одна точка.'],
       ['Корзина', 'Удалённые карточки, записи ТО, путевые листы и показания хранятся заданное в настройках число дней (по умолчанию 30) и возвращаются вместе со связанными записями.'],
       ['Журнал изменений', 'Кто бы ни правил карточку, сохраняются прежнее и новое значение важных полей: наименование, номера, подразделение, ответственный, статус, группа, тип по справочнику, даты. Последние изменения видны в карточке техники.'],
@@ -17332,7 +17328,7 @@ function buildHelp() {
       'Браузер очищен или компьютер заменён — откройте программу и «Восстановить из копии» последний ZIP-файл.',
       'Проверка целостности нашла ошибки — «Исправить автоматически» (перед исправлением создаётся точка восстановления).']),
     h3('12.4 Модули платформы'),
-    p('Программа разделена на модули: справочник, парк, ТО, ремонты и готовность, путевые листы и моточасы, склад (запланирован), документы, командный пункт, QR-маркировка, сохранность данных. Каждый модуль владеет своими данными, имеет версию и самотесты. «Запустить самотесты» проверяет модули на копиях данных — реальные данные при этом не меняются.'),
+    p('Программа разделена на модули: справочник, парк, ТО, ремонты и готовность, путевые листы и моточасы, склад (запланирован), документы, пункт управления, QR-маркировка, сохранность данных. Каждый модуль владеет своими данными, имеет версию и самотесты. «Запустить самотесты» проверяет модули на копиях данных — реальные данные при этом не меняются.'),
     p('Идентификатор записи: <вид>_<время>_<случайная часть> (например, v_… — техника, m_… — запись ТО). Он присваивается один раз и не меняется: на нём держатся связи, журнал изменений и QR-код.')
   ]);
   sections.forEach(x => { x.text = x.el.textContent; });

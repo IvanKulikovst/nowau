@@ -1,11 +1,11 @@
 ﻿# =====================================================================
-#  Установка «Регламент-ТСТ» для текущего пользователя Windows
+#  Установка «Регламент-ТС» для текущего пользователя Windows
 #  Права администратора и интернет не нужны.
 #
 #  Что делает:
 #    1. Копирует index.html в %LOCALAPPDATA%\Reglament-TST\app
 #       (прежняя версия сохраняется как index.previous.html — для отката);
-#    2. Создаёт ярлыки «Регламент-ТСТ» на рабочем столе и в меню «Пуск».
+#    2. Создаёт ярлыки «Регламент-ТС» на рабочем столе и в меню «Пуск».
 #       Ярлык открывает программу в отдельном окне Microsoft Edge или
 #       Google Chrome без адресной строки и вкладок (режим приложения);
 #    3. Данные программы хранятся в собственном профиле браузера
@@ -52,20 +52,25 @@ $url  = ([System.Uri]$target).AbsoluteUri
 $argv = "--app=`"$url`" --user-data-dir=`"$profile`" --no-first-run --no-default-browser-check"
 
 $shell = New-Object -ComObject WScript.Shell
+# Ярлыки прежнего названия (до переименования в «Регламент-ТС») убираются
+foreach ($dir in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) {
+  $old = Join-Path $dir 'Регламент-ТСТ.lnk'
+  if (Test-Path $old) { Remove-Item $old -Force }
+}
 $places = @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))
 foreach ($dir in $places) {
-  $lnk = $shell.CreateShortcut((Join-Path $dir 'Регламент-ТСТ.lnk'))
+  $lnk = $shell.CreateShortcut((Join-Path $dir 'Регламент-ТС.lnk'))
   $lnk.TargetPath       = $browser
   $lnk.Arguments        = $argv
   $lnk.WorkingDirectory = $app
   $lnk.IconLocation     = "$browser,0"
-  $lnk.Description      = 'Автоматизированная система учёта и контроля «Регламент-ТСТ»'
+  $lnk.Description      = 'Автоматизированная система учёта и контроля «Регламент-ТС»'
   $lnk.Save()
 }
 
 Write-Host ''
 Write-Host 'Готово. Программа установлена:' $target
-Write-Host 'Ярлык «Регламент-ТСТ» — на рабочем столе и в меню «Пуск».'
+Write-Host 'Ярлык «Регламент-ТС» — на рабочем столе и в меню «Пуск».'
 Write-Host 'Данные хранятся в' $profile
 Write-Host ''
 Write-Host 'Если раньше программа открывалась в обычном браузере, перенесите данные:'
