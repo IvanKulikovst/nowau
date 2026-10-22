@@ -125,6 +125,8 @@ dialog .df{padding:var(--s3) var(--s5) var(--s4);display:flex;gap:var(--s2);just
 .report{background:#fff;color:#000}
 .report h1{font-size:20px}
 .only-print{display:none}
+abbr[title]{text-decoration:underline dotted;cursor:help;text-underline-offset:2px}
+@media print{abbr[title]{text-decoration:none}}
 @media (max-width:1000px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:1fr 1fr}}
 @media (max-width:760px){
   .app{grid-template-columns:1fr}
@@ -144,7 +146,7 @@ dialog .df{padding:var(--s3) var(--s5) var(--s4);display:flex;gap:var(--s2);just
   .app{display:block}
   .main{padding:0;max-width:none}
   .card{box-shadow:none;border:none;padding:0;margin-bottom:14px;break-inside:avoid}
-  .only-print{display:block}
+  .only-print{display:block} span.only-print{display:inline}
   .lv{color:#000!important;background:none!important;border:1px solid #000}
   a{color:#000;text-decoration:none}
   table{font-size:11.5px} th{background:#eee!important}
@@ -162,6 +164,7 @@ dialog .df{padding:var(--s3) var(--s5) var(--s4);display:flex;gap:var(--s2);just
       <a href="#/objects">Объекты оценки</a>
       <a href="#/history">История расчётов</a>
       <a href="#/summary">Сводная по группе</a>
+      <a href="#/reviews">Анализ отзывов</a>
       <div class="sep">Методика</div>
       <a href="#/method">Справочник методики</a>
       <a href="#/coef">Наборы Кзнк и экспертиза</a>
@@ -330,6 +333,46 @@ const METHOD = (() => {
   const MARKS4 = ['отл.', 'хор.', 'удовл.', 'неуд.'];
   const CONCLUSIONS = ['Назначен на вышестоящую воинскую должность', 'Достоин выдвижения на вышестоящую должность', 'Занимаемой должности соответствует', 'С занимаемой должностью справляется с трудом, требует контроля', 'Занимаемой должности не соответствует'];
 
+  /* Шапка отзыва (S1 Прил. 1). Сведения хранятся только для отчёта и анализа отзывов. */
+  const REVIEW_HEADER = [
+    ['rank', 'Воинское звание'], ['gradYear', 'Год выпуска'], ['faculty', 'Факультет'], ['company', 'Рота'], ['platoon', 'Взвод'],
+    ['primaryPosition', 'Первичная должность по прибытии в часть (подразделение)'], ['position', 'Занимаемая штатная должность в настоящее время'],
+    ['organ', 'Округ (орган военного управления)'], ['city', 'Город'], ['unitNo', 'Номер войсковой части']
+  ];
+  const SERVICE_CHANGES = [['', 'нет'], ['transfer', 'перевод (указать, в какую в/ч убыл)'], ['dismissal', 'увольнение (указать основание)']];
+  const REVIEW_SIGNERS = [['direct', 'Непосредственный начальник'], ['commander', 'Командир войсковой части («СОГЛАСЕН»)'], ['deputy', 'Заместитель командира по ВПР']];
+
+  /* «Колонка выпускника» (S1 Прил. 1) — заполняется выпускником, в расчёт не входит */
+  const GRADUATE_COLUMN = [
+    { id: 'q1', text: 'Какие практические и теоретические трудности возникли у Вас в начале служебной деятельности, в период становления?' },
+    { id: 'q2', text: 'Что, по Вашему мнению, недостаточно изучено Вами в институте?' },
+    { id: 'q3', text: 'Как Вы считаете, обеспечила ли Вам практикуемая в институте система обучения достаточный уровень профессиональной подготовленности как военного специалиста?',
+      options: ['Да, обеспечила', 'Скорее да, чем нет', 'Скорее нет, чем да', 'Нет, не обеспечила', 'Затрудняюсь ответить'] },
+    { id: 'q4', text: 'Что, по Вашему мнению, можно было бы исключить из программы обучения курсантов, а что добавить?' },
+    { id: 'q5', text: 'Изменились ли Ваши взгляды на выбор профессии офицера в настоящее время?',
+      options: ['Интерес к избранной профессии заметно повысился', 'По-прежнему убеждён в правильности выбора', 'В выборе профессии испытываю некоторую разочарованность', 'Считаю поступление в институт неправильным шагом', 'Намерен уволиться из войск', 'Свой вариант ответа'], own: true },
+    { id: 'q6', text: 'Как Вы считаете, какие условия в большей степени повлияли на Ваше обучение и каким образом?' },
+    { id: 'q7', text: 'Ваши предложения по улучшению учебно-воспитательного процесса в институте' }
+  ];
+
+  /* Пояснения терминов для подсказок интерфейса (по тексту источников) */
+  const GLOSSARY = {
+    'ВПК': 'Военно-профессиональные компетенции — набор требуемых результатов освоения программы специалитета по квалификационным требованиям (S1).',
+    'ПСК': 'Профессионально-специализированные компетенции по специальности (S1).',
+    'Кзнк': 'Коэффициент значимости компетенции — получен методом экспертных оценок (ранжирование экспертами), λ = Σs / ΣΣs (S1; S4 Прил. 10).',
+    'Псфк': 'Показатель сформированности компетенции: Псфк = Оценка × Кзнк. Суммарный показатель — среднее арифметическое по набору (S1).',
+    'bср': 'Средний балл за освоение компетенций: среднее арифметическое оценок 1–5 (S1).',
+    'Степень сформированности': 'bср / 5 × 100 % (S4 табл. 7).',
+    'g₀': 'Относительный уровень подготовленности обучающегося на начальной стадии обучения, 0…1 (S5 ф. 22).',
+    'g': 'Уровень (степень) подготовленности обучающегося после изучения дисциплины, 0…1: чем ближе к 1, тем более подготовлен (S5).',
+    'm': 'Относительный уровень методической подготовки преподавателя M / Mmax (S5).',
+    'c': 'Способность обучающегося к овладению учебным материалом, 0 ≤ c < 1 (S5).',
+    'p': 'Интенсивность процесса обучения (скорость обучения в единицу времени), ч⁻¹ (S5).',
+    'Y': 'Уровень компетентности выпускника: отношение взвешенной суммы компетентностных признаков к эталону (S6; S4 Заключение).',
+    'W': 'Коэффициент конкордации — средняя степень согласованности мнений экспертов, 0…1 (S4 Прил. 10).',
+    'χ²': 'Критерий согласования Пирсона для проверки значимости коэффициента конкордации (S4 Прил. 10).'
+  };
+
   /* Модель подготовленности (S5): параметры по умолчанию */
   const G_MODEL = {
     p24: 1e-4,   /* S5 с. 96: p = 1/(365·24 ч) ≈ 10⁻⁴ ч⁻¹; использован в контрольном примере с. 99–100 */
@@ -353,7 +396,8 @@ const METHOD = (() => {
   ];
 
   return { VERSION, SOURCES, LEVELS, SCALES, COEF_SETS, PRACTICE_OKPK, PERSONAL_QUALITIES, QUALITY_SCALE, COMPETENCE_SCALE,
-    PERSONAL_TRAINING, ACTIVITY_KINDS, MARKS4, CONCLUSIONS, G_MODEL, STAGE_WEIGHTS, COMPONENTS };
+    PERSONAL_TRAINING, ACTIVITY_KINDS, MARKS4, CONCLUSIONS, G_MODEL, STAGE_WEIGHTS, COMPONENTS,
+    REVIEW_HEADER, SERVICE_CHANGES, REVIEW_SIGNERS, GRADUATE_COLUMN, GLOSSARY };
 })();
 
 /* =====================================================================
@@ -824,7 +868,7 @@ const Store = (() => {
 
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const nowIso = () => new Date().toISOString();
-  const empty = () => ({ schema: SCHEMA, objects: [], assessments: [], coefSets: [], expertStudies: [], curricula: [], yModels: [], meta: { createdAt: nowIso(), lastBackupAt: null } });
+  const empty = () => ({ schema: SCHEMA, objects: [], assessments: [], coefSets: [], expertStudies: [], curricula: [], yModels: [], reviewSent: {}, meta: { createdAt: nowIso(), lastBackupAt: null } });
 
   function probe() {
     try { const k = KEY + '-probe'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
@@ -903,14 +947,24 @@ const Model = (() => {
   function newAssessment(state, type, objectId) {
     const meta = { date: new Date().toISOString().slice(0, 10), evaluator: '' };
     let input = {};
-    if (type === 'graduate') { Object.assign(meta, { period: 1, vpkSetId: 'src-vpk16', pskSetId: 'src-psk5' }); input = { vpk: {}, pskEnabled: true, psk: {}, qualities: {}, training: {}, activity: {}, conclusion: '', notes: {} }; }
-    if (type === 'practice') { Object.assign(meta, { course: 4, vpkSetId: 'src-vpk13', unit: '' }); input = { vpk: {}, okpk: {}, leaderMark: '', commissionMark: '' }; }
+    if (type === 'graduate') { Object.assign(meta, { period: 1, vpkSetId: 'src-vpk16', pskSetId: 'src-psk5' }); Object.assign(meta, { header: {}, serviceChange: '', serviceChangeNote: '', signers: {} }); input = { vpk: {}, pskEnabled: true, psk: {}, qualities: {}, training: {}, activity: {}, conclusion: '', notes: {}, graduateColumn: {} }; }
+    if (type === 'practice') { Object.assign(meta, { course: 4, vpkSetId: 'src-vpk13', unit: '', evaluator2: '' }); input = { vpk: {}, okpk: {}, leaderMark: '', commissionMark: '' }; }
     if (type === 'g0') input = { x: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, y: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
     if (type === 'trajectory') input = { curriculumId: '', g0: '', g0From: '', mode: '24', p: METHOD.G_MODEL.p24, abilities: {} };
     if (type === 'ymodel') input = { modelId: '', values: {} };
     const a = { id: Store.uid(), type, objectId, status: 'draft', createdAt: Store.nowIso(), updatedAt: Store.nowIso(), meta, input, snapshot: null, result: null, revisions: [] };
     a.snapshot = snapshot(state, type, meta, input);
     return a;
+  }
+
+  /* Для черновика: снимок пересобирается по текущим справочникам. Возвращает true,
+     если параметры методики (наборы Кзнк, учебный план, модель Y) изменились. */
+  function refreshDraftSnapshot(state, a) {
+    if (a.status !== 'draft') return false;
+    const fresh = snapshot(state, a.type, a.meta, a.input);
+    const key = x => JSON.stringify({ ...x, takenAt: null });
+    if (key(fresh) === key(a.snapshot)) return false;
+    a.snapshot = fresh; return true;
   }
 
   const expand = counts => { const out = []; for (const g of [1, 2, 3, 4, 5]) { const n = Number(counts[g] || 0); for (let i = 0; i < n; i++) out.push(g); } return out; };
@@ -953,7 +1007,7 @@ const Model = (() => {
     if (a.type === 'ymodel') return { label: 'Y', value: r.Y, digits: 3 };
     return null;
   }
-  return { TYPES, coefSet, snapshot, newAssessment, compute, headline, clone };
+  return { TYPES, coefSet, snapshot, refreshDraftSnapshot, newAssessment, compute, headline, clone };
 })();
 
 /* =====================================================================
@@ -971,7 +1025,7 @@ const fmtDT = s => { if (!s) return '—'; const d = new Date(s); return isNaN(d
 const parseNum = v => { if (v === '' || v == null) return NaN; return Number(String(v).replace(',', '.').trim()); };
 
 let state = Store.load();
-const ui = { editing: null, filters: { type: '', status: '', q: '', from: '', to: '' }, summary: { type: 'practice', group: '', sub: '' }, saveTimer: null, lastRoute: '' };
+const ui = { editing: null, filters: { type: '', status: '', q: '', from: '', to: '' }, summary: { type: 'practice', group: '', sub: '' }, reviews: { period: '1', year: '', basis: 'total' }, saveTimer: null, lastRoute: '' };
 
 function persist() {
   const ok = Store.save(state);
@@ -1016,6 +1070,9 @@ const csvCell = v => { const s = v == null ? '' : String(v); return /[;"\n\r]/.t
 const csvNum = x => isNumV(x) ? String(x).replace('.', ',') : '';
 const toCsv = rows => '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n');
 
+/* Подсказки терминов (METHOD.GLOSSARY) */
+const term = (k, label) => `<abbr title="${esc(METHOD.GLOSSARY[k] || '')}">${esc(label || k)}</abbr>`;
+const glossaryFor = label => { const tokens = String(label).split(/[\s:(),.]+/); const k = Object.keys(METHOD.GLOSSARY).find(k => k.includes(' ') ? label.includes(k) : tokens.includes(k)); return k ? METHOD.GLOSSARY[k] : ''; };
 const levelInfo = code => METHOD.LEVELS.find(l => l.code === code);
 function lvBadge(lv, withMark = true) {
   if (!lv) return '<span class="lv lv-none">не определяется</span>';
@@ -1217,7 +1274,7 @@ route(/^\/object\/([\w-]+)$/, id => {
     const h0 = Model.headline(arr[0]);
     return `<h3>${esc(typeTitle(t))}: ${esc(h0.label)}</h3>${arr.length > 1 ? lineChart({ labels: arr.map(label), series: [{ name: h0.label, color: '#2f6fa8', values: arr.map(a => Model.headline(a).value) }], yDigits: 3 }) : `<p class="muted">Одна оценка: ${fmt(h0.value, 3)}. Для динамики нужно не менее двух.</p>`}`;
   }).join('');
-  return `<div class="row"><h1 style="margin:0">${esc(o.name)}</h1><span class="spacer"></span><a class="btn primary" href="#/new?obj=${o.id}">+ Новая оценка</a></div>
+  return `<div class="row"><h1 style="margin:0">${esc(o.name)}</h1><span class="spacer"></span><a class="btn" href="#/object/${o.id}/report">Отчёт по объекту</a><a class="btn primary" href="#/new?obj=${o.id}">+ Новая оценка</a></div>
   <p class="muted">${esc(o.group || 'группа не указана')} · ${esc(o.specialty || 'специальность не указана')} · ${esc(o.year || '—')}</p>
   <div class="card"><h2>Расчёты</h2>
   ${list.length ? `<div class="table-wrap"><table><thead><tr><th class="no-print">Сравн.</th><th>Дата</th><th>Тип</th><th>Параметры</th><th>Статус</th><th class="num">Показатель</th><th>Уровень</th></tr></thead><tbody>
@@ -1225,6 +1282,30 @@ route(/^\/object\/([\w-]+)$/, id => {
   </tbody></table></div><button class="btn sm no-print" style="margin-top:10px" data-act="compare">Сравнить выбранные (2 оценки одного типа)</button>` : '<div class="empty">Расчётов пока нет.</div>'}</div>
   <div class="card"><h2>Динамика</h2>${dyn || '<p class="muted">Нет утверждённых расчётов.</p>'}</div>
   <div class="card no-print"><h2>Редактировать сведения</h2>${objectForm(o)}<div class="row"><button class="btn primary" data-act="obj-save" data-id="${o.id}">Сохранить</button><span class="spacer"></span><button class="btn danger" data-act="obj-del" data-id="${o.id}">Удалить объект</button></div></div>`;
+});
+/* Отчёт по объекту оценки: все утверждённые расчёты, динамика, сравнение по компетенциям */
+route(/^\/object\/([\w-]+)\/report$/, id => {
+  const o = state.objects.find(x => x.id === id);
+  if (!o) return '<div class="card empty">Объект не найден.</div>';
+  const fin = state.assessments.filter(a => a.objectId === id && a.status === 'final').sort((a, b) => (a.meta.date || '').localeCompare(b.meta.date || ''));
+  const lab = a => `${fmtDate(a.meta.date)}${a.type === 'practice' ? ', ' + a.meta.course + ' курс' : a.type === 'graduate' ? ', ' + a.meta.period + ' год' : ''}`;
+  const matrix = t => {
+    const arr = fin.filter(a => a.type === t); if (!arr.length) return '';
+    const rowsOf = a => [a.result.vpk, a.result.psk].filter(Boolean).flatMap(x => x.rows);
+    const ids = [...new Set(arr.flatMap(a => rowsOf(a).map(r => r.id)))];
+    const cell = (a, id) => { const r = rowsOf(a).find(x => x.id === id); return r ? `${r.grade ?? '—'} / ${fmt(r.psfk, 3)}` : '—'; };
+    return `<h3>${esc(typeTitle(t))}: оценка / Псфк по компетенциям</h3><div class="table-wrap"><table><thead><tr><th>Компетенция</th>${arr.map(a => `<th class="num">${esc(lab(a))}</th>`).join('')}</tr></thead><tbody>
+      ${ids.map(cid => `<tr><td>${esc(cid)}</td>${arr.map(a => `<td class="num">${cell(a, cid)}</td>`).join('')}</tr>`).join('')}</tbody>
+      <tfoot><tr><td>Суммарный показатель ВПК (bср / Псфк)</td>${arr.map(a => `<td class="num">${fmt(a.result.vpk.meanGrade, 2)} / ${fmt(a.result.vpk.meanPsfk, 3)}</td>`).join('')}</tr></tfoot></table></div>
+      ${arr.length > 1 ? lineChart({ labels: arr.map(lab), series: [{ name: 'Суммарный Псфк ВПК', color: '#2f6fa8', values: arr.map(a => a.result.vpk.meanPsfk) }] }) : ''}`;
+  };
+  return `<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/object/${id}">← К объекту</a><button class="btn primary" data-act="print">Печать / сохранить в PDF</button></div>
+  <div class="report"><div class="card"><h1>Отчёт по объекту оценки</h1><dl class="spec"><dt>Фамилия И.О.</dt><dd>${esc(o.name)}</dd><dt>Группа / подразделение</dt><dd>${esc(o.group || '—')}</dd><dt>Специальность</dt><dd>${esc(o.specialty || '—')}</dd><dt>Год выпуска / курс</dt><dd>${esc(o.year || '—')}</dd><dt>Утверждённых расчётов</dt><dd>${fin.length}</dd></dl></div>
+  <div class="card"><h2>Утверждённые расчёты</h2>${fin.length ? `<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Вид оценки</th><th>Параметры</th><th>Оценщик</th><th class="num">Показатель</th><th>Уровень</th><th>Методика</th></tr></thead><tbody>
+    ${fin.map(a => { const h = Model.headline(a); return `<tr><td>${fmtDate(a.meta.date)}</td><td>${esc(Model.TYPES[a.type].short)}</td><td>${a.type === 'practice' ? a.meta.course + ' курс' : a.type === 'graduate' ? a.meta.period + ' год службы' : ''}</td><td>${esc(a.meta.evaluator || '—')}</td><td class="num">${h ? esc(h.label) + ' ' + fmt(h.value, 3) : '—'}</td><td>${h && h.level !== undefined ? lvBadge(h.level) : '—'}</td><td>v${esc(a.snapshot.methodVersion)}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="muted">Утверждённых расчётов нет.</p>'}</div>
+  ${fin.some(a => a.type === 'practice' || a.type === 'graduate') ? `<div class="card"><h2>Динамика сформированности компетенций</h2>${matrix('practice')}${matrix('graduate')}<p class="src">Сравнение значений Псфк корректно при одинаковом наборе Кзнк.</p></div>` : ''}
+  ${fin.filter(a => a.type === 'trajectory' || a.type === 'g0' || a.type === 'ymodel').map(a => `<div class="card"><h2>${esc(typeTitle(a.type))} — ${fmtDate(a.meta.date)}</h2>${resultView(a, a.result)}</div>`).join('')}
+  <p class="muted">Подробности каждого расчёта, формулы и источники — в отчёте по отдельной оценке. Сформировано ${fmtDT(new Date().toISOString())}.</p></div>`;
 });
 actions['obj-save'] = el => {
   const o = state.objects.find(x => x.id === el.dataset.id); const d = readObjectForm(); if (!o || !d) return;
@@ -1310,7 +1391,7 @@ function gradeBar(path, val, label) {
   return `<div class="gradebar" role="radiogroup" aria-label="${esc(label)}">${[1, 2, 3, 4, 5].map(g => `<label><input type="radio" name="gr-${esc(path)}" value="${g}" data-bind="${esc(path)}" data-type="int" ${val === g ? 'checked' : ''}><span>${g}</span></label>`).join('')}<label class="clr"><button type="button" class="btn sm" style="border:none;padding:5px 6px" data-act="clear-grade" data-path="${esc(path)}" title="Очистить" aria-label="Очистить оценку">×</button></label></div>`;
 }
 function gradeTable(items, base, values, opts = {}) {
-  return `<div class="table-wrap"><table><thead><tr><th>Компетенция</th>${opts.showK ? '<th class="num">Кзнк</th>' : ''}<th class="c">Оценка (1–5)</th></tr></thead><tbody>
+  return `<div class="table-wrap"><table><thead><tr><th>Компетенция</th>${opts.showK ? `<th class="num">${term('Кзнк')}</th>` : ''}<th class="c">Оценка (1–5)</th></tr></thead><tbody>
   ${items.map(it => { const v = values ? values[it.id] : undefined; const path = base + '|' + it.id;
     const title = it.title || it.id;
     return `<tr data-row="${esc(path)}" class="${Calc.isGrade(v) ? '' : 'missing'}"><td><b>${esc(title)}</b><div class="muted" style="font-size:13px">${esc(it.text)}</div></td>${opts.showK ? `<td class="num">${fmtK(it.k)}</td>` : ''}<td class="c">${gradeBar(path, v, title)}</td></tr>`; }).join('')}
@@ -1347,8 +1428,16 @@ const STEPS = {
       ${fieldSelect('Период', 'meta|period', a.meta.period, [['1', 'по окончании первого года службы'], ['2', 'по окончании двух лет службы']], 'data-type="int" data-rerender="1"')}
       ${fieldText('Дата отзыва', 'meta|date', a.meta.date, 'date')}
       ${fieldText('Оценщик (непосредственный начальник)', 'meta|evaluator', a.meta.evaluator)}
-      ${fieldText('Занимаемая должность выпускника', 'meta|position', a.meta.position)}
     </div>
+    <h3>Сведения о выпускнике (шапка отзыва)</h3>
+    <div class="grid g3">${METHOD.REVIEW_HEADER.map(([k, l]) => fieldText(l, 'meta|header|' + k, (a.meta.header || {})[k] ?? (k === 'position' ? a.meta.position : ''))).join('')}</div>
+    <div class="grid g2">
+      ${fieldSelect('Перевод / увольнение', 'meta|serviceChange', a.meta.serviceChange || '', METHOD.SERVICE_CHANGES)}
+      ${fieldText('В какую в/ч убыл / по каким основаниям уволен', 'meta|serviceChangeNote', a.meta.serviceChangeNote)}
+    </div>
+    <details><summary class="btn sm" style="display:inline-flex">Семейное положение (необязательно)</summary><div style="margin-top:8px">${fieldText('Семейное положение', 'meta|header|family', (a.meta.header || {}).family, 'text', 'Поле есть в форме отзыва S1, но для расчёта не требуется. Заполняйте только при необходимости.')}</div></details>
+    <h3>Подписи</h3>
+    <div class="grid g3">${METHOD.REVIEW_SIGNERS.map(([k, l]) => fieldText(l + ' (звание, фамилия)', 'meta|signers|' + k, (a.meta.signers || {})[k])).join('')}</div>
     <div class="grid g2">
       ${fieldSelect('Набор Кзнк для ВПК', 'meta|vpkSetId', a.meta.vpkSetId, [], 'data-resnap="1" data-rerender="1"').replace('</select>', setOptions('src-vpk16', a.meta.vpkSetId) + '</select>')}
       ${fieldSelect('Набор Кзнк для ПСК', 'meta|pskSetId', a.meta.pskSetId, [], 'data-resnap="1" data-rerender="1"').replace('</select>', setOptions('src-psk5', a.meta.pskSetId) + '</select>')}
@@ -1360,7 +1449,7 @@ const STEPS = {
       <h3>Уровень сформированности военно-профессиональных компетенций (ВПК)</h3>${gradeTable(a.snapshot.sets.vpk.items, 'input|vpk', a.input.vpk, { showK: true })}
       ${a.input.pskEnabled ? `<h3>Уровень сформированности профессионально-специализированных компетенций (ПСК)</h3>${gradeTable(a.snapshot.sets.psk.items, 'input|psk', a.input.psk, { showK: true })}` : '<div class="note">ПСК не оцениваются (отключено в параметрах).</div>'}
       <p class="src">Кзнк заполняются автоматически из набора «${esc(a.snapshot.sets.vpk.name)}» (в источнике — сотрудниками учебно-методического отдела).</p>`],
-  ['Разделы II–V', a => `
+  ['Разделы II–V, колонка выпускника', a => `
       <h3>II. Личностные качества <span class="muted" style="font-weight:400">(в расчёт Псфк не входят)</span></h3>
       <div class="note">${METHOD.QUALITY_SCALE.map(esc).join('; ')}</div>
       ${gradeTable(METHOD.PERSONAL_QUALITIES.map(q => ({ id: q.id, title: q.name, text: q.text })), 'input|qualities', a.input.qualities)}
@@ -1374,6 +1463,10 @@ const STEPS = {
       <div class="grid g3">${METHOD.ACTIVITY_KINDS.map(s => fieldSelect(s, 'input|activity|' + s, (a.input.activity || {})[s], [['', '—'], ...METHOD.MARKS4])).join('')}</div>
       <h3>V. Выводы по отзыву</h3>
       ${fieldSelect('Вывод командира', 'input|conclusion', a.input.conclusion, [['', '— не выбран —'], ...METHOD.CONCLUSIONS])}
+      <h3>Колонка выпускника <span class="muted" style="font-weight:400">(заполняется выпускником; в расчёт не входит)</span></h3>
+      ${METHOD.GRADUATE_COLUMN.map((q, i) => q.options
+        ? fieldSelect(`${i + 1}. ${q.text}`, 'input|graduateColumn|' + q.id, (a.input.graduateColumn || {})[q.id] || '', [['', '— нет ответа —'], ...q.options]) + (q.own ? fieldText('Свой вариант ответа', 'input|graduateColumn|' + q.id + 'own', (a.input.graduateColumn || {})[q.id + 'own']) : '')
+        : fieldArea(`${i + 1}. ${q.text}`, 'input|graduateColumn|' + q.id, (a.input.graduateColumn || {})[q.id])).join('')}
       <p class="src">Разделы II–V заполняются по форме S1 Прил. 1; методика не содержит правил их числовой обработки, поэтому они отображаются в отчёте без агрегирования.</p>`],
   ['Проверка и расчёт', a => reviewStep(a)]],
 
@@ -1381,9 +1474,10 @@ const STEPS = {
       ${fieldSelect('Курс (практика)', 'meta|course', a.meta.course, [['4', '4 курс'], ['5', '5 курс']], 'data-type="int"')}
       ${fieldText('Дата заполнения анкеты', 'meta|date', a.meta.date, 'date')}
       ${fieldText('Оценщик (командир подразделения — непосредственный руководитель практики)', 'meta|evaluator', a.meta.evaluator)}
+      ${fieldText('Руководитель практики от военного института (совместная оценка)', 'meta|evaluator2', a.meta.evaluator2)}
       ${fieldText('Воинская часть / подразделение', 'meta|unit', a.meta.unit)}
       ${fieldSelect('Набор Кзнк для ВПК', 'meta|vpkSetId', a.meta.vpkSetId, [], 'data-resnap="1" data-rerender="1"').replace('</select>', setOptions('src-vpk13', a.meta.vpkSetId) + '</select>')}
-    </div><div class="note">Анкета экспертной оценки уровня достижения компетенций курсантом — стажёром командира взвода (S2 Прил. 1; S4 Прил. 6). Оценка от 1 до 5 по каждому индексу компетенции.</div>`],
+    </div><div class="note">Анкета экспертной оценки уровня достижения компетенций курсантом — стажёром командира взвода (S2 Прил. 1; S4 Прил. 6). Оценка от 1 до 5 по каждому индексу компетенции. Анкету заполняет руководитель практики от института совместно с командиром подразделения (S2 разд. III, п. 3.1 «г») — одна согласованная оценка по каждой компетенции.</div>`],
   ['Анкета', a => `<div id="prog" class="note"></div>
       <h3>Военно-профессиональные компетенции (участвуют в расчёте)</h3>${gradeTable(a.snapshot.sets.vpk.items, 'input|vpk', a.input.vpk, { showK: true })}
       <h3>Общекультурные и профессиональные компетенции</h3>
@@ -1475,6 +1569,8 @@ route(/^\/a\/([\w-]+)\/edit\/(\d)$/, (id, stepS) => {
   if (!a) return '<div class="card empty">Запись не найдена.</div>';
   if (a.status !== 'draft') { location.hash = '#/a/' + id; return ''; }
   ui.editing = id;
+  const refreshed = Model.refreshDraftSnapshot(state, a);
+  if (refreshed) { a.updatedAt = Store.nowIso(); persist(); ui.snapNote = id; }
   const steps = STEPS[a.type]; const step = Math.min(Math.max(1, +stepS), steps.length);
   const isLast = step === steps.length;
   const reopened = a.revisions.length > 0;
@@ -1482,6 +1578,7 @@ route(/^\/a\/([\w-]+)\/edit\/(\d)$/, (id, stepS) => {
     html: `<div class="row"><h1 style="margin:0">${esc(typeTitle(a.type))}</h1><span class="spacer"></span>${statusBadge(a)}</div>
     <p class="muted">${esc(objName(a.objectId))}${reopened ? ` · новая редакция (ранее утверждённых: ${a.revisions.length})` : ''} · черновик сохраняется автоматически</p>
     <ol class="steps" aria-label="Шаги">${steps.map((s, i) => `<li class="${i + 1 === step ? 'cur' : i + 1 < step ? 'done' : ''}"><a href="#/a/${id}/edit/${i + 1}" style="color:inherit;text-decoration:none" ${i + 1 === step ? 'aria-current="step"' : ''}>${i + 1}. ${esc(s[0])}</a></li>`).join('')}</ol>
+    ${ui.snapNote === id ? '<div class="note warn"><b>Параметры методики обновлены.</b> После создания черновика изменились используемые справочники (набор Кзнк, учебный план или модель признаков) — черновик пересчитан по их текущему состоянию. Проверьте введённые данные.</div>' : ''}
     <div class="card">${steps[step - 1][1](a)}</div>
     <div class="row no-print">
       ${step > 1 ? `<a class="btn" href="#/a/${id}/edit/${step - 1}">← Назад</a>` : ''}
@@ -1538,9 +1635,9 @@ actions['export-one'] = el => {
 };
 
 /* ---------- Представление результатов ---------- */
-function kpi(label, value, sub) { return `<div class="kpi"><div class="l">${esc(label)}</div><div class="v">${value}</div><div class="s">${sub || ''}</div></div>`; }
+function kpi(label, value, sub) { const tip = glossaryFor(label); return `<div class="kpi"><div class="l"${tip ? ` title="${esc(tip)}" style="cursor:help"` : ''}>${esc(label)}${tip ? ' ⓘ' : ''}</div><div class="v">${value}</div><div class="s">${sub || ''}</div></div>`; }
 function setTable(set, res, withMinMax) {
-  return `<div class="table-wrap"><table><thead><tr><th>№</th><th>Показатель сформированности</th><th class="num">Оценка</th><th class="num">Кзнк</th><th class="num">Псфк</th><th class="num">Степень, %</th>${withMinMax ? '<th class="num">Мин. (2)</th><th class="num">Макс. (5)</th>' : ''}</tr></thead><tbody>
+  return `<div class="table-wrap"><table><thead><tr><th>№</th><th>Показатель сформированности</th><th class="num">Оценка</th><th class="num">${term('Кзнк')}</th><th class="num">${term('Псфк')}</th><th class="num">${term('Степень сформированности', 'Степень, %')}</th>${withMinMax ? '<th class="num">Мин. (2)</th><th class="num">Макс. (5)</th>' : ''}</tr></thead><tbody>
   ${res.rows.map((r, i) => { const it = set.items[i]; return `<tr><td>${i + 1}</td><td><b>${esc(r.id)}</b> <span class="muted" style="font-size:13px">${esc(it.text)}</span></td><td class="num">${r.grade ?? '—'}</td><td class="num">${fmtK(r.k)}</td><td class="num">${fmt(r.psfk, 5)}</td><td class="num">${fmt(r.pct, 0)}</td>${withMinMax ? `<td class="num">${fmt(r.min, 3)}</td><td class="num">${fmt(r.max, 3)}</td>` : ''}</tr>`; }).join('')}
   </tbody><tfoot><tr><td></td><td>Суммарный показатель (среднее арифметическое, n = ${res.n})</td><td class="num">${fmt(res.meanGrade, 2)}</td><td class="num">${fmtK(res.sumK)}</td><td class="num">${fmt(res.meanPsfk, 3)}</td><td class="num">${fmt(res.meanPct, 2)}</td>${withMinMax ? `<td class="num">${fmt(2 * res.sumK / res.n, 3)}</td><td class="num">${fmt(res.maxMeanPsfk, 3)}</td>` : ''}</tr></tfoot></table></div>`;
 }
@@ -1574,6 +1671,7 @@ function resultView(a, r) {
     </div>
     ${r.warnings.map(w => `<div class="note warn">${esc(w)}</div>`).join('')}
     ${scaleNote(s.scales[s.sets.vpk.scale], v.levelPsfk)}
+    ${headerBlock(a)}
     <h3>Раздел I. Военно-профессиональные компетенции</h3>${setTable(s.sets.vpk, v, true)}${calcDetails(s.sets.vpk, v, s.sets.vpk.scale, s)}
     ${competenceChart(v.rows, 'Псфк ВПК')}
     ${p ? `<h3>Профессионально-специализированные компетенции</h3>${setTable(s.sets.psk, p, true)}${calcDetails(s.sets.psk, p, s.sets.psk.scale, s)}` : ''}
@@ -1593,7 +1691,7 @@ function resultView(a, r) {
     <h3>График уровня сформированности ВПК</h3>${competenceChart(v.rows)}
     <h3>Оценки ОК и ПК (в расчёт не входят)</h3>
     <div class="table-wrap"><table><thead><tr>${r.okpk.map(x => `<th class="c">${esc(x.id)}</th>`).join('')}</tr></thead><tbody><tr>${r.okpk.map(x => `<td class="c">${x.grade ?? '—'}</td>`).join('')}</tr></tbody></table></div>
-    <div class="grid g2" style="margin-top:12px">${kpi('Оценка руководителя практики', esc(a.input.leaderMark || '—'), '')}${kpi('Итоговая оценка комиссии', esc(a.input.commissionMark || '—'), '')}</div>
+    <div class="grid g2" style="margin-top:12px">${kpi('Оценка руководителя практики', esc(a.input.leaderMark || '—'), [a.meta.evaluator ? 'командир подразделения: ' + esc(a.meta.evaluator) : '', a.meta.evaluator2 ? 'руководитель от института: ' + esc(a.meta.evaluator2) : ''].filter(Boolean).join('<br>'))}${kpi('Итоговая оценка комиссии', esc(a.input.commissionMark || '—'), '')}</div>
     ${a.input.note ? `<p><b>Примечание:</b> ${esc(a.input.note)}</p>` : ''}`;
   }
   if (a.type === 'g0') {
@@ -1626,13 +1724,28 @@ function graduateOther(a) {
     <h3>III. Уровень личной подготовки</h3><div class="table-wrap"><table><thead><tr>${METHOD.PERSONAL_TRAINING[a.meta.period === 2 ? 2 : 1].map(s => `<th class="c">${esc(s)}</th>`).join('')}</tr></thead><tbody><tr>${tr}</tr></tbody></table></div>
     ${[['unit', 'Оценка подразделения'], ['rewards', 'Поощрения'], ['penalties', 'Взыскания'], ['shortcomings', 'Недостатки и причины'], ['recommendations', 'Рекомендации']].filter(([k]) => (i.notes || {})[k]).map(([k, l]) => `<p><b>${l}:</b> ${esc(i.notes[k])}</p>`).join('')}
     <h3>IV. Оценка по видам деятельности</h3><div class="table-wrap"><table><thead><tr>${METHOD.ACTIVITY_KINDS.map(s => `<th class="c">${esc(s)}</th>`).join('')}</tr></thead><tbody><tr>${METHOD.ACTIVITY_KINDS.map(s => `<td class="c">${esc((i.activity || {})[s] || '—')}</td>`).join('')}</tr></tbody></table></div>
-    <h3>V. Вывод по отзыву</h3><p>${esc(i.conclusion || '—')}</p>`;
+    <h3>V. Вывод по отзыву</h3><p>${esc(i.conclusion || '—')}</p>
+    ${signersBlock(a)}
+    <h3>Колонка выпускника</h3>${METHOD.GRADUATE_COLUMN.map((q, n) => { const v = (i.graduateColumn || {})[q.id], own = (i.graduateColumn || {})[q.id + 'own']; return `<p><b>${n + 1}. ${esc(q.text)}</b><br>${esc(v || '—')}${own ? ' — ' + esc(own) : ''}</p>`; }).join('')}`;
+}
+function headerBlock(a) {
+  if (a.type !== 'graduate') return '';
+  const h = a.meta.header || {};
+  const rows = METHOD.REVIEW_HEADER.map(([k, l]) => [l, h[k] ?? (k === 'position' ? a.meta.position : '')]).filter(r => r[1]);
+  if (h.family) rows.push(['Семейное положение', h.family]);
+  if (a.meta.serviceChange) rows.push([a.meta.serviceChange === 'transfer' ? 'Перевод' : 'Увольнение', a.meta.serviceChangeNote || '—']);
+  return rows.length ? `<h3>Сведения о выпускнике</h3><dl class="spec">${rows.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>` : '';
+}
+function signersBlock(a) {
+  const sg = a.meta.signers || {};
+  const rows = METHOD.REVIEW_SIGNERS.filter(([k]) => sg[k]);
+  return rows.length ? `<h3>Подписи</h3><dl class="spec">${rows.map(([k, l]) => `<dt>${esc(l)}</dt><dd>${esc(sg[k])}</dd>`).join('')}</dl>` : '';
 }
 
 route(/^\/a\/([\w-]+)$/, id => {
   const a = findA(id); if (!a) return '<div class="card empty">Запись не найдена. <a href="#/history">К истории</a></div>';
   if (a.status === 'draft') return `<div class="card"><h1>${esc(typeTitle(a.type))}</h1><p>${statusBadge(a)} ${esc(objName(a.objectId))}</p><div class="note warn">Расчёт не утверждён. Черновик не является результатом оценки.</div><a class="btn primary" href="#/a/${id}/edit/1">Продолжить заполнение</a></div>`;
-  const metaLine = [a.type === 'graduate' ? `${a.meta.period} год службы` : '', a.type === 'practice' ? `${a.meta.course} курс` : '', a.meta.evaluator ? 'оценщик: ' + a.meta.evaluator : '', a.meta.unit || '', a.meta.position || ''].filter(Boolean).join(' · ');
+  const metaLine = [a.type === 'graduate' ? `${a.meta.period} год службы` : '', a.type === 'practice' ? `${a.meta.course} курс` : '', a.meta.evaluator ? 'оценщик: ' + a.meta.evaluator : '', a.meta.unit || '', (a.meta.header || {}).position || a.meta.position || '', a.meta.evaluator2 ? 'руководитель от института: ' + a.meta.evaluator2 : ''].filter(Boolean).join(' · ');
   return `<div class="row"><h1 style="margin:0">${esc(typeTitle(a.type))}</h1><span class="spacer"></span>${statusBadge(a)}</div>
   <p class="muted"><a href="#/object/${a.objectId}">${esc(objName(a.objectId))}</a> · дата: ${fmtDate(a.meta.date)}${metaLine ? ' · ' + esc(metaLine) : ''}<br>Утверждён: ${fmtDT(a.finalizedAt)} · методика v${esc(a.snapshot.methodVersion)} (снимок от ${fmtDT(a.snapshot.takenAt)})</p>
   <div class="row no-print" style="margin-bottom:16px"><a class="btn primary" href="#/a/${id}/report">Отчёт / печать</a><button class="btn" data-act="verify" data-id="${id}">Проверить воспроизводимость</button><button class="btn" data-act="reopen" data-id="${id}">Изменить данные (новая редакция)</button><button class="btn" data-act="export-one" data-id="${id}">JSON</button><span class="spacer"></span><button class="btn danger" data-act="del-a" data-id="${id}">Удалить</button></div>
@@ -1704,7 +1817,7 @@ const FORMULAS = [
 
 route(/^\/method(?:\/(\w+))?$/, tab => {
   tab = tab || 'model';
-  const tabs = [['model', 'Модель'], ['comp', 'Компетенции'], ['scales', 'Шкалы и уровни'], ['formulas', 'Формулы'], ['sources', 'Источники и расхождения'], ['ref', 'Справочные данные']];
+  const tabs = [['model', 'Модель'], ['comp', 'Компетенции'], ['scales', 'Шкалы и уровни'], ['formulas', 'Формулы'], ['terms', 'Термины'], ['sources', 'Источники и расхождения'], ['ref', 'Справочные данные']];
   let body = '';
   if (tab === 'model') body = `
     <div class="card"><h2>Система полифункционального контроля (S3 п. 2.2)</h2>
@@ -1724,11 +1837,16 @@ route(/^\/method(?:\/(\w+))?$/, tab => {
     <dt>Традиционные методы</dt><dd>устный, письменный, программируемый, комбинируемый, практический</dd><dt>Комплексные военно-профессиональные</dt><dd>в составе воинской части, подразделений, экипажа (расчёта)</dd>
     <dt>Формы контроля ВПК</dt><dd>курсовая работа, экзамен, зачёт, тест, портфолио, тактическая летучка, групповое упражнение, нормативы по боевой и специальной подготовке, вождение боевых машин, самостоятельная работа, войсковая стажировка, контрольная работа, устный опрос, боевая стрельба, КШВИ, ТСЗ, КШТ, КШУ</dd></dl>
     <p class="src">Эти элементы описывают организацию контроля; правил их числового агрегирования источники не содержат, поэтому в расчёты они не входят.</p></div>`;
-  if (tab === 'comp') body = Object.values(METHOD.COEF_SETS).map(set => `<div class="card"><h2>${esc(set.name)}</h2><p class="src">${esc(set.src)}</p>
-    <div class="table-wrap"><table><thead><tr><th>Индекс</th><th>Формулировка</th><th>Вид деятельности</th><th class="num">Кзнк</th></tr></thead><tbody>
-    ${set.items.map(c => `<tr><td><b>${esc(c.id)}</b></td><td>${esc(c.text)}</td><td>${esc(c.group || '')}</td><td class="num">${fmtK(c.k)}</td></tr>`).join('')}</tbody>
-    <tfoot><tr><td></td><td>Сумма Кзнк</td><td></td><td class="num">${fmtK(set.items.reduce((s, c) => s + c.k, 0))}</td></tr></tfoot></table></div>
-    <p class="muted">Шкала оценки: ${METHOD.COMPETENCE_SCALE.map(esc).join('; ')}.</p></div>`).join('') +
+  if (tab === 'terms') body = `<div class="card"><h2>Термины и обозначения</h2><dl class="spec">${Object.entries(METHOD.GLOSSARY).map(([k, v]) => `<dt><b>${esc(k)}</b></dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <p class="muted">Подчёркнутые пунктиром термины в таблицах и значок ⓘ у показателей показывают эти пояснения при наведении.</p></div>
+    <div class="card"><h2>Уровни сформированности</h2>${METHOD.LEVELS.map(L => `<p>${lvBadge({ code: L.code })} — ${esc(L.descr)}.</p>`).join('')}</div>`;
+  if (tab === 'comp') body = Object.values(METHOD.COEF_SETS).map(set => { const groups = [...new Set(set.items.map(c => c.group || ''))];
+    return `<div class="card"><h2>${esc(set.name)}</h2><p class="src">${esc(set.src)}</p>
+    ${groups.map(g => { const its = set.items.filter(c => (c.group || '') === g); return `<details open style="margin-bottom:8px"><summary style="cursor:pointer;font-weight:600;padding:6px 0">${esc(g ? g[0].toUpperCase() + g.slice(1) : 'Компетенции')} <span class="muted" style="font-weight:400">(${its.length}; Σ${term('Кзнк')} = ${fmtK(its.reduce((s, c) => s + c.k, 0))})</span></summary>
+      <div class="table-wrap"><table><thead><tr><th>Индекс</th><th>Формулировка</th><th class="num">${term('Кзнк')}</th></tr></thead><tbody>
+      ${its.map(c => `<tr><td><b>${esc(c.id)}</b></td><td>${esc(c.text)}</td><td class="num">${fmtK(c.k)}</td></tr>`).join('')}</tbody></table></div></details>`; }).join('')}
+    <p><b>Сумма Кзнк набора: ${fmtK(set.items.reduce((s, c) => s + c.k, 0))}</b>. Иерархия: набор → вид профессиональной деятельности (S1 разд. I) → компетенция. Промежуточные суммы по видам деятельности приведены справочно — правил расчёта показателей по видам деятельности источники не содержат.</p>
+    <p class="muted">Шкала оценки: ${METHOD.COMPETENCE_SCALE.map(esc).join('; ')}. Правило оценивания: оценку выставляет командир (руководитель практики); ${term('Псфк')} = Оценка × ${term('Кзнк')}.</p></div>`; }).join('') +
     `<div class="card"><h2>ОК и ПК анкеты войсковой практики</h2><p class="src">S2 Прил. 1; S4 Прил. 1, 6. Кзнк не установлены — в расчёт не входят.</p><div class="table-wrap"><table><tbody>${METHOD.PRACTICE_OKPK.map(c => `<tr><td><b>${esc(c.id)}</b></td><td>${esc(c.text)}</td></tr>`).join('')}</tbody></table></div></div>
     <div class="card"><h2>Компоненты ВПК (S3 п. 2.2, табл. 1)</h2><div class="table-wrap"><table><thead><tr><th>Компонент</th><th>Показатели</th><th>Индикаторы</th><th>Методы контроля</th></tr></thead><tbody>${METHOD.COMPONENTS.map(r => `<tr>${r.map(x => `<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <p class="src">Матрица компонентов задаёт содержание контроля; числовые веса компонентов и правила свёртки в источниках не приведены — в расчётах не используется.</p></div>`;
@@ -1798,7 +1916,7 @@ route(/^\/coef\/([\w-]+)$/, id => {
   <div class="table-wrap"><table><thead><tr><th>Индекс</th><th>Формулировка</th><th class="num">Кзнк</th></tr></thead><tbody>
   ${s.items.map((c, i) => `<tr><td><b>${esc(c.id)}</b></td><td>${esc(c.text)}</td><td class="num">${ed ? `<input type="text" class="cell" style="width:100px" id="cs-k-${i}" value="${esc(String(c.k).replace('.', ','))}" aria-label="Кзнк ${esc(c.id)}">` : fmtK(c.k)}</td></tr>`).join('')}</tbody>
   <tfoot><tr><td></td><td>Сумма</td><td class="num">${fmtK(s.items.reduce((a, c) => a + c.k, 0))}</td></tr></tfoot></table></div>
-  ${ed ? `<div class="note warn">Изменение набора не влияет на утверждённые расчёты (в них сохранён снимок). Черновиков, использующих набор: ${used}.</div>
+  ${ed ? `<div class="note warn">Изменение набора не влияет на утверждённые расчёты (в них сохранён снимок). Черновиков, использующих набор: ${used} — при следующем открытии они будут пересчитаны по новым значениям.</div>
   <div class="row"><button class="btn primary" data-act="coef-save" data-id="${id}">Сохранить</button><span class="spacer"></span><button class="btn danger" data-act="coef-del" data-id="${id}">Удалить набор</button></div>` : '<p class="muted">Набор источника не редактируется.</p>'}</div>`;
 });
 actions['coef-save'] = el => {
@@ -2040,23 +2158,86 @@ route(/^\/summary$/, () => {
     <div class="field"><label class="f" for="sm-type">Вид оценки</label><select id="sm-type" data-sum="type"><option value="practice" ${S.type === 'practice' ? 'selected' : ''}>Войсковая практика</option><option value="graduate" ${S.type === 'graduate' ? 'selected' : ''}>Отзыв на выпускника</option></select></div>
     <div class="field"><label class="f" for="sm-group">Группа / подразделение</label><select id="sm-group" data-sum="group"><option value="">все</option>${groups.map(g => `<option ${S.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div>
     <div class="field"><label class="f" for="sm-sub">${S.type === 'practice' ? 'Курс' : 'Год службы'}</label><select id="sm-sub" data-sum="sub"><option value="">все</option>${(S.type === 'practice' ? ['4', '5'] : ['1', '2']).map(v => `<option ${S.sub === v ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
-  </div><button class="btn sm" data-act="csv-summary" ${list.length ? '' : 'disabled'}>Экспорт сводной в CSV</button></div>
+  </div><div class="row"><button class="btn sm" data-act="csv-summary" ${list.length ? '' : 'disabled'}>Экспорт сводной в CSV</button><button class="btn sm" data-act="print" ${list.length ? '' : 'disabled'}>Печать / PDF</button></div></div>
+  <div class="only-print"><p><b>${S.type === 'practice' ? 'Войсковая практика' : 'Отзывы на выпускников'}</b>; группа: ${esc(S.group || 'все')}; ${S.type === 'practice' ? 'курс' : 'год службы'}: ${esc(S.sub || 'все')}. Сформировано ${fmtDT(new Date().toISOString())}.</p></div>
   ${sets.size > 1 ? '<div class="note warn">В выборке использованы разные наборы Кзнк — ранжирование по Псфк некорректно. Отфильтруйте выборку.</div>' : ''}
   ${!S.sub && list.length ? `<div class="note">В выборке объединены разные ${S.type === 'practice' ? 'курсы' : 'годы службы'}; один курсант может встречаться несколько раз.</div>` : ''}
-  <div class="card">${list.length ? `<div class="table-wrap"><table><thead><tr><th>№</th><th>Курсант / выпускник</th><th>Группа</th><th>${S.type === 'practice' ? 'Курс' : 'Год'}</th><th class="num">Оценка руководителя (ср.)</th><th class="num">Степень сформированности, %</th><th class="num">Показатель сформированности</th><th class="num">Место</th><th>Уровень</th>${S.type === 'practice' ? '<th class="c">Оценка руководителя практики</th><th class="c">Оценка комиссии</th>' : ''}</tr></thead><tbody>
+  <div class="card">${list.length ? `<div class="table-wrap"><table><thead><tr><th>№</th><th>Курсант / выпускник</th><th>Группа</th><th>${S.type === 'practice' ? 'Курс' : 'Год'}</th><th class="num">Оценка руководителя (ср.)</th><th class="num">Степень сформированности, %</th><th class="num">Показатель сформированности</th><th class="num">Место</th><th>Уровень</th>${S.type === 'practice' ? '<th class="c">Оценка руководителя практики</th><th class="c">Оценка комиссии</th>' : '<th class="num">Псфк ПСК</th><th>Уровень ПСК</th><th class="num">Итоговая оценка</th><th>Итоговый уровень</th>'}</tr></thead><tbody>
   ${list.map((a, i) => { const v = a.result.vpk; const lv = S.type === 'graduate' ? (v.levelPsfk || v.levelBsr) : v.levelBsr; const o = state.objects.find(x => x.id === a.objectId) || {};
-    return `<tr class="click" data-act="go" data-href="#/a/${a.id}"><td>${i + 1}</td><td>${esc(o.name)}</td><td>${esc(o.group || '—')}</td><td>${S.type === 'practice' ? a.meta.course : a.meta.period}</td><td class="num">${fmt(v.meanGrade, 2)}</td><td class="num">${fmt(v.meanPct, 2)}</td><td class="num">${fmt(v.meanPsfk, 3)}</td><td class="num"><b>${ranks[i]}</b></td><td>${lvBadge(lv, false)}</td>${S.type === 'practice' ? `<td class="c">${esc(a.input.leaderMark || '—')}</td><td class="c">${esc(a.input.commissionMark || '—')}</td>` : ''}</tr>`; }).join('')}
-  </tbody><tfoot><tr><td></td><td>Средний балл группы</td><td></td><td></td><td class="num">${fmt(avg, 2)}</td><td></td><td></td><td></td><td></td>${S.type === 'practice' ? '<td></td><td></td>' : ''}</tr></tfoot></table></div>
+    return `<tr class="click" data-act="go" data-href="#/a/${a.id}"><td>${i + 1}</td><td>${esc(o.name)}</td><td>${esc(o.group || '—')}</td><td>${S.type === 'practice' ? a.meta.course : a.meta.period}</td><td class="num">${fmt(v.meanGrade, 2)}</td><td class="num">${fmt(v.meanPct, 2)}</td><td class="num">${fmt(v.meanPsfk, 3)}</td><td class="num"><b>${ranks[i]}</b></td><td>${lvBadge(lv, false)}</td>${S.type === 'practice' ? `<td class="c">${esc(a.input.leaderMark || '—')}</td><td class="c">${esc(a.input.commissionMark || '—')}</td>` : gradCols(a.result)}</tr>`; }).join('')}
+  </tbody><tfoot><tr><td></td><td>Средний балл группы</td><td></td><td></td><td class="num">${fmt(avg, 2)}</td><td></td><td></td><td></td><td></td>${S.type === 'practice' ? '<td></td><td></td>' : '<td></td><td></td><td></td><td></td>'}</tr></tfoot></table></div>
   <p class="src">Место: 1 + число курсантов с большим (неокруглённым) Псфк; равные значения делят место (S4 табл. 8). Уровень: ${S.type === 'practice' ? 'по bср (пороги Псфк для 13 ВПК не установлены)' : 'по таблице Псфк ВПК (S1), для пользовательских наборов — по bср'}. Сопоставление расчётного показателя и выставленных оценок выполняется пользователем — правило выявления «разногласий» в источнике не формализовано.</p>
   <h3>Распределение по уровням</h3>${levelBars(counts)}
   ${sets.size === 1 ? `<h3>Показатель сформированности по курсантам</h3>${lineChart({ labels: list.map((a, i) => String(i + 1)), yMin: 0, yMax: 0.35, series: [{ name: 'Псфк ВПК', color: '#2f6fa8', values: vals }] })}` : ''}` : '<div class="empty">Нет утверждённых расчётов для выбранных условий.</div>'}</div>`;
 });
 document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.sum; if (!k) return; ui.summary[k] = e.target.value; if (k === 'type') ui.summary.sub = ''; render(); });
+function gradCols(r) {
+  const lp = r.psk && (r.psk.levelPsfk || r.psk.levelBsr), lt = r.total && (r.total.levelPsfk || r.total.levelBsr);
+  return `<td class="num">${r.psk ? fmt(r.psk.meanPsfk, 3) : '—'}</td><td>${r.psk ? lvBadge(lp, false) : '—'}</td><td class="num">${r.total ? fmt(r.total.meanPsfk, 3) : '—'}</td><td>${r.total ? lvBadge(lt, false) : '—'}</td>`;
+}
 actions['csv-summary'] = () => {
-  const S = ui.summary; const rows = [['№', 'Курсант / выпускник', 'Группа', S.type === 'practice' ? 'Курс' : 'Год службы', 'Оценка руководителя (ср.)', 'Степень сформированности, %', 'Показатель сформированности', 'Место', 'Уровень', 'Оценка руководителя практики', 'Оценка комиссии']];
+  const S = ui.summary; const rows = [['№', 'Курсант / выпускник', 'Группа', S.type === 'practice' ? 'Курс' : 'Год службы', 'Оценка руководителя (ср.)', 'Степень сформированности, %', 'Показатель сформированности', 'Место', 'Уровень', ...(S.type === 'practice' ? ['Оценка руководителя практики', 'Оценка комиссии'] : ['Псфк ПСК', 'Уровень ПСК', 'Итоговая оценка', 'Итоговый уровень'])]];
   (ui.summaryRows || []).forEach(({ a, rank }, i) => { const v = a.result.vpk; const lv = S.type === 'graduate' ? (v.levelPsfk || v.levelBsr) : v.levelBsr; const o = state.objects.find(x => x.id === a.objectId) || {};
-    rows.push([i + 1, o.name, o.group || '', S.type === 'practice' ? a.meta.course : a.meta.period, csvNum(v.meanGrade), csvNum(v.meanPct), csvNum(v.meanPsfk), rank, lv ? levelInfo(lv.code).name : '', a.input.leaderMark || '', a.input.commissionMark || '']); });
+    rows.push([i + 1, o.name, o.group || '', S.type === 'practice' ? a.meta.course : a.meta.period, csvNum(v.meanGrade), csvNum(v.meanPct), csvNum(v.meanPsfk), rank, lv ? levelInfo(lv.code).name : '', ...(S.type === 'practice' ? [a.input.leaderMark || '', a.input.commissionMark || ''] : (() => { const r = a.result, lp = r.psk && (r.psk.levelPsfk || r.psk.levelBsr), lt = r.total && (r.total.levelPsfk || r.total.levelBsr); return [r.psk ? csvNum(r.psk.meanPsfk) : '', lp ? levelInfo(lp.code).name : '', r.total ? csvNum(r.total.meanPsfk) : '', lt ? levelInfo(lt.code).name : '']; })())]); });
   download(`сводная_${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+};
+
+/* ---------- Анализ отзывов на выпускников (S1 Прил. 2) ---------- */
+const MARK_OF = { high: 5, mid: 4, low: 3, crit: 2 };
+function reviewLevel(r, basis) {
+  if (basis === 'total') return r.total ? (r.total.levelPsfk || r.total.levelBsr) : null;
+  if (basis === 'vpkPsfk') return r.vpk.levelPsfk || null;
+  return r.vpk.levelBsr || null;
+}
+function reviewAnalysis() {
+  const F = ui.reviews;
+  const items = state.assessments.filter(a => a.status === 'final' && a.type === 'graduate' && String(a.meta.period) === F.period
+    && (!F.year || ((a.meta.header || {}).gradYear || '') === F.year));
+  /* по одному (последнему по дате) отзыву на выпускника за выбранный период */
+  const byObj = new Map();
+  for (const a of items) { const p = byObj.get(a.objectId); if (!p || (a.meta.date || '') > (p.meta.date || '')) byObj.set(a.objectId, a); }
+  const groups = new Map();
+  for (const a of byObj.values()) {
+    const organ = ((a.meta.header || {}).organ || '').trim() || '(не указан)';
+    if (!groups.has(organ)) groups.set(organ, { organ, n: 0, marks: { 5: 0, 4: 0, 3: 0, 2: 0 }, undet: 0, transfer: 0, dismissal: 0 });
+    const g = groups.get(organ); g.n++;
+    const lv = reviewLevel(a.result, F.basis); if (lv) g.marks[MARK_OF[lv.code]]++; else g.undet++;
+    if (a.meta.serviceChange === 'transfer') g.transfer++; if (a.meta.serviceChange === 'dismissal') g.dismissal++;
+  }
+  return { rows: [...groups.values()].sort((a, b) => a.organ.localeCompare(b.organ, 'ru')), dup: items.length - byObj.size };
+}
+const sentKey = organ => `${ui.reviews.period}|${ui.reviews.year}|${organ}`;
+route(/^\/reviews$/, () => {
+  const F = ui.reviews;
+  const years = [...new Set(state.assessments.filter(a => a.type === 'graduate').map(a => (a.meta.header || {}).gradYear).filter(Boolean))].sort();
+  const { rows, dup } = reviewAnalysis();
+  const sent = state.reviewSent || {};
+  const tot = rows.reduce((t, r) => { t.n += r.n; t.u += r.undet; for (const m of [5, 4, 3, 2]) t[m] += r.marks[m]; const v = Number(sent[sentKey(r.organ)]); if (Number.isFinite(v)) t.sent += v; return t; }, { n: 0, u: 0, 5: 0, 4: 0, 3: 0, 2: 0, sent: 0 });
+  const basisText = { total: 'по итоговой оценке сформированности компетенций (ВПК + ПСК)', vpkPsfk: 'по суммарному Псфк ВПК (таблица S1)', bsr: 'по среднему баллу bср ВПК' }[F.basis];
+  return `<h1>Анализ отзывов на выпускников</h1><p class="muted">Форма S1 Прил. 2: «Анализ отзывов на выпускников, прослуживших 1 год (2 года) после выпуска». Учитываются утверждённые отзывы.</p>
+  <div class="card no-print"><div class="grid g3">
+    <div class="field"><label class="f" for="rv-p">Период</label><select id="rv-p" data-rv="period"><option value="1" ${F.period === '1' ? 'selected' : ''}>1 год службы</option><option value="2" ${F.period === '2' ? 'selected' : ''}>2 года службы</option></select></div>
+    <div class="field"><label class="f" for="rv-y">Год выпуска (из шапки отзыва)</label><select id="rv-y" data-rv="year"><option value="">все</option>${years.map(y => `<option ${F.year === y ? 'selected' : ''}>${esc(y)}</option>`).join('')}</select></div>
+    <div class="field"><label class="f" for="rv-b">«Уровень подготовки оценён» — основание</label><select id="rv-b" data-rv="basis"><option value="total" ${F.basis === 'total' ? 'selected' : ''}>итоговая оценка (ВПК + ПСК)</option><option value="vpkPsfk" ${F.basis === 'vpkPsfk' ? 'selected' : ''}>суммарный Псфк ВПК</option><option value="bsr" ${F.basis === 'bsr' ? 'selected' : ''}>средний балл bср ВПК</option></select><div class="hint">В форме S1 основание оценки 5/4/3/2 не указано — выберите его. Уровень переводится в оценку: «высокий» — 5, «средний» — 4, «низкий» — 3, «критический» — 2.</div></div>
+  </div><div class="row"><button class="btn sm" data-act="csv-reviews" ${rows.length ? '' : 'disabled'}>Экспорт в CSV</button><button class="btn sm" data-act="print" ${rows.length ? '' : 'disabled'}>Печать / PDF</button></div></div>
+  <div class="card"><div class="only-print"><p><b>Анализ отзывов на выпускников, прослуживших ${F.period === '2' ? '2 года' : '1 год'} после выпуска</b>${F.year ? ', выпуск ' + esc(F.year) : ''}. Оценка — ${esc(basisText)}.</p></div>
+  ${rows.length ? `<div class="table-wrap"><table><thead><tr><th rowspan="2">№</th><th rowspan="2">Орган военного управления</th><th rowspan="2" class="num">Количество выпускников, направленных для прохождения службы</th><th rowspan="2" class="num">Поступило отзывов, всего</th><th colspan="4" class="c">Уровень подготовки выпускников оценён</th><th rowspan="2">Примечание</th></tr><tr><th class="c">5</th><th class="c">4</th><th class="c">3</th><th class="c">2</th></tr></thead><tbody>
+  ${rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.organ)}</td><td class="num"><input type="number" min="0" class="cell no-print" data-sent="${esc(r.organ)}" value="${esc(sent[sentKey(r.organ)] ?? '')}" aria-label="Направлено: ${esc(r.organ)}"><span class="only-print">${esc(sent[sentKey(r.organ)] ?? '—')}</span></td><td class="num">${r.n}</td>${[5, 4, 3, 2].map(m => `<td class="c">${r.marks[m]}</td>`).join('')}<td>${[r.undet ? `уровень не определён: ${r.undet}` : '', r.transfer ? `переведено: ${r.transfer}` : '', r.dismissal ? `уволено: ${r.dismissal}` : ''].filter(Boolean).join('; ') || ''}</td></tr>`).join('')}
+  </tbody><tfoot><tr><td></td><td>Итого</td><td class="num">${tot.sent || '—'}</td><td class="num">${tot.n}</td>${[5, 4, 3, 2].map(m => `<td class="c">${tot[m]}</td>`).join('')}<td>${tot.u ? 'уровень не определён: ' + tot.u : ''}</td></tr></tfoot></table></div>
+  <p class="src">Орган военного управления — из поля «Округ (орган военного управления)» шапки отзыва. Количество направленных выпускников вводится вручную (в отзывах этих сведений нет). На каждого выпускника учитывается последний отзыв за период${dup ? ` (не учтено повторных: ${dup})` : ''}. Оценка ${esc(basisText)}${F.basis === 'total' ? '; без ПСК итоговая оценка не определяется' : ''}.</p>` : '<div class="empty">Нет утверждённых отзывов за выбранный период.</div>'}</div>`;
+});
+document.addEventListener('change', e => {
+  const d = e.target.dataset || {};
+  if (d.rv) { ui.reviews[d.rv] = e.target.value; render(); }
+  if (d.sent !== undefined) { const v = e.target.value === '' ? undefined : Number(e.target.value); if (!state.reviewSent) state.reviewSent = {};
+    if (v !== undefined && !(Number.isInteger(v) && v >= 0)) { e.target.classList.add('invalid'); toast('Количество — целое неотрицательное число', true); return; }
+    if (v === undefined) delete state.reviewSent[sentKey(d.sent)]; else state.reviewSent[sentKey(d.sent)] = v; persist(); render(); }
+});
+actions['csv-reviews'] = () => {
+  const { rows } = reviewAnalysis(); const sent = state.reviewSent || {};
+  const out = [['№', 'Орган военного управления', 'Количество выпускников, направленных для прохождения службы', 'Поступило отзывов, всего', 'Оценено 5', 'Оценено 4', 'Оценено 3', 'Оценено 2', 'Уровень не определён', 'Переведено', 'Уволено']];
+  rows.forEach((r, i) => out.push([i + 1, r.organ, sent[sentKey(r.organ)] ?? '', r.n, r.marks[5], r.marks[4], r.marks[3], r.marks[2], r.undet, r.transfer, r.dismissal]));
+  download(`анализ_отзывов_${ui.reviews.period}год_${new Date().toISOString().slice(0, 10)}.csv`, toCsv(out), 'text/csv;charset=utf-8');
 };
 
 /* ---------- Данные и резервные копии ---------- */
@@ -2122,7 +2303,7 @@ route(/^\/tests$/, () => {
 
 /* ---------- Запуск ---------- */
 $('#menuBtn').addEventListener('click', () => { const s = $('#side'); s.classList.toggle('open'); $('#menuBtn').setAttribute('aria-expanded', s.classList.contains('open')); });
-window.addEventListener('hashchange', () => { if (!/^#\/a\/[\w-]+\/edit/.test(location.hash)) { if (ui.editing) persist(); ui.editing = null; } render(); });
+window.addEventListener('hashchange', () => { if (!/^#\/a\/[\w-]+\/edit/.test(location.hash)) { if (ui.editing) persist(); ui.editing = null; ui.snapNote = null; } render(); });
 window.addEventListener('beforeunload', () => { clearTimeout(ui.saveTimer); Store.save(state); });
 window.addEventListener('storage', e => { if (e.key && e.key.startsWith('pfk-vpk-calculator')) { state = Store.load(); render(); toast('Данные обновлены в другой вкладке'); } });
 renderStorage();

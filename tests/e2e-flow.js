@@ -71,17 +71,27 @@ const assert = (c, m) => { if (!c) { console.log('FAIL:', m); process.exitCode =
   await page.goto(url + '#/new');
   await page.selectOption('#nw-obj', { label: 'Иванов И.И. — выпуск 2023' }); await page.check('input[name=nw-type][value=graduate]');
   await page.click('[data-act=nw-create]'); await page.waitForTimeout(50);
+  await page.fill('input[data-bind="meta|header|organ"]', 'Центральный округ');
+  await page.fill('input[data-bind="meta|header|gradYear"]', '2023');
+  await page.fill('input[data-bind="meta|header|rank"]', 'лейтенант');
+  await page.fill('input[data-bind="meta|signers|commander"]', 'полковник Петров');
+  await page.waitForTimeout(400);
   await page.click('text=Далее →');
   await page.waitForSelector('#prog');
   const radios = await page.$$('input[type=radio][value="5"]');
   for (const r of radios) await (await r.evaluateHandle(e => e.nextElementSibling)).click();
   assert((await page.textContent('#prog')).includes('21 из 21'), 'отзыв: 21 из 21');
-  await page.click('text=Далее →'); await page.click('text=Далее →');
+  await page.click('text=Далее →'); await page.waitForTimeout(50);
+  await page.selectOption('select[data-bind="input|graduateColumn|q3"]', 'Скорее да, чем нет');
+  await page.fill('textarea[data-bind="input|graduateColumn|q2"]', 'тактика');
+  await page.waitForTimeout(400);
+  await page.click('text=Далее →');
   await page.click('[data-act=finalize]'); await page.waitForTimeout(50);
   assert((await page.textContent('#dlgBody')).includes('Не заполнено'), 'предупреждение о незаполненных разделах II–V');
   await page.click('#dlgFoot .primary'); await page.waitForTimeout(80);
   const g = await page.textContent('#main');
   assert(g.includes('0,313') && g.includes('0,321') && g.includes('0,315'), 'отзыв все 5: ВПК 0,313, ПСК 0,321, итог 0,315');
+  assert(g.includes('Центральный округ') && g.includes('полковник Петров') && g.includes('Скорее да, чем нет') && g.includes('тактика'), 'шапка, подписи и колонка выпускника в результате');
   // revision
   await page.click('[data-act=reopen]'); await page.click('#dlgFoot .primary'); await page.waitForTimeout(50);
   await page.click('text=Далее →');
@@ -136,6 +146,34 @@ const assert = (c, m) => { if (!c) { console.log('FAIL:', m); process.exitCode =
   const tr = await page.textContent('#main');
   assert(tr.includes('0,7339') || tr.includes('0,7340'), 'траектория K1: g6 ≈ 0,734');
 
+  // анализ отзывов (S1 Прил. 2)
+  await page.goto(url + '#/reviews'); await page.waitForTimeout(80);
+  let rv = await page.textContent('#main');
+  assert(rv.includes('Центральный округ'), 'анализ отзывов: строка органа управления');
+  const rvCells = await page.$$eval('#main tbody tr td', t => t.map(x => x.textContent.trim()));
+  assert(rvCells[3] === '1' && rvCells[4] === '1', 'анализ отзывов: 1 отзыв, оценён на 5 (итог 0,307 — «высокий») — ' + rvCells.slice(3, 8));
+  await page.fill('input[data-sent]', '12'); await page.press('input[data-sent]', 'Tab'); await page.waitForTimeout(80);
+  assert((await page.textContent('#main tfoot')).includes('12'), 'анализ отзывов: введено число направленных');
+  // сводная для выпускников с ПСК и итогом
+  await page.goto(url + '#/summary'); await page.selectOption('#sm-type', 'graduate'); await page.waitForTimeout(80);
+  assert((await page.textContent('#main thead')).includes('Итоговый уровень'), 'сводная по отзывам: столбцы ПСК и итог');
+  // отчёт по объекту
+  const objId = await page.evaluate(() => JSON.parse(localStorage.getItem('pfk-vpk-calculator-v1')).objects.find(o => o.name.startsWith('Сердюк')).id);
+  await page.goto(url + '#/object/' + objId + '/report'); await page.waitForTimeout(80);
+  const orep = await page.textContent('#main');
+  assert(orep.includes('Отчёт по объекту') && orep.includes('4 курс') && orep.includes('5 курс') && orep.includes('ВПК-16'), 'отчёт по объекту: расчёты и матрица компетенций');
+  // справочник: термины и группы
+  await page.goto(url + '#/method/terms'); assert((await page.textContent('#main')).includes('Коэффициент значимости'), 'справочник: термины');
+  await page.goto(url + '#/method/comp'); assert((await page.$$('#main details')).length >= 6, 'справочник: группы по видам деятельности');
+  // черновик подхватывает изменения набора Кзнк
+  await page.goto(url + '#/coef'); await page.click('[data-act=coef-copy][data-id=src-vpk13]'); await page.waitForTimeout(80);
+  const setId = page.url().split('/').pop();
+  await page.goto(url + '#/new'); await page.selectOption('#nw-obj', { index: 1 }); await page.check('input[name=nw-type][value=practice]'); await page.click('[data-act=nw-create]'); await page.waitForTimeout(80);
+  await page.selectOption('select[data-bind="meta|vpkSetId"]', setId); await page.waitForTimeout(80);
+  const dr = page.url();
+  await page.goto(url + '#/coef/' + setId); await page.fill('#cs-k-0', '0,5'); await page.click('[data-act=coef-save]'); await page.waitForTimeout(80);
+  await page.goto(dr.replace(/edit\/1$/, 'edit/2')); await page.waitForTimeout(80);
+  assert((await page.textContent('tbody tr:first-child td.num')).trim() === '0,50000' && (await page.textContent('#main')).includes('Параметры методики обновлены'), 'черновик подхватил новый Кзнк и показал уведомление');
   // mobile
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto(url + '#/history'); await page.waitForTimeout(600);
