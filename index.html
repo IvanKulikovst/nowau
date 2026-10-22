@@ -2896,6 +2896,36 @@ button.cp-tile[data-empty] .f-stat-value{opacity:.55}
 .mc-badge{margin-top:4px;font-size:12px;font-weight:700;color:var(--st-urgent-text)}
 .mc-badge.is-full{color:var(--st-ok-text)}
 .is-native #setStorageStatus,.is-native #setPersistBtn{display:none!important}
+/* ---- Фото и документы техники (27h) ---- */
+.vf-panel { margin-bottom: 16px; }
+.vf-panel.is-over { outline: 2px dashed var(--accent, #0a84ff); outline-offset: -4px; }
+.vf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; margin: 10px 0; }
+.vf-ph { position: relative; padding: 0; border: 1px solid var(--g-border); border-radius: 10px; overflow: hidden; background: var(--fill-tertiary); cursor: pointer; aspect-ratio: 4 / 3; }
+.vf-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vf-ph.is-main { outline: 2px solid var(--accent, #0a84ff); }
+.vf-main-tag { position: absolute; left: 6px; bottom: 6px; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: rgba(0,0,0,.62); color: #fff; }
+.vf-empty { padding: 18px 4px; color: var(--label-secondary); font-size: 13px; }
+.vf-docs { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.vf-doc { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--g-border); border-radius: 10px; background: var(--fill-tertiary); }
+.vf-doc-main { min-width: 0; flex: 1; }
+.vf-doc-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.vf-doc-meta, .vf-doc-note { font-size: 12.5px; color: var(--label-secondary); margin-top: 4px; }
+.vf-doc-files { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.vf-doc-files .f-btn span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vf-doc-files .f-btn small { color: var(--label-secondary); margin-left: 4px; }
+.vf-mini { float: left; width: 44px; height: 33px; object-fit: cover; border-radius: 6px; margin-right: 10px; border: 1px solid var(--g-border); }
+.vf-card-ph { float: right; width: 72px; height: 54px; object-fit: cover; border-radius: 8px; margin: 0 0 6px 10px; border: 1px solid var(--g-border); }
+.vf-cover { padding: 0; border: 1px solid var(--g-border); border-radius: 10px; overflow: hidden; width: 88px; height: 66px; flex: none; cursor: pointer; background: var(--fill-tertiary); }
+.vf-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vf-view { position: relative; display: flex; justify-content: center; align-items: center; min-height: 240px; background: #000; padding: 0; }
+.vf-view img { max-width: 100%; max-height: 68vh; display: block; }
+.vf-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 56px; border: 0; border-radius: 10px; background: rgba(255,255,255,.18); color: #fff; font-size: 28px; cursor: pointer; }
+.vf-prev { left: 8px; } .vf-next { right: 8px; }
+.vf-view-foot { flex-wrap: wrap; }
+.vf-view-foot .f-input { flex: 1; min-width: 160px; }
+img.is-missing { visibility: hidden; }
+@media print { .vf-panel, .vf-mini, .vf-card-ph, .vf-cover { display: none !important; } }
+
 </style>
 <style id="krpd-print-styles">
 /* =====================================================================
@@ -10254,6 +10284,7 @@ function staffCard(v, st, i, selected) {
         <span class="sc-status">${esc(v.status)}</span>
       </header>
       <div class="sc-title">
+        ${vfThumbHtml(v, 'vf-card-ph')}
         <div class="sc-name">${esc(v.name)}</div>
         <div class="sc-sub">${esc([v.brand, v.year ? v.year + ' г. в.' : ''].filter(Boolean).join(' · ') || 'Марка не указана')}</div>
         ${node ? `<div class="sc-cat" title="${esc(node.name)}">${FI.file(12)}<span>${esc(node.name)}</span></div>` : ''}
@@ -10604,7 +10635,7 @@ function renderParkResults(rows) {
             <tr class="is-clickable ${sel.has(v.id) ? 'is-selected' : ''}" data-act="open-vehicle" data-id="${v.id}">
               <td><input type="checkbox" data-act="row-select" data-id="${v.id}" aria-label="Выбрать: ${esc(v.name)}" ${sel.has(v.id) ? 'checked' : ''}></td>
               <td><span class="f-dot f-lvl-${st.level}" title="${esc(LEVELS[st.level].label)}"></span></td>
-              <td class="f-td-strong">${esc(v.name)}<div class="f-td-muted" style="font-size:12px;font-weight:400">${esc(v.brand || '')}</div></td>
+              <td class="f-td-strong">${vfThumbHtml(v, 'vf-mini')}${esc(v.name)}<div class="f-td-muted" style="font-size:12px;font-weight:400">${esc(v.brand || '')}</div></td>
               <td>${v.regNumber ? `<span class="f-plate">${esc(v.regNumber)}</span>` : '<span class="f-td-muted">—</span>'}</td>
               <td>${esc(v.unit || '—')}</td>
               <td>${esc(v.responsible || '—')}</td>
@@ -10672,6 +10703,8 @@ function renderVehicle() {
     <a class="f-back" data-act="back-park">${FI.back(15)} К списку техники</a>
 
     <div class="f-detail-head">
+      <div style="min-width:0;display:flex;gap:14px;align-items:center">
+      ${vfThumbId(v) ? `<button type="button" class="vf-cover" data-act="vf" data-do="open-files" title="Фото и документы">${vfThumbHtml(v, '')}</button>` : ''}
       <div style="min-width:0">
         <div class="f-detail-title">${esc(v.name)}</div>
         <div class="f-detail-sub">
@@ -10681,6 +10714,7 @@ function renderVehicle() {
           <span class="f-badge f-badge-neutral">${esc(v.status)}</span>
           ${levelBadge(st.level)}
         </div>
+      </div>
       </div>
       <div class="f-page-actions">
         <button type="button" class="f-btn" data-act="add-hours" data-id="${v.id}">${FI.gauge(15)}<span>Моточасы</span></button>
@@ -10713,6 +10747,7 @@ function renderVehicle() {
       <button type="button" class="f-tab ${ui.vehicleTab === 'info'  ? 'is-active' : ''}" data-act="vtab" data-tab="info">Основные сведения</button>
       <button type="button" class="f-tab ${ui.vehicleTab === 'maint' ? 'is-active' : ''}" data-act="vtab" data-tab="maint">Журнал ТО (${ms.length})</button>
       <button type="button" class="f-tab ${ui.vehicleTab === 'hours' ? 'is-active' : ''}" data-act="vtab" data-tab="hours">Моточасы (${hs.length})</button>
+      <button type="button" class="f-tab ${ui.vehicleTab === 'files' ? 'is-active' : ''}" data-act="vtab" data-tab="files">Фото и документы (${vfPhotos(v).length + vfDocs(v).length})</button>
     </div>
 
     <div id="vehTabBody">${renderVehicleTab(v, st, ms, hs)}</div>`;
@@ -10720,6 +10755,7 @@ function renderVehicle() {
 
 function renderVehicleTab(v, st, ms, hs) {
   if (ui.vehicleTab === 'info')  return renderVehicleInfo(v, st);
+  if (ui.vehicleTab === 'files') return renderVehicleFiles(v);
   if (ui.vehicleTab === 'maint') return renderVehicleMaint(v, ms);
   return renderVehicleHours(v, hs);
 }
@@ -11010,6 +11046,7 @@ function removeTrip(t) {
 function removeVehicle(v, docIds) {
   DB.maint.filter(m => m.vehicleId === v.id)
           .forEach(m => dropFiles(m.docs, docIds));
+  vfFileIds(v).forEach(id => (docIds ? docIds.push(id) : fileDel(id)));
   DB.maint = DB.maint.filter(m => m.vehicleId !== v.id);
   DB.hours = DB.hours.filter(h => h.vehicleId !== v.id);
   DB.trips = DB.trips.filter(t => t.vehicleId !== v.id);
@@ -13918,6 +13955,7 @@ async function backupExport() {
   try {
     const docs = [];
     DB.maint.forEach(m => (m.docs || []).forEach(d => docs.push(d)));
+    DB.vehicles.forEach(v => vfFileIds(v).forEach(id => docs.push({ id })));
     const files = [], manifest = [];
     let missing = 0;
     for (const d of docs) {
@@ -14292,6 +14330,10 @@ function onFleetClick(e) {
       });
       break;
     }
+
+    case 'vf':
+      vfAction(node);
+      break;
 
     case 'download-file':
       fileGet(id).then(rec => {
@@ -15332,11 +15374,12 @@ async function snapDelete(id) {
 async function referencedFileIds() {
   const used = new Set();
   const take = list => (list || []).forEach(m => (m && m.docs || []).forEach(d => d && used.add(d.id)));
-  take(DB.maint);
-  (DB.trash || []).forEach(t => take(t.records && t.records.maint));
+  const takeV = list => (list || []).forEach(v => v && vfFileIds(v).forEach(id => used.add(id)));
+  take(DB.maint); takeV(DB.vehicles);
+  (DB.trash || []).forEach(t => { take(t.records && t.records.maint); takeV(t.records && t.records.vehicles); });
   if ('indexedDB' in window) {
     const all = await snapAll();
-    all.forEach(s => { try { take(JSON.parse(s.data).maint); } catch (e) { /* повреждённая точка — пропускаем */ } });
+    all.forEach(s => { try { const d = JSON.parse(s.data); take(d.maint); takeV(d.vehicles); } catch (e) { /* повреждённая точка — пропускаем */ } });
   }
   return used;
 }
@@ -16011,6 +16054,24 @@ function registerFleetModules() {
       });
     } }] });
 
+  P.register({ id: 'vfiles', name: 'Фото и документы техники', version: '1.0.0', owns: [], depends: ['park'],
+    desc: 'Фотографии единицы техники, паспорт, формуляр, акты приёма-передачи (поля photos, vdocs)',
+    tests: [{ name: 'Файлы техники: учёт ссылок и удаление вместе с машиной', run() {
+      return withTestDB(testFixture(), () => {
+        const v = getVehicle('v_test_aaaa01');
+        v.photos = [{ id: 'file_p1', thumbId: 'file_t1', name: 'a.jpg' }, { id: 'file_p2', name: 'b.jpg' }];
+        v.vdocs = [{ id: 'doc_1', kind: 'Паспорт', files: [{ id: 'file_d1', name: 'p.pdf' }, { id: 'file_d2', name: 'p2.png' }] }, { id: 'doc_2', kind: 'Формуляр', files: [] }];
+        const ids = vfFileIds(v);
+        A(ids.length === 5 && ids.indexOf('file_t1') >= 0 && ids.indexOf('file_d2') >= 0, 'не собраны идентификаторы файлов');
+        A(vfThumbId(v) === 'file_t1', 'миниатюра главного фото не определена');
+        A(vfFileIds({ id: 'v_x' }).length === 0, 'у машины без файлов есть ссылки');
+        const drop = [];
+        removeVehicle(v, drop);
+        A(drop.length === 5 && drop.indexOf('file_p2') >= 0, 'файлы не переданы на удаление');
+        return '5 файлов, 2 документа';
+      });
+    } }] });
+
   P.register({ id: 'safety', name: 'Сохранность данных', version: '1.0.0', owns: ['trash', 'history'], depends: ['platform'],
     desc: 'Точки восстановления, корзина, журнал изменений, проверка перед импортом, миграции',
     tests: [
@@ -16332,6 +16393,420 @@ async function nativeChooseDir() {
   if (r && r.ok) toast('success', 'Папка данных изменена', `${r.dir}${r.copied ? ' — данные скопированы' : ' — найдены существующие данные'}. Приложение перезапускается…`, 6000);
   else if (r && r.error) toast('danger', 'Не удалось сменить папку', r.error);
 }
+
+/* =========================================================================
+   27h. ФОТО И ДОКУМЕНТЫ НА ТЕХНИКУ
+   Модуль «Файлы техники» (vfiles). Данные — поля единицы техники:
+     v.photos  = [{ id, thumbId, name, w, h, size, addedAt, caption }]
+     v.vdocs   = [{ id, kind, title, number, date, issuer, note, files:[{ id, name, type, size }] }]
+     v.mainPhotoId — фото, показываемое в шапке и в списке
+   Сами файлы лежат там же, где вложения ТО (filePut / fileGet / fileDel), поэтому
+   резервная копия, точки восстановления и файловое хранилище приложения работают без
+   отдельной настройки. Фотографии сжимаются в браузере; миниатюры — отдельные файлы.
+   ========================================================================= */
+const VF_DOC_KINDS = ['Паспорт', 'Формуляр', 'Акт приёма-передачи', 'Другой документ'];
+const VF_OTHER = 'Другой документ';
+const VF_MAX_FILE = 20 * 1024 * 1024;
+const VF_MAX_PHOTOS = 100;
+const VF_PHOTO_PX = 1600, VF_THUMB_PX = 320, VF_SCAN_PX = 2600;
+const VF_DOC_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.txt';
+const vfUrls = new Map();          // id файла → blob-адрес (для предпросмотра)
+
+const vfPhotos = v => Array.isArray(v && v.photos) ? v.photos : [];
+const vfDocs   = v => Array.isArray(v && v.vdocs) ? v.vdocs : [];
+
+/* Все идентификаторы файлов единицы техники — для удаления и учёта ссылок */
+function vfFileIds(v) {
+  const ids = [];
+  vfPhotos(v).forEach(p => { if (p && p.id) ids.push(p.id); if (p && p.thumbId) ids.push(p.thumbId); });
+  vfDocs(v).forEach(d => (d && d.files || []).forEach(f => { if (f && f.id) ids.push(f.id); }));
+  return ids;
+}
+
+function vfUrl(id) {
+  if (vfUrls.has(id)) return Promise.resolve(vfUrls.get(id));
+  return fileGet(id).then(rec => {
+    if (!rec || !rec.blob) return '';
+    const u = URL.createObjectURL(rec.blob);
+    vfUrls.set(id, u);
+    return u;
+  }).catch(() => '');
+}
+function vfForget(ids) {
+  ids.forEach(id => { const u = vfUrls.get(id); if (u) { URL.revokeObjectURL(u); vfUrls.delete(id); } });
+}
+
+/* Миниатюры подгружаются лениво: в разметке только data-vf-img, адрес ставится после показа */
+function vfHydrate(root) {
+  (root || document).querySelectorAll('img[data-vf-img]:not([src])').forEach(img => {
+    vfUrl(img.dataset.vfImg).then(u => { if (u) img.src = u; else img.classList.add('is-missing'); });
+  });
+}
+let vfHydrateQueued = false;
+function vfWatch() {
+  if (typeof MutationObserver === 'undefined') return;
+  new MutationObserver(() => {
+    if (vfHydrateQueued) return;
+    vfHydrateQueued = true;
+    requestAnimationFrame(() => { vfHydrateQueued = false; vfHydrate(document); });
+  }).observe(document.body, { childList: true, subtree: true });
+}
+
+/* Сжатие изображения: длинная сторона не больше maxPx, JPEG */
+async function vfScale(file, maxPx, quality) {
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch (e) { throw new Error('Формат изображения не поддерживается'); }
+  const k = Math.min(1, maxPx / Math.max(bmp.width, bmp.height));
+  const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);      // прозрачность PNG → белый фон
+  g.drawImage(bmp, 0, 0, w, h);
+  if (bmp.close) bmp.close();
+  const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', quality));
+  if (!blob) throw new Error('Не удалось сжать изображение');
+  return { blob, w, h };
+}
+const vfBase = n => String(n || 'photo').replace(/\.[^.]+$/, '').slice(0, 80) || 'photo';
+
+async function vfAddPhotos(v, files) {
+  const list = Array.from(files || []);
+  let added = 0, bad = 0;
+  for (const f of list) {
+    if (vfPhotos(v).length >= VF_MAX_PHOTOS) { toast('warning', 'Достигнут предел', `На одну единицу техники — не более ${VF_MAX_PHOTOS} фотографий.`); break; }
+    if (!/^image\//.test(f.type)) { bad++; continue; }
+    try {
+      const big = await vfScale(f, VF_PHOTO_PX, 0.82);
+      const th = await vfScale(f, VF_THUMB_PX, 0.7);
+      const id = uid('file'), thumbId = uid('file');
+      const name = vfBase(f.name) + '.jpg';
+      await filePut({ id, name, type: 'image/jpeg', size: big.blob.size, blob: big.blob });
+      await filePut({ id: thumbId, name: 'thumb_' + name, type: 'image/jpeg', size: th.blob.size, blob: th.blob });
+      if (!Array.isArray(v.photos)) v.photos = [];
+      v.photos.push({ id, thumbId, name, w: big.w, h: big.h, size: big.blob.size, addedAt: new Date().toISOString(), caption: '' });
+      if (!v.mainPhotoId) v.mainPhotoId = id;
+      added++;
+    } catch (e) { bad++; }
+  }
+  if (added) { v.updatedAt = new Date().toISOString(); saveDB(); }
+  if (bad) toast('warning', 'Не все файлы добавлены', `Пропущено: ${bad}. Нужны изображения JPG, PNG, WebP или GIF.`);
+  if (added) toast('success', 'Фотографии добавлены', `${added} ${plural(added, 'фото', 'фото', 'фото')} · ${v.name}`);
+  return added;
+}
+
+function vfRemovePhoto(v, pid) {
+  const p = vfPhotos(v).find(x => x.id === pid);
+  if (!p) return;
+  v.photos = v.photos.filter(x => x.id !== pid);
+  if (v.mainPhotoId === pid) v.mainPhotoId = v.photos.length ? v.photos[0].id : '';
+  vfForget([p.id, p.thumbId]);
+  saveDB();
+  cleanupOrphanFiles();           // файл удаляется, только если на него не ссылается корзина или точка восстановления
+}
+
+function vfThumbId(v) {
+  const ph = vfPhotos(v);
+  const p = ph.find(x => x.id === v.mainPhotoId) || ph[0];
+  return p ? (p.thumbId || p.id) : '';
+}
+function vfThumbHtml(v, cls) {
+  const id = vfThumbId(v);
+  return id ? `<img class="${cls || 'vf-mini'}" data-vf-img="${esc(id)}" alt="Фото: ${esc(v.name)}" loading="lazy">` : '';
+}
+
+/* ---------- Вкладка «Фото и документы» ---------- */
+const vfIsImg = f => /^image\//.test((f && f.type) || '') || /\.(png|jpe?g|webp|gif)$/i.test((f && f.name) || '');
+
+function renderVehicleFiles(v) {
+  const ph = vfPhotos(v), dc = vfDocs(v);
+  const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  const photos = ph.length ? `<div class="vf-grid">${ph.map(p => `
+      <button type="button" class="vf-ph ${p.id === v.mainPhotoId ? 'is-main' : ''}" data-act="vf" data-do="photo" data-pid="${esc(p.id)}" title="${esc(p.caption || p.name)}">
+        <img data-vf-img="${esc(p.thumbId || p.id)}" alt="${esc(p.caption || p.name)}" loading="lazy">
+        ${p.id === v.mainPhotoId ? '<span class="vf-main-tag">Главное</span>' : ''}
+      </button>`).join('')}</div>`
+    : `<div class="vf-empty">Фотографий пока нет. Добавьте общий вид, номера, табличку с заводским номером, повреждения.</div>`;
+  const order = k => { const i = VF_DOC_KINDS.indexOf(k); return i < 0 ? VF_DOC_KINDS.length : i; };
+  const docs = dc.length ? `<div class="vf-docs">${dc.slice().sort((a, b) => order(a.kind) - order(b.kind)).map(d => {
+      const head = d.kind === VF_OTHER && d.title ? d.title : d.kind;
+      const meta = [d.number ? '№ ' + d.number : '', d.date ? 'от ' + fmtDate(d.date) : '', d.issuer || ''].filter(Boolean).join(' · ');
+      return `<div class="vf-doc">
+        <div class="vf-doc-main">
+          <div class="vf-doc-head"><span class="f-badge f-badge-neutral">${esc(d.kind)}</span><b>${esc(head)}</b></div>
+          ${meta ? `<div class="vf-doc-meta">${esc(meta)}</div>` : ''}
+          ${d.note ? `<div class="vf-doc-note">${esc(d.note)}</div>` : ''}
+          <div class="vf-doc-files">${(d.files || []).length ? d.files.map(f => `
+            <button type="button" class="f-btn f-btn-sm" data-act="vf" data-do="docfile" data-did="${esc(d.id)}" data-fid="${esc(f.id)}" title="${vfIsImg(f) ? 'Открыть' : 'Скачать'}: ${esc(f.name)}">
+              ${vfIsImg(f) ? FI.file(13) : FI.download(13)}<span>${esc(f.name)}</span><small>${fmtSize(f.size || 0)}</small></button>`).join('')
+            : '<span class="f-td-muted">Скан не приложен — документ учтён по бумажному экземпляру</span>'}</div>
+        </div>
+        <div class="f-row-actions">
+          <button type="button" class="f-icon-btn" data-act="vf" data-do="doc-edit" data-did="${esc(d.id)}" title="Редактировать">${FI.edit(15)}</button>
+          <button type="button" class="f-icon-btn is-danger" data-act="vf" data-do="doc-del" data-did="${esc(d.id)}" title="Удалить">${FI.trash(15)}</button>
+        </div>
+      </div>`; }).join('')}</div>`
+    : `<div class="vf-empty">Документов на машину нет. Добавьте паспорт, формуляр, акты приёма-передачи — со сканами или без них.</div>`;
+  return `
+    <div class="f-panel vf-panel" data-vf-drop>
+      <div class="f-panel-head">
+        <div class="f-panel-title">Фотографии (${ph.length})</div>
+        <div class="sf-actions">
+          <button type="button" class="f-btn f-btn-sm f-btn-primary" data-act="vf" data-do="pick-photo">${FI.upload(14)}<span>Добавить фото</span></button>
+          ${coarse ? `<button type="button" class="f-btn f-btn-sm" data-act="vf" data-do="pick-cam">Снять на камеру</button>` : ''}
+        </div>
+      </div>
+      <input type="file" hidden multiple accept="image/*" data-vf-in="photo" id="vfPhotoIn">
+      <input type="file" hidden accept="image/*" capture="environment" data-vf-in="photo" id="vfCamIn">
+      ${photos}
+      <p class="f-hint">Перетащите фотографии сюда или нажмите «Добавить фото». Снимки сжимаются до ${VF_PHOTO_PX} px и хранятся на этом компьютере.</p>
+    </div>
+    <div class="f-panel vf-panel">
+      <div class="f-panel-head">
+        <div class="f-panel-title">Документы на машину (${dc.length})</div>
+        <div class="sf-actions"><button type="button" class="f-btn f-btn-sm f-btn-primary" data-act="vf" data-do="doc-add">${FI.plus(14)}<span>Добавить документ</span></button></div>
+      </div>
+      ${docs}
+    </div>`;
+}
+
+/* ---------- Просмотр фотографий и изображений документов ---------- */
+function vfViewer(items, idx, ctx) {
+  let i = idx;
+  const m = openModal(`
+    <div class="f-modal-head">
+      <div><div class="f-modal-title" id="vwTitle"></div><div class="f-modal-sub" id="vwSub"></div></div>
+      <button type="button" class="f-modal-close" data-close aria-label="Закрыть">${FI.x(16)}</button>
+    </div>
+    <div class="f-modal-body vf-view">
+      <button type="button" class="vf-nav vf-prev" aria-label="Предыдущее">‹</button>
+      <img id="vwImg" alt="">
+      <button type="button" class="vf-nav vf-next" aria-label="Следующее">›</button>
+    </div>
+    <div class="f-modal-foot vf-view-foot">
+      <input type="text" class="f-input" id="vwCap" placeholder="Подпись к фото" maxlength="120" ${ctx && ctx.photos ? '' : 'hidden'}>
+      <button type="button" class="f-btn" id="vwMain" ${ctx && ctx.photos ? '' : 'hidden'}>Сделать главным</button>
+      <button type="button" class="f-btn" id="vwDl">${FI.download(15)}<span>Скачать</span></button>
+      <button type="button" class="f-btn f-btn-danger" id="vwDel" ${ctx && ctx.photos ? '' : 'hidden'}>${FI.trash(15)}<span>Удалить</span></button>
+    </div>`, { onClose: () => document.removeEventListener('keydown', onKey) });
+  const q = s => m.root.querySelector(s);
+  const draw = () => {
+    const it = items[i];
+    q('.f-modal-title').textContent = it.title;
+    q('#vwSub').textContent = `${i + 1} из ${items.length}${it.sub ? ' · ' + it.sub : ''}`;
+    const img = q('#vwImg');
+    img.removeAttribute('src');
+    vfUrl(it.id).then(u => { if (items[i] === it) img.src = u; });
+    q('.vf-prev').hidden = q('.vf-next').hidden = items.length < 2;
+    if (ctx && ctx.photos) {
+      q('#vwCap').value = it.caption || '';
+      const v = getVehicle(ui.vehicleId);
+      q('#vwMain').disabled = !!(v && v.mainPhotoId === it.id);
+    }
+  };
+  const step = d => { i = (i + d + items.length) % items.length; draw(); };
+  function onKey(e) { if (e.key === 'ArrowLeft') step(-1); else if (e.key === 'ArrowRight') step(1); }
+  document.addEventListener('keydown', onKey);
+  q('.vf-prev').addEventListener('click', () => step(-1));
+  q('.vf-next').addEventListener('click', () => step(1));
+  q('#vwDl').addEventListener('click', () => fileGet(items[i].id).then(r => r && r.blob ? downloadBlob(r.blob, items[i].name) : toast('warning', 'Файл недоступен', 'Не найден в локальном хранилище.')));
+  if (ctx && ctx.photos) {
+    q('#vwCap').addEventListener('change', e => {
+      const v = getVehicle(ui.vehicleId), p = v && vfPhotos(v).find(x => x.id === items[i].id);
+      if (!p) return;
+      p.caption = e.target.value.trim().slice(0, 120); items[i].caption = p.caption; saveDB();
+    });
+    q('#vwMain').addEventListener('click', () => {
+      const v = getVehicle(ui.vehicleId); if (!v) return;
+      v.mainPhotoId = items[i].id; saveDB(); draw(); rerender();
+      toast('success', 'Главное фото выбрано', 'Оно показывается в карточке и в списке техники.');
+    });
+    q('#vwDel').addEventListener('click', async () => {
+      if (!(await confirmDialog('Удалить фото?', items[i].title, 'Удалить'))) return;
+      const v = getVehicle(ui.vehicleId); if (!v) return;
+      vfRemovePhoto(v, items[i].id);
+      m.close(); rerender();
+    });
+  }
+  draw();
+}
+
+/* ---------- Форма документа ---------- */
+function vfDocModal(v, docId) {
+  const cur = docId ? vfDocs(v).find(d => d.id === docId) : null;
+  const rec = cur || { kind: VF_DOC_KINDS[0], title: '', number: '', date: '', issuer: '', note: '', files: [] };
+  let files = (rec.files || []).map(f => Object.assign({}, f));
+  const newBlobs = new Map();
+  const fileRow = f => `<div class="f-file"><span class="f-file-name">${esc(f.name)}</span><span class="f-td-muted">${fmtSize(f.size || 0)}</span>
+      <button type="button" class="f-icon-btn is-danger" data-rm="${esc(f.id)}" title="Убрать" aria-label="Убрать файл ${esc(f.name)}">${FI.x(14)}</button></div>`;
+  const m = openModal(`
+    <div class="f-modal-head">
+      <div><div class="f-modal-title">${cur ? 'Изменить документ' : 'Добавить документ'}</div><div class="f-modal-sub">${esc(v.name)}</div></div>
+      <button type="button" class="f-modal-close" data-close aria-label="Закрыть">${FI.x(16)}</button>
+    </div>
+    <div class="f-modal-body">
+      <div class="f-form-grid">
+        <div><label class="f-fld-label" for="vdKind">Вид документа</label>
+          <select id="vdKind" class="f-select">${VF_DOC_KINDS.map(k => `<option ${k === rec.kind ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></div>
+        <div id="vdTitleBox"><label class="f-fld-label" for="vdTitle">Название</label>
+          <input id="vdTitle" class="f-input" maxlength="120" value="${esc(rec.title)}" placeholder="Например: свидетельство о регистрации"></div>
+        <div><label class="f-fld-label" for="vdNumber">Номер</label><input id="vdNumber" class="f-input" maxlength="60" value="${esc(rec.number)}"></div>
+        <div><label class="f-fld-label" for="vdDate">Дата</label><input id="vdDate" class="f-input" type="date" value="${esc(rec.date)}"></div>
+        <div class="f-span2"><label class="f-fld-label" for="vdIssuer">Кем выдан, составлен или подписан</label><input id="vdIssuer" class="f-input" maxlength="160" value="${esc(rec.issuer)}"></div>
+        <div class="f-span2"><label class="f-fld-label" for="vdNote">Примечание</label><textarea id="vdNote" class="f-textarea" maxlength="500">${esc(rec.note)}</textarea></div>
+        <div class="f-span2">
+          <label class="f-fld-label">Сканы и файлы</label>
+          <div class="f-drop" id="vdDrop">${FI.upload(18)} Перетащите файлы сюда или нажмите для выбора<br>
+            <span style="font-size:11.5px">PDF, Word, Excel, изображения · до ${VF_MAX_FILE / 1048576} МБ</span></div>
+          <input type="file" id="vdFiles" multiple hidden accept="${VF_DOC_ACCEPT}">
+          <div class="f-files" id="vdList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="f-modal-foot">
+      <button type="button" class="f-btn" data-close>Отмена</button>
+      <button type="button" class="f-btn f-btn-primary" id="vdSave">${FI.save(15)}<span>Сохранить</span></button>
+    </div>`);
+  const q = id => m.root.querySelector('#' + id);
+  const kindUi = () => { q('vdTitleBox').hidden = q('vdKind').value !== VF_OTHER; };
+  q('vdKind').addEventListener('change', kindUi); kindUi();
+  const list = q('vdList');
+  const redraw = () => {
+    list.innerHTML = files.map(fileRow).join('');
+    list.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => {
+      files = files.filter(f => f.id !== b.dataset.rm); newBlobs.delete(b.dataset.rm); redraw();
+    }));
+  };
+  redraw();
+  const add = fl => {
+    Array.from(fl).forEach(f => {
+      if (f.size > VF_MAX_FILE) { toast('warning', 'Файл слишком большой', `${f.name} — более ${VF_MAX_FILE / 1048576} МБ, пропущен.`); return; }
+      const id = uid('file');
+      files.push({ id, name: f.name, type: f.type, size: f.size });
+      newBlobs.set(id, f);
+    });
+    redraw();
+  };
+  const drop = q('vdDrop');
+  drop.addEventListener('click', () => q('vdFiles').click());
+  q('vdFiles').addEventListener('change', e => { add(e.target.files); e.target.value = ''; });
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('is-over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('is-over'); }));
+  drop.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files) add(e.dataTransfer.files); });
+
+  let saving = false;
+  q('vdSave').addEventListener('click', async () => {
+    if (saving) return;
+    saving = true;
+    try {
+      const kind = q('vdKind').value;
+      const title = kind === VF_OTHER ? q('vdTitle').value.trim() : '';
+      if (kind === VF_OTHER && !title) { toast('warning', 'Укажите название', 'Для «Другого документа» название обязательно.'); saving = false; return; }
+      // Новые файлы записываются в хранилище; изображения-сканы сжимаются
+      for (const f of files) {
+        const blob = newBlobs.get(f.id);
+        if (!blob) continue;
+        let out = blob, name = f.name, type = f.type;
+        if (/^image\/(png|jpeg|webp)$/.test(blob.type) && blob.size > 1.5 * 1048576) {
+          try { const s = await vfScale(blob, VF_SCAN_PX, 0.85); out = s.blob; type = 'image/jpeg'; name = vfBase(f.name) + '.jpg'; } catch (e) { /* оставляем как есть */ }
+        }
+        await filePut({ id: f.id, name, type, size: out.size, blob: out });
+        f.name = name; f.type = type; f.size = out.size;
+      }
+      const data = { kind, title, number: q('vdNumber').value.trim(), date: q('vdDate').value,
+        issuer: q('vdIssuer').value.trim(), note: q('vdNote').value.trim(), files };
+      if (!Array.isArray(v.vdocs)) v.vdocs = [];
+      if (cur) {
+        const dropped = (cur.files || []).filter(f => !files.some(x => x.id === f.id)).map(f => f.id);
+        Object.assign(cur, data);
+        vfForget(dropped);
+      } else {
+        v.vdocs.push(Object.assign({ id: uid('doc') }, data));
+      }
+      v.updatedAt = new Date().toISOString();
+      saveDB();
+      m.close();
+      toast('success', cur ? 'Документ изменён' : 'Документ добавлен', `${kind === VF_OTHER ? title : kind} · ${v.name}`);
+      rerender();
+      cleanupOrphanFiles();
+    } catch (e) {
+      saving = false;
+      toast('danger', 'Не удалось сохранить', 'Файл не записан в хранилище. Проверьте свободное место и повторите.');
+    }
+  });
+}
+
+/* ---------- Действия ---------- */
+function vfAction(node) {
+  const v = getVehicle(ui.vehicleId);
+  if (!v) return;
+  const d = node.dataset;
+  switch (d.do) {
+    case 'pick-photo': document.getElementById('vfPhotoIn')?.click(); break;
+    case 'pick-cam':   document.getElementById('vfCamIn')?.click(); break;
+    case 'open-files': ui.vehicleTab = 'files'; rerender(); break;
+    case 'photo': {
+      const items = vfPhotos(v).map(p => ({ id: p.id, name: p.name, caption: p.caption || '', title: p.caption || p.name,
+        sub: `${p.w || '?'}×${p.h || '?'} · ${fmtSize(p.size || 0)}` }));
+      const at = items.findIndex(x => x.id === d.pid);
+      if (at >= 0) vfViewer(items, at, { photos: true });
+      break;
+    }
+    case 'doc-add':  vfDocModal(v, null); break;
+    case 'doc-edit': vfDocModal(v, d.did); break;
+    case 'doc-del': {
+      const doc = vfDocs(v).find(x => x.id === d.did);
+      if (!doc) break;
+      confirmDialog('Удалить документ?', `${doc.kind}${doc.number ? ' № ' + doc.number : ''} — вместе со сканами`, 'Удалить').then(ok => {
+        if (!ok) return;
+        v.vdocs = v.vdocs.filter(x => x.id !== doc.id);
+        vfForget((doc.files || []).map(f => f.id));
+        v.updatedAt = new Date().toISOString();
+        saveDB(); rerender(); cleanupOrphanFiles();
+        toast('success', 'Документ удалён', v.name);
+      });
+      break;
+    }
+    case 'docfile': {
+      const doc = vfDocs(v).find(x => x.id === d.did);
+      const f = doc && (doc.files || []).find(x => x.id === d.fid);
+      if (!f) break;
+      if (vfIsImg(f)) {
+        const imgs = (doc.files || []).filter(vfIsImg).map(x => ({ id: x.id, name: x.name, title: x.name, sub: doc.kind + (doc.number ? ' № ' + doc.number : '') }));
+        vfViewer(imgs, Math.max(0, imgs.findIndex(x => x.id === f.id)), { photos: false });
+      } else {
+        fileGet(f.id).then(r => r && r.blob ? downloadBlob(r.blob, r.name || f.name) : toast('warning', 'Файл недоступен', 'Не найден в локальном хранилище.'));
+      }
+      break;
+    }
+  }
+}
+
+/* Выбор файлов и перетаскивание фотографий — общий обработчик документа */
+function vfBindInputs() {
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (!(t && t.matches && t.matches('input[data-vf-in="photo"]'))) return;
+    const v = getVehicle(ui.vehicleId);
+    const fl = Array.from(t.files || []);
+    t.value = '';
+    if (v && fl.length) vfAddPhotos(v, fl).then(() => rerender());
+  });
+  const zone = e => e.target && e.target.closest ? e.target.closest('[data-vf-drop]') : null;
+  document.addEventListener('dragover', e => { const z = zone(e); if (z) { e.preventDefault(); z.classList.add('is-over'); } });
+  document.addEventListener('dragleave', e => { const z = zone(e); if (z) z.classList.remove('is-over'); });
+  document.addEventListener('drop', e => {
+    const z = zone(e);
+    if (!z) return;
+    e.preventDefault(); z.classList.remove('is-over');
+    const v = getVehicle(ui.vehicleId);
+    if (v && e.dataTransfer && e.dataTransfer.files.length) vfAddPhotos(v, e.dataTransfer.files).then(() => rerender());
+  });
+}
+vfBindInputs();
+if (document.body) vfWatch(); else document.addEventListener('DOMContentLoaded', vfWatch);
+
 
 /* =========================================================================
    28a. ПУБЛИЧНЫЙ API МОДУЛЯ — window.TST.fleet
@@ -17470,7 +17945,11 @@ function buildHelp() {
       'Если техника привязана к справочнику, в карточке («Основные сведения») видны регламенты ТО, и по каждому виду можно распечатать карту ТО с отметками о выполнении.']),
     h3('3.3 Моточасы'),
     p('Показание вносится с датой снятия. Прирост наработки считается как разность соседних показаний; отрицательные скачки (замена счётчика) в расход не включаются. Самое первое показание единицы — база отсчёта, а не наработка.'),
-    p('Если показания не обновлялись ' + s.hoursStaleDays + ' дн. и более, программа напоминает об этом (только для техники в статусе «В эксплуатации»).', 'Настройки → Пороги цветовой индикации')
+    p('Если показания не обновлялись ' + s.hoursStaleDays + ' дн. и более, программа напоминает об этом (только для техники в статусе «В эксплуатации»).', 'Настройки → Пороги цветовой индикации'),
+    h3('3.4 Фото и документы на технику'),
+    ul(['Карточка техники → вкладка «Фото и документы». Фотографии добавляются кнопкой или перетаскиванием (на телефоне — «Снять на камеру»); снимки сжимаются до 1600 px, миниатюры хранятся отдельно. До 100 фото на единицу, у одного из них — отметка «Главное»: оно видно в шапке карточки и в списке техники.',
+      'Документы на машину в целом: паспорт, формуляр, акты приёма-передачи и другие (с названием). Номер, дата, кем выдан, примечание и несколько сканов на документ (PDF, Word, Excel, изображения до 20 МБ). Документ можно учесть и без скана — по бумажному экземпляру.',
+      'Изображения открываются в просмотре со стрелками, подписью и скачиванием; PDF и прочие файлы скачиваются. Все файлы входят в резервную копию и удаляются вместе с техникой (отмена возвращает их).'])
   ]);
 
   /* 4: формулы и примеры считаются движком программы */

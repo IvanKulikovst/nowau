@@ -146,7 +146,7 @@ const check = (name, ok, info) => { res.push(ok); console.log((ok ? 'PASS ' : 'F
   await act('tests-run'); await p.waitForTimeout(1200);
   const raw1 = await p.evaluate(k => localStorage.getItem(k), LS);
   const tr = await p.evaluate(() => document.querySelector('.sf-tests-sum')?.textContent || '');
-  check('Самотесты модулей пройдены и не изменили базу', /19 из 19/.test(tr) && raw0 === raw1, tr);
+  check('Самотесты модулей пройдены и не изменили базу', /20 из 20/.test(tr) && raw0 === raw1, tr);
 
   // 9. Пункт управления: числа совпадают с перечнями, перечень → карточка, задание печатается
   await load('#fleet/command');
