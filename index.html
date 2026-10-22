@@ -2884,6 +2884,17 @@ button.cp-tile[data-empty] .f-stat-value{opacity:.55}
   .f-table-stack .cp-ktg-cell{flex:1;max-width:60%;align-items:flex-end}
 }
 .sf-row-acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
+.mc-box{padding:12px 14px;border-radius:14px;background:var(--fill-tertiary)}
+.mc-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.mc-head .f-fld-label{margin:0;flex:1;min-width:180px}
+.mc-count{font-weight:700;font-size:13px;color:var(--text-secondary);white-space:nowrap}
+.mc-list{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto}
+.mc-row{display:flex;gap:10px;align-items:flex-start;padding:6px 8px;border-radius:10px;cursor:pointer;font-size:13.5px;line-height:1.4}
+.mc-row:hover{background:var(--accent-soft)}
+.mc-row input{margin-top:3px;flex:none;width:16px;height:16px}
+.mc-row input:checked+span{color:var(--text-secondary)}
+.mc-badge{margin-top:4px;font-size:12px;font-weight:700;color:var(--st-urgent-text)}
+.mc-badge.is-full{color:var(--st-ok-text)}
 </style>
 <style id="krpd-print-styles">
 /* =====================================================================
@@ -9034,6 +9045,7 @@ const DEFAULT_SETTINGS = {
   notifyOnStart:  true,  // всплывающая сводка при открытии раздела
   backupRemindDays: 14,  // напоминать о резервной копии, если последней больше N дней
   trashDays:      30,    // хранить удалённое в корзине, дней
+  seasons: { summer: '04-15', winter: '10-15', leadDays: 30 },   // сезонное обслуживание: даты перевода и срок напоминания
 
   /* --- Нормативные параметры планирования (методика ВАМТО, 2025) --- */
   ktgByGroup: {           // норматив КТГ по группам эксплуатации
@@ -9219,6 +9231,7 @@ function normalizeDB(parsed) {
   d.settings.ktgByGroup = Object.assign({}, DEFAULT_SETTINGS.ktgByGroup, ps.ktgByGroup || {});
   d.settings.laborNorms = Object.assign({}, DEFAULT_SETTINGS.laborNorms, ps.laborNorms || {});
   d.settings.repairUnit = Object.assign({}, DEFAULT_SETTINGS.repairUnit, ps.repairUnit || {});
+  d.settings.seasons = Object.assign({}, DEFAULT_SETTINGS.seasons, ps.seasons || {});
   ALL_COLLECTIONS.forEach(k => { if (!Array.isArray(d[k])) d[k] = []; });
   if (!Array.isArray(d.migrations)) d.migrations = [];
   return d;
@@ -9637,6 +9650,8 @@ function computeNotifications() {
     }
   });
 
+  const sn = seasonNotification();
+  if (sn) out.push(sn);
   const rank = { overdue: 0, urgent: 1, soon: 2, info: 3 };
   return out.sort((a, b) => rank[a.level] - rank[b.level]);
 }
@@ -10356,7 +10371,7 @@ const NAV = [
 ];
 
 function renderNav() {
-  const alerts = computeNotifications().filter(n => n.level === 'overdue' || n.level === 'urgent').length;
+  const alerts = computeNotifications().filter(n => !n.act && (n.level === 'overdue' || n.level === 'urgent')).length;
   el('fleetNavbar').innerHTML = NAV.map(n => `
     <button type="button" class="f-nav-btn ${ui.view === n.key || (n.key === 'park' && ui.view === 'vehicle') ? 'is-active' : ''}"
             role="tab" data-act="nav" data-key="${n.key}">
@@ -10852,13 +10867,13 @@ function renderVehicleMaint(v, ms) {
             <tr>
               <td class="f-td-strong f-td-nowrap">
                 ${RESET_KINDS.has(m.kind) ? '<span class="f-dot f-lvl-ok" title="Сбрасывает межсервисный интервал"></span> ' : ''}
-                ${esc(m.kind)}
+                ${esc(m.kind)}${m.season && SEASONS[m.season] ? ' · ' + esc(SEASONS[m.season].label) : ''}
               </td>
               <td class="f-td-nowrap">${fmtDate(m.date)}</td>
               <td class="f-td-num">${fmtNum(m.hours, 0)}</td>
               <td>${esc(m.executor || '—')}</td>
               <td>${esc(m.unit || '—')}</td>
-              <td style="max-width:240px">${m.works ? esc(m.works) : '<span class="f-td-muted">—</span>'}</td>
+              <td style="max-width:240px">${m.works ? esc(m.works) : '<span class="f-td-muted">—</span>'}${(() => { const s = checklistSummary(m.checklist); return s.total ? `<div class="mc-badge ${s.done === s.total ? 'is-full' : ''}" title="${esc(m.checklist.items.filter(x => !x.done).map(x => x.t).join('; ') || 'Все операции выполнены')}">По регламенту: ${s.done} из ${s.total}</div>` : ''; })()}</td>
               <td style="max-width:200px">${m.parts ? esc(m.parts) : '<span class="f-td-muted">—</span>'}</td>
               <td class="f-td-num">${m.cost ? fmtMoney(m.cost) : '—'}</td>
               <td>${(m.docs && m.docs.length)
@@ -12978,6 +12993,8 @@ function renderSettings() {
       </div>
     </div>
 
+    ${renderSeasonSettings()}
+
     <div class="f-panel">
       <div class="f-panel-title">Пороги цветовой индикации</div>
       <div class="f-form-grid">
@@ -13057,6 +13074,7 @@ function bindSettings() {
   num('setStale', 'hoursStaleDays', 1);
   num('setBackupDays', 'backupRemindDays', 1, 365);
   num('setTrashDays', 'trashDays', 1, 365);
+  bindSeasonSettings();
   fillStorageStatus();
   refreshStorageInfo();
 
@@ -13427,6 +13445,9 @@ function maintModal(vehicleId, maint, preset) {
         <div><label class="f-fld-label" for="mKind">Вид ТО *</label>
           <select id="mKind" class="f-select">${options(MAINT_KINDS, rec.kind)}</select>
           <div class="f-hint">ЕО и ремонты не сбрасывают межсервисный интервал</div></div>
+        <div id="mSeasonBox" hidden><label class="f-fld-label" for="mSeason">Режим (сезон)</label>
+          <select id="mSeason" class="f-select"><option value="summer">Летний</option><option value="winter">Зимний</option></select>
+          <div class="f-hint">Засчитывается в сезонное обслуживание «Пункта управления»</div></div>
         <div><label class="f-fld-label" for="mDate">Дата проведения *</label>
           <input id="mDate" class="f-input" type="date" value="${esc(rec.date)}" max="${todayISO()}">
           <div class="f-error" id="errDate">Укажите корректную дату (не позднее сегодняшней)</div></div>
@@ -13441,6 +13462,7 @@ function maintModal(vehicleId, maint, preset) {
           <input id="mCost" class="f-input" type="number" min="0" step="0.01" value="${rec.cost || ''}"></div>
 
         <div class="f-span2 f-reg-hint" id="mCatHint" hidden></div>
+        <div class="f-span2 mc-box" id="mCheck" hidden></div>
         <div class="f-span2"><label class="f-fld-label" for="mWorks">Выполненные работы</label>
           <textarea id="mWorks" class="f-textarea" placeholder="Замена масла и фильтров, регулировка топливной аппаратуры…">${esc(rec.works)}</textarea></div>
         <div class="f-span2"><label class="f-fld-label" for="mParts">Использованные запасные части</label>
@@ -13488,15 +13510,41 @@ function maintModal(vehicleId, maint, preset) {
     const ops = (reg.actions || []).length;
     const people = (reg.personnel || []).reduce((s, p) => s + (Number(p.count) || 0), 0);
     box.innerHTML = `${FI.file(15)}<span>Норматив по справочнику: <b>${ops}</b> ${plural(ops, 'операция', 'операции', 'операций')} · <b>${fmtNum(reg.labor, 1)}</b> чел·ч · <b>${people}</b> чел.</span>
-      <button type="button" class="f-btn f-btn-sm" data-fill-cat>Заполнить из справочника</button>`;
+      <button type="button" class="f-btn f-btn-sm" data-fill-cat>Подставить материалы</button>`;
     box.querySelector('[data-fill-cat]').addEventListener('click', () => {
-      addText('mWorks', (reg.actions || []).map((a, i) => `${i + 1}. ${a}`).join('\n'));
       addText('mParts', (reg.materials || []).join('; '));
-      toast('info', 'Заполнено по справочнику', 'Проверьте перечень и скорректируйте под фактически выполненные работы.');
+      toast('info', 'Материалы подставлены', 'Проверьте перечень и скорректируйте под фактически использованное.');
     });
   };
-  q('mKind').addEventListener('change', updCatHint);
-  updCatHint();
+  // Перечень работ регламента с галочками (шаблон работ); снимок хранится в записи
+  let curChecklist = null;
+  const memoChecks = new Map();   // отметки по видам ТО в пределах открытой формы
+  const savedChecklist = rec.checklist && Array.isArray(rec.checklist.items) ? rec.checklist : null;
+  const renderCheck = () => {
+    const box = q('mCheck');
+    const key = KIND_TO_CATALOG[q('mKind').value];
+    const reg = catMaint && key ? catMaint[key] : null;
+    const actions = reg ? (reg.actions || []) : [];
+    if (!actions.length) { box.hidden = true; box.innerHTML = ''; curChecklist = null; return; }
+    const kindNow = q('mKind').value;
+    const prev = memoChecks.get(kindNow) || (savedChecklist && savedChecklist.kind === kindNow ? savedChecklist.items : []);
+    curChecklist = buildChecklist(actions, prev);
+    memoChecks.set(kindNow, curChecklist);
+    box.hidden = false;
+    box.innerHTML = `<div class="mc-head"><label class="f-fld-label">Перечень работ по регламенту</label><span class="mc-count" id="mcCount"></span>
+        <button type="button" class="f-btn f-btn-sm" data-mc-all>Отметить все</button><button type="button" class="f-btn f-btn-sm" data-mc-none>Снять отметки</button></div>
+      <div class="mc-list">${curChecklist.map((x, i) => `<label class="mc-row"><input type="checkbox" data-mc="${i}" ${x.done ? 'checked' : ''}><span>${i + 1}. ${esc(x.t)}</span></label>`).join('')}</div>`;
+    const upd = () => { const s = checklistSummary({ items: curChecklist }); q('mcCount').textContent = `выполнено ${s.done} из ${s.total}`; };
+    box.querySelectorAll('[data-mc]').forEach(cb => cb.addEventListener('change', () => { curChecklist[Number(cb.dataset.mc)].done = cb.checked; upd(); }));
+    const setAll = on => { curChecklist.forEach(x => { x.done = on; }); box.querySelectorAll('[data-mc]').forEach(cb => { cb.checked = on; }); upd(); };
+    box.querySelector('[data-mc-all]').addEventListener('click', () => setAll(true));
+    box.querySelector('[data-mc-none]').addEventListener('click', () => setAll(false));
+    upd();
+  };
+  const updSeason = () => { q('mSeasonBox').hidden = q('mKind').value !== SEASON_KIND; };
+  { const ev = seasonEvent(); q('mSeason').value = rec.season || (ev ? ev.season : 'summer'); }
+  q('mKind').addEventListener('change', () => { updCatHint(); renderCheck(); updSeason(); });
+  updCatHint(); renderCheck(); updSeason();
   if (preset && preset.fill) q('mCatHint').querySelector('[data-fill-cat]')?.click();
 
   const redrawFiles = () => {
@@ -13571,7 +13619,10 @@ function maintModal(vehicleId, maint, preset) {
         vehicleId, kind: q('mKind').value, date, hours,
         executor: q('mExec').value.trim(),
         unit:     q('mUnit').value.trim(),
-        works:    q('mWorks').value.trim(),
+        works:    (() => { const w = q('mWorks').value.trim(); if (w || !curChecklist) return w; return curChecklist.filter(x => x.done).map((x, i) => `${i + 1}. ${x.t}`).join('\n'); })(),
+        season:   q('mKind').value === SEASON_KIND ? q('mSeason').value : '',
+        checklist: curChecklist ? { kind: q('mKind').value, items: curChecklist.map(x => ({ t: x.t, done: x.done })) }
+                                : (savedChecklist && savedChecklist.kind === q('mKind').value ? savedChecklist : undefined),
         parts:    q('mParts').value.trim(),
         cost:     (() => { const c = parseFloat(q('mCost').value); return (q('mCost').value !== '' && !isNaN(c) && c >= 0) ? c : ''; })(),
         note:     q('mNote').value.trim(),
@@ -13698,7 +13749,7 @@ function renderNotifPanel() {
     </div>
     ${list.length
       ? list.map(n => `
-        <div class="f-notif" data-act="open-vehicle" data-id="${n.vehicleId}">
+        <div class="f-notif" data-act="${n.act || 'open-vehicle'}" data-id="${n.vehicleId}">
           <span class="f-notif-dot" style="background:${dot(n.level)}"></span>
           <div style="min-width:0">
             <div class="f-notif-title">${esc(n.title)}</div>
@@ -13714,14 +13765,16 @@ function startupNotify() {
   try { if (sessionStorage.getItem('tst-fleet-notified')) return; } catch (e) { /* нет доступа */ }
 
   const list = computeNotifications();
-  const overdue = list.filter(n => n.level === 'overdue').length;
-  const urgent  = list.filter(n => n.level === 'urgent').length;
+  const seasonN = list.find(n => n.act === 'season');
+  const overdue = list.filter(n => n.level === 'overdue' && !n.act).length;
+  const urgent  = list.filter(n => n.level === 'urgent' && !n.act).length;
   const stale   = list.filter(n => n.level === 'info').length;
 
   if (overdue) toast('danger', 'Просроченные ТО', `${overdue} ${plural(overdue, 'единица техники', 'единицы техники', 'единиц техники')} с истёкшим сроком обслуживания.`, 8000);
   if (urgent)  toast('warning', 'Требуется ТО', `${urgent} ${plural(urgent, 'единица', 'единицы', 'единиц')} техники нуждается в обслуживании в ближайшее время.`, 8000);
   if (stale)   toast('info', 'Обновите моточасы', `У ${stale} ${plural(stale, 'единицы', 'единиц', 'единиц')} техники давно не обновлялись показания счётчика.`, 8000);
-  if (!overdue && !urgent && !stale && DB.vehicles.length) toast('success', 'Все ТО в срок', 'Просроченных обслуживаний не обнаружено.');
+  if (seasonN) toast(seasonN.level === 'overdue' ? 'danger' : 'warning', seasonN.title, seasonN.text, 9000, { action: 'Список', onAction: () => commandListModal('season') });
+  if (!overdue && !urgent && !stale && !seasonN && DB.vehicles.length) toast('success', 'Все ТО в срок', 'Просроченных обслуживаний не обнаружено.');
   const bk = backupInfo();
   if (bk.due) toast('warning', 'Сохраните резервную копию', backupAgoText(bk).replace(/^./, c => c.toUpperCase()) + '.', 10000,
     { action: 'Сохранить', onAction: backupExport });
@@ -14099,6 +14152,7 @@ function onFleetClick(e) {
     case 'cp-task':      commandTask(node.dataset.list); break;
     case 'cp-range':     ui.cp.range = node.dataset.range; renderView(); break;
     case 'cp-report':    commandReport(); break;
+    case 'season':       commandListModal('season'); break;
     case 'snap-create':  snapCreate('manual').then(() => { toast('success', 'Точка восстановления создана', fmtStamp(new Date().toISOString())); fillSafetyAsync(); })
                            .catch(() => toast('danger', 'Не удалось создать точку', 'Хранилище браузера недоступно или переполнено.')); break;
     case 'snap-restore': snapRestore(id); break;
@@ -15576,6 +15630,10 @@ function commandList(key) {
     if (!CP_RANGES[r]) return null;
     return { title: `Работы по ТО — ${CP_RANGES[r].label.toLowerCase()}`, list: commandCalendar(S, r).map(x => x.v), task: true };
   }
+  if (key === 'season') {
+    const info = seasonInfo();
+    return { title: info.ev ? `Сезонное обслуживание: ${seasonTitle(info.ev).toLowerCase()} — не проведено` : 'Сезонное обслуживание', list: info.todo, task: true, season: true };
+  }
   const map = {
     total: ['Вся техника на учёте', S.active], ready: ['Исправная техника', S.ready], faulty: ['Неисправная техника', S.faulty],
     repair: ['Техника в ремонте', S.repair], stored: ['На хранении и консервации', S.stored],
@@ -15633,6 +15691,15 @@ function renderCommand() {
       ${cpBtn('soon', S.soon.length, 'Скоро ТО', { color: S.soon.length ? 'soon' : '', dot: 'soon' })}
       ${cpBtn('none', S.none.length, 'Интервал не задан', { dot: 'none' })}
       ${cpBtn('stale', S.stale.length, 'Моточасы не обновлялись', { hint: `${DB.settings.hoursStaleDays} и более дней` })}
+      ${(() => {
+        const si = seasonInfo();
+        if (!si.ev) return '';
+        const todo = si.ev.active ? si.todo.length : 0;
+        const hint = si.ev.active
+          ? `${SEASONS[si.ev.season].cap} режим к ${fmtDate(si.ev.date)} · ${seasonLeftText(si.ev)}`
+          : `Ближайшее: ${SEASONS[si.ev.season].label} режим ${fmtDate(si.ev.date)} · ${seasonLeftText(si.ev)}`;
+        return cpBtn('season', todo, 'Сезонное ТО не проведено', { color: si.ev.active && si.ev.late && todo ? 'overdue' : (todo ? 'urgent' : ''), hint });
+      })()}
     </div>
 
     <div class="cp-grid">
@@ -15721,6 +15788,7 @@ function commandListModal(key) {
 
 /* Задание на проведение ТО / перечень техники — печатная форма */
 function commandTask(key) {
+  if (key === 'season') { seasonTask(); return; }
   const L = commandList(key);
   if (!L || !L.list.length) { toast('info', 'Нет техники', 'Перечень пуст — задание не сформировано.'); return; }
   const rows = L.list.slice().sort((a, b) => (computeStatus(a).nextDate || '9').localeCompare(computeStatus(b).nextDate || '9') || a.name.localeCompare(b.name, 'ru'));
@@ -15827,9 +15895,17 @@ function registerFleetModules() {
       } }
     ] });
 
-  P.register({ id: 'maint', name: 'Техническое обслуживание', version: '1.6.0', owns: ['maint'], depends: ['park'],
+  P.register({ id: 'maint', name: 'Техническое обслуживание', version: '1.7.0', owns: ['maint'], depends: ['park'],
     desc: 'Журнал ТО, расчёт сроков и состояния по моточасам и календарю',
-    tests: [{ name: 'Срок ТО рассчитывается по моточасам и календарю', run() {
+    tests: [{ name: 'Шаблон работ: операции регламента и отметки сохраняются по тексту', run() {
+      const a = buildChecklist(['Осмотр', 'Замена масла', 'Проверка тормозов'], null);
+      A(a.length === 3 && a.every(x => !x.done), 'новый шаблон должен быть без отметок');
+      a[1].done = true;
+      const b = buildChecklist(['Осмотр', 'Замена масла', 'Проверка тормозов', 'Новая операция'], a);
+      A(b[1].done && !b[0].done && !b[3].done && b.length === 4, 'отметки не перенеслись по тексту операции');
+      A(checklistSummary({ items: b }).done === 1 && checklistSummary({ items: b }).total === 4, 'неверная сводка');
+      return 'отметки переносятся при изменении регламента';
+    } }, { name: 'Срок ТО рассчитывается по моточасам и календарю', run() {
       return withTestDB(testFixture(), () => {
         const s1 = computeStatus(getVehicle('v_test_aaaa01'));
         A(s1.level === 'overdue', 'ожидалось «ТО просрочено», получено ' + s1.level);
@@ -15875,7 +15951,7 @@ function registerFleetModules() {
       });
     } }] });
 
-  P.register({ id: 'analytics', name: 'Пункт управления', version: '1.0.0', owns: [], depends: ['park', 'maint', 'repairs'],
+  P.register({ id: 'analytics', name: 'Пункт управления', version: '1.1.0', owns: [], depends: ['park', 'maint', 'repairs'],
     desc: 'Стартовый экран: состояние парка, КТГ по подразделениям, календарь работ',
     tests: [{ name: 'Перечни по нажатию на числа совпадают со счётчиками', run() {
       return withTestDB(testFixture(), () => {
@@ -15886,6 +15962,34 @@ function registerFleetModules() {
         return true;
       });
     } }] });
+
+  P.register({ id: 'seasons', name: 'Сезонное обслуживание', version: '1.0.0', owns: [], depends: ['park', 'maint'],
+    desc: 'Перевод техники на летний и зимний режим: даты, напоминания, задание',
+    tests: [
+      { name: 'Окно напоминания и отметка выполнения по сезону', run() {
+        return withTestDB(Object.assign(testFixture(), { settings: Object.assign({}, DB.settings, { seasons: { summer: addDays(todayISO(), 180).slice(5), winter: addDays(todayISO(), 10).slice(5), leadDays: 30 } }) }), () => {
+          let info = seasonInfo();
+          A(info.ev && info.ev.active && info.ev.season === 'winter' && info.ev.daysLeft === 10, 'ожидалось активное зимнее событие через 10 дней');
+          A(info.fleet.length === 4 && info.todo.length === 4, 'СО не проведено ни на одной машине');
+          DB.maint.push({ id: 'm_test_season1', vehicleId: 'v_test_aaaa01', kind: SEASON_KIND, season: 'winter', date: todayISO(), hours: 1000 });
+          info = seasonInfo();
+          A(info.done.length === 1 && info.todo.length === 3, 'отметка о СО не засчитана');
+          DB.maint.push({ id: 'm_test_season2', vehicleId: 'v_test_aaaa04', kind: SEASON_KIND, season: 'summer', date: todayISO(), hours: 0 });
+          A(seasonInfo().todo.length === 3, 'СО другого сезона засчитано ошибочно');
+          const n = seasonNotification();
+          A(n && n.act === 'season' && /зимний/.test(n.title), 'нет уведомления о сезоне');
+          return 'зимний режим: 1 из 4 проведено';
+        });
+      } },
+      { name: 'Вне окна напоминаний уведомления нет; дата 30 февраля не ломает расчёт', run() {
+        return withTestDB(Object.assign(testFixture(), { settings: Object.assign({}, DB.settings, { seasons: { summer: addDays(todayISO(), 100).slice(5), winter: addDays(todayISO(), 200).slice(5), leadDays: 30 } }) }), () => {
+          const info = seasonInfo();
+          A(info.ev && !info.ev.active && !seasonNotification(), 'уведомление вне окна');
+          A(/^\d{4}-02-2[89]$/.test(seasonDate('02-30', 2026)), 'дата 30 февраля не приведена к концу месяца');
+          return true;
+        });
+      } }
+    ] });
 
   P.register({ id: 'qr', name: 'QR-маркировка', version: '1.2.0', owns: [], depends: ['park'],
     desc: 'Постоянные QR-коды, наклейки, сканирование без интернета',
@@ -15940,6 +16044,186 @@ function registerFleetModules() {
         return true;
       } }
     ] });
+}
+
+/* =========================================================================
+   27f. ШАБЛОНЫ РАБОТ ТО И СЕЗОННОЕ ОБСЛУЖИВАНИЕ
+   -------------------------------------------------------------------------
+   Шаблон работ — перечень операций регламента из справочника для выбранного
+   вида ТО. В форме записи ТО операции показываются списком с галочками;
+   снимок (операция + отметка) сохраняется в записи, поэтому история не
+   меняется, даже если регламент в справочнике потом отредактируют.
+
+   Сезонное обслуживание — перевод техники на летний и зимний режим к
+   заданным датам (Настройки → «Сезонное обслуживание»). За leadDays дней
+   до даты программа напоминает, кому ещё не проведено СО с отметкой
+   сезона. Напоминание остаётся SEASON_GRACE дней после даты (с пометкой
+   «просрочено») и затем снимается. Даты задаются пользователем (приказом
+   или решением командира): программа их не выдумывает, значения по
+   умолчанию — только исходная подстановка.
+   ========================================================================= */
+const SEASON_KIND = 'Сезонное обслуживание (СО)';
+const SEASONS = {
+  summer: { label: 'летний', title: 'весенне-летний период', cap: 'Летний' },
+  winter: { label: 'зимний', title: 'осенне-зимний период',  cap: 'Зимний' }
+};
+const SEASON_GRACE = 60;        // сколько дней после даты напоминание ещё показывается
+const SEASON_MATCH = 120;       // СО в пределах ±N дней от даты засчитывается за этот сезон
+const SEASON_DEFAULTS = { summer: '04-15', winter: '10-15', leadDays: 30 };
+
+/* --- Шаблон работ: снимок перечня операций с отметками --- */
+function buildChecklist(actions, prevItems) {
+  const prev = new Map((prevItems || []).map(x => [x.t, !!x.done]));
+  return (actions || []).map(t => ({ t: String(t), done: !!prev.get(String(t)) }));
+}
+function checklistSummary(cl) {
+  const items = (cl && cl.items) || [];
+  return { total: items.length, done: items.filter(x => x.done).length };
+}
+
+/* --- Расчёт сезонных событий --- */
+function seasonDate(mmdd, year) {
+  const m = /^(\d{2})-(\d{2})$/.exec(String(mmdd || ''));
+  if (!m) return null;
+  const mo = Number(m[1]), d = Number(m[2]);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  const dt = new Date(year, mo - 1, d);
+  if (dt.getMonth() !== mo - 1) return isoOf(new Date(year, mo, 0));   // 30 февраля → 28/29
+  return isoOf(dt);
+}
+function seasonSettings() {
+  const s = DB.settings.seasons || {};
+  return {
+    summer: s.summer || SEASON_DEFAULTS.summer,
+    winter: s.winter || SEASON_DEFAULTS.winter,
+    leadDays: Math.max(0, Number(s.leadDays) >= 0 && s.leadDays !== '' ? Number(s.leadDays) : SEASON_DEFAULTS.leadDays)
+  };
+}
+/* Событие, которое сейчас в работе (окно напоминания), иначе ближайшее будущее */
+function seasonEvent(today) {
+  today = today || todayISO();
+  const cfg = seasonSettings();
+  const y = Number(today.slice(0, 4));
+  const all = [];
+  Object.keys(SEASONS).forEach(season => {
+    [y - 1, y, y + 1].forEach(yr => {
+      const date = seasonDate(cfg[season], yr);
+      if (date) all.push({ season, date });
+    });
+  });
+  all.sort((a, b) => a.date.localeCompare(b.date));
+  const mk = e => {
+    const daysLeft = daysBetween(today, e.date);
+    return Object.assign({ daysLeft, late: daysLeft < 0, leadDays: cfg.leadDays }, e);
+  };
+  const active = all.find(e => {
+    const d = daysBetween(today, e.date);
+    return d <= cfg.leadDays && d >= -SEASON_GRACE;
+  });
+  if (active) return Object.assign(mk(active), { active: true });
+  const next = all.find(e => e.date > today);
+  return next ? Object.assign(mk(next), { active: false }) : null;
+}
+/* Техника, к которой применимо СО: не списана и не на хранении/консервации */
+function seasonFleet() {
+  return DB.vehicles.filter(v => v.status !== 'Списано' && v.status !== 'На хранении' && v.status !== 'Консервация');
+}
+function seasonDone(v, ev) {
+  const from = addDays(ev.date, -SEASON_MATCH), to = addDays(ev.date, SEASON_MATCH);
+  return DB.maint.some(m => m.vehicleId === v.id && m.kind === SEASON_KIND && m.season === ev.season && m.date >= from && m.date <= to);
+}
+function seasonInfo(today) {
+  const ev = seasonEvent(today);
+  const fleet = seasonFleet();
+  if (!ev) return { ev: null, fleet, done: [], todo: [] };
+  const done = fleet.filter(v => seasonDone(v, ev));
+  const todo = fleet.filter(v => !seasonDone(v, ev));
+  return { ev, fleet, done, todo };
+}
+function seasonLeftText(ev) {
+  if (ev.daysLeft === 0) return 'сегодня';
+  if (ev.daysLeft > 0) return `через ${ev.daysLeft} ${plural(ev.daysLeft, 'день', 'дня', 'дней')}`;
+  const d = Math.abs(ev.daysLeft);
+  return `просрочено на ${d} ${plural(d, 'день', 'дня', 'дней')}`;
+}
+function seasonTitle(ev) {
+  return `Перевод на ${SEASONS[ev.season].label} режим к ${fmtDate(ev.date)}`;
+}
+
+/* --- Уведомление и сводка --- */
+function seasonNotification() {
+  const info = seasonInfo();
+  if (!info.ev || !info.ev.active || !info.todo.length) return null;
+  const ev = info.ev;
+  return {
+    level: ev.late ? 'overdue' : ev.daysLeft <= 7 ? 'urgent' : 'soon',
+    vehicleId: '', act: 'season',
+    title: seasonTitle(ev),
+    text: `Не проведено СО: ${info.todo.length} из ${info.fleet.length} · ${seasonLeftText(ev)}`
+  };
+}
+
+/* --- Поля настроек --- */
+const MONTHS_RU = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+function seasonField(prefix, mmdd) {
+  const [mo, d] = String(mmdd).split('-').map(Number);
+  return `<div style="display:flex;gap:8px">
+    <input id="${prefix}Day" class="f-input" type="number" min="1" max="31" value="${d}" style="width:84px" aria-label="День">
+    <select id="${prefix}Month" class="f-select" aria-label="Месяц">${MONTHS_RU.map((n, i) => `<option value="${i + 1}" ${i + 1 === mo ? 'selected' : ''}>${n}</option>`).join('')}</select>
+  </div>`;
+}
+function renderSeasonSettings() {
+  const c = seasonSettings();
+  return `
+    <div class="f-panel">
+      <div class="f-panel-title">Сезонное обслуживание</div>
+      <div class="f-hint" style="margin-bottom:10px">Даты перевода техники на ${SEASONS.summer.label} и ${SEASONS.winter.label} режим. Задаются приказом или решением командира — значения ниже подставлены по умолчанию, проверьте их. За указанное число дней до даты программа напоминает (колокол, «Пункт управления»), у кого СО ещё не проведено.</div>
+      <div class="f-form-grid">
+        <div><label class="f-fld-label" for="setSumDay">Перевод на летний режим — до</label>${seasonField('setSum', c.summer)}</div>
+        <div><label class="f-fld-label" for="setWinDay">Перевод на зимний режим — до</label>${seasonField('setWin', c.winter)}</div>
+        <div><label class="f-fld-label" for="setSeasonLead">Напоминать за, дней</label>
+          <input id="setSeasonLead" class="f-input" type="number" min="0" max="365" value="${c.leadDays}"></div>
+      </div>
+      <div class="f-hint" style="margin-top:10px">СО засчитывается, если в журнале ТО есть запись вида «Сезонное обслуживание (СО)» с отметкой сезона в пределах ${SEASON_MATCH} дней от даты. Не требуется для техники на хранении, консервации и списанной.</div>
+    </div>`;
+}
+function bindSeasonSettings() {
+  const save = () => {
+    const cfg = Object.assign({}, DB.settings.seasons || {});
+    const read = p => {
+      const d = parseInt(el(p + 'Day').value, 10), m = parseInt(el(p + 'Month').value, 10);
+      const maxD = new Date(2024, m, 0).getDate();          // 2024 — високосный: 29 февраля допустимо
+      if (isNaN(d) || d < 1 || d > maxD) return null;
+      return String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    };
+    const sum = read('setSum'), win = read('setWin');
+    if (!sum || !win) { toast('warning', 'Некорректная дата', 'Проверьте день и месяц.'); return false; }
+    cfg.summer = sum; cfg.winter = win;
+    const lead = parseInt(el('setSeasonLead').value, 10);
+    cfg.leadDays = isNaN(lead) || lead < 0 || lead > 365 ? SEASON_DEFAULTS.leadDays : lead;
+    DB.settings.seasons = cfg;
+    saveDB(); renderNav(); renderNotifPanel();
+    toast('success', 'Настройки сохранены', '');
+    return true;
+  };
+  ['setSumDay', 'setSumMonth', 'setWinDay', 'setWinMonth', 'setSeasonLead'].forEach(id => {
+    const n = el(id);
+    if (n) n.addEventListener('change', () => { if (!save()) renderView(); });
+  });
+}
+
+/* --- Задание на перевод на сезонный режим (печатная форма) --- */
+function seasonTask() {
+  const info = seasonInfo();
+  if (!info.ev || !info.todo.length) { toast('info', 'Нет техники', 'Сезонное обслуживание проведено на всей технике.'); return; }
+  const ev = info.ev;
+  const rows = info.todo.slice().sort((a, b) => (a.unit || '').localeCompare(b.unit || '', 'ru') || a.name.localeCompare(b.name, 'ru'));
+  const body = `<table>
+    <thead><tr><th style="width:22pt">№</th><th>Техника, гос. номер</th><th>Подразделение</th><th>Вид работ</th><th>Срок</th><th>Ответственный</th><th style="width:70pt">Отметка о выполнении</th></tr></thead>
+    <tbody>${rows.map((v, i) => `<tr><td>${i + 1}</td><td>${esc(v.name)}${v.regNumber ? ', ' + esc(v.regNumber) : ''}</td><td>${esc(v.unit || '—')}</td>
+      <td>Сезонное обслуживание — перевод на ${esc(SEASONS[ev.season].label)} режим</td><td>${fmtDate(ev.date)}</td><td>${esc(v.responsible || '')}</td><td></td></tr>`).join('')}</tbody></table>`;
+  printCustom('ЗАДАНИЕ', `на проведение сезонного обслуживания: перевод техники на ${SEASONS[ev.season].label} режим эксплуатации (${SEASONS[ev.season].title}) к ${fmtDate(ev.date)}`, body,
+    '<span>Задание выдал: _______________________</span><span>Задание получил: _______________________</span><span>«____» _______________ 20____ г.</span>');
 }
 
 /* =========================================================================
@@ -17329,7 +17613,14 @@ function buildHelp() {
       'Проверка целостности нашла ошибки — «Исправить автоматически» (перед исправлением создаётся точка восстановления).']),
     h3('12.4 Модули платформы'),
     p('Программа разделена на модули: справочник, парк, ТО, ремонты и готовность, путевые листы и моточасы, склад (запланирован), документы, пункт управления, QR-маркировка, сохранность данных. Каждый модуль владеет своими данными, имеет версию и самотесты. «Запустить самотесты» проверяет модули на копиях данных — реальные данные при этом не меняются.'),
-    p('Идентификатор записи: <вид>_<время>_<случайная часть> (например, v_… — техника, m_… — запись ТО). Он присваивается один раз и не меняется: на нём держатся связи, журнал изменений и QR-код.')
+    p('Идентификатор записи: <вид>_<время>_<случайная часть> (например, v_… — техника, m_… — запись ТО). Он присваивается один раз и не меняется: на нём держатся связи, журнал изменений и QR-код.'),
+    h3('12.5 Шаблоны работ ТО'),
+    p('В форме записи ТО, если для типа техники и выбранного вида ТО в справочнике есть регламент, показывается перечень его операций с галочками. Отметьте выполненные работы: счётчик «выполнено N из M» ведётся автоматически. Если поле «Выполненные работы» оставить пустым, в него подставятся отмеченные операции. Перечень сохраняется в записи как снимок: если регламент в справочнике потом изменят, история обслуживания останется прежней. В журнале ТО у записи видно «По регламенту: N из M», а при наведении — какие операции не выполнены. Кнопка «Подставить материалы» переносит в запись перечень материалов регламента.'),
+    h3('12.6 Сезонное обслуживание'),
+    p('В настройках задаются даты перевода всей техники на летний и зимний режим и число дней, за которое нужно напоминать. Даты задаются приказом или решением командира; значения по умолчанию (15 апреля и 15 октября) — лишь начальная подстановка, их нужно проверить. За заданное число дней до даты в колоколе, при входе в учёт и в «Пункте управления» появляется напоминание: сколько машин ещё не прошли сезонное обслуживание. Напоминание остаётся 60 дней после даты с пометкой «просрочено», затем снимается.'),
+    ul(['СО засчитывается, если в журнале ТО есть запись вида «Сезонное обслуживание (СО)» с отметкой сезона (летний или зимний) в пределах 120 дней от даты.',
+      'Не учитываются списанная техника и техника на хранении и консервации.',
+      'Плитка «Сезонное ТО не проведено» в «Пункте управления» открывает перечень машин, из него можно сформировать печатное «Задание на проведение сезонного обслуживания».'])
   ]);
   sections.forEach(x => { x.text = x.el.textContent; });
   return sections;
