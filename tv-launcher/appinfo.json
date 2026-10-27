@@ -1,0 +1,14 @@
+{
+  "id": "com.nowau.launcher",
+  "version": "1.0.0",
+  "vendor": "nowau",
+  "type": "web",
+  "main": "index.html",
+  "title": "Мой ТВ",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#0b1430",
+  "iconColor": "#1d4e89",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true
+}

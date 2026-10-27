@@ -1,0 +1,554 @@
+/* Все размеры в rem; 1rem = 1/54 высоты экрана (20px при 1080p). */
+html {
+  font-size: 1.85vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  color: #fff;
+  background: #0b1430;
+  font-family: "LG Smart UI", "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.period-night {
+  background: linear-gradient(160deg, #050816 0%, #0b1430 55%, #1a1035 100%);
+}
+body.period-morning {
+  background: linear-gradient(160deg, #18264a 0%, #34497a 50%, #a8664f 100%);
+}
+body.period-day {
+  background: linear-gradient(160deg, #0d2442 0%, #1a4a82 55%, #2a76ab 100%);
+}
+body.period-evening {
+  background: linear-gradient(160deg, #170f2e 0%, #44204b 55%, #a24a45 100%);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- верхняя панель ---------- */
+
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6.5rem;
+  padding: 2rem 4rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.greeting {
+  font-size: 1.9rem;
+  font-weight: 300;
+  opacity: .9;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.hint {
+  font-size: 1rem;
+  opacity: .6;
+  margin-right: 2rem;
+}
+
+.key-red {
+  display: inline-block;
+  width: .9rem;
+  height: .9rem;
+  border-radius: 50%;
+  background: #e53935;
+  margin-right: .5rem;
+  vertical-align: -.1rem;
+}
+
+.gear {
+  width: 1.3rem;
+  height: 1.3rem;
+  vertical-align: -.25rem;
+  margin-right: .3rem;
+}
+
+/* ---------- кнопки ---------- */
+
+.btn {
+  display: inline-block;
+  padding: .7rem 1.4rem;
+  border-radius: .7rem;
+  background: rgba(255, 255, 255, .12);
+  font-size: 1.15rem;
+  cursor: pointer;
+  outline: none;
+  -webkit-transition: -webkit-transform .15s, background .15s;
+  transition: transform .15s, background .15s;
+}
+
+.btn:focus {
+  background: #fff;
+  color: #111;
+  -webkit-transform: scale(1.06);
+  transform: scale(1.06);
+}
+
+.btn.primary {
+  background: #2f7fe0;
+}
+
+.btn.primary:focus {
+  background: #fff;
+}
+
+/* ---------- основная область ---------- */
+
+#main {
+  position: absolute;
+  top: 6.5rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  padding: 0 4rem 3rem;
+}
+
+.widgets {
+  display: flex;
+  height: 19.5rem;
+  margin-top: 1rem;
+}
+
+.card {
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 1.3rem;
+  padding: 1.5rem 1.8rem;
+  margin-right: 1.5rem;
+  overflow: hidden;
+}
+
+.card:last-child {
+  margin-right: 0;
+}
+
+/* часы */
+
+.clock-card {
+  flex: 1.15;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.clock {
+  font-size: 8rem;
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -.2rem;
+}
+
+.clock .sec {
+  font-size: 2.6rem;
+  margin-left: .6rem;
+  opacity: .6;
+  letter-spacing: 0;
+}
+
+.date {
+  font-size: 1.7rem;
+  margin-top: .8rem;
+  opacity: .9;
+}
+
+.holiday {
+  font-size: 1.05rem;
+  margin-top: 1rem;
+  opacity: .6;
+}
+
+/* погода */
+
+.weather-card {
+  flex: 1.35;
+  outline: none;
+  cursor: pointer;
+  -webkit-transition: -webkit-transform .15s, box-shadow .15s;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.weather-card:focus {
+  box-shadow: 0 0 0 .25rem #fff;
+  -webkit-transform: scale(1.02);
+  transform: scale(1.02);
+}
+
+.w-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.w-city {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.w-upd {
+  font-size: .95rem;
+  opacity: .55;
+}
+
+.w-now {
+  display: flex;
+  align-items: center;
+  margin-top: .6rem;
+}
+
+.w-icon {
+  width: 6rem;
+  height: 6rem;
+}
+
+.w-icon svg,
+.w-dicon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.w-temp {
+  font-size: 4.6rem;
+  font-weight: 200;
+  margin: 0 1.4rem 0 .8rem;
+}
+
+.w-desc {
+  font-size: 1.35rem;
+}
+
+.w-desc small {
+  display: block;
+  font-size: 1rem;
+  opacity: .7;
+  margin-top: .4rem;
+  line-height: 1.4;
+}
+
+.w-days {
+  display: flex;
+  margin-top: .9rem;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+  padding-top: .8rem;
+}
+
+.w-day {
+  flex: 1;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.w-dname {
+  opacity: .75;
+}
+
+.w-dicon {
+  width: 2.6rem;
+  height: 2.6rem;
+  margin: .2rem auto;
+}
+
+.w-drange span {
+  opacity: .55;
+}
+
+.w-empty {
+  font-size: 1.3rem;
+  opacity: .75;
+  margin-top: 2rem;
+  line-height: 1.5;
+}
+
+.w-empty small {
+  font-size: 1rem;
+  opacity: .8;
+}
+
+/* календарь */
+
+.calendar-card {
+  flex: .95;
+}
+
+.cal-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: .5rem;
+}
+
+.cal {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.cal th {
+  font-weight: 400;
+  opacity: .55;
+  padding-bottom: .3rem;
+}
+
+.cal td {
+  height: 2.1rem;
+}
+
+.cal td span {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  border-radius: 50%;
+}
+
+.cal .we,
+.cal .hol {
+  color: #ff9e93;
+}
+
+.cal .hol span {
+  box-shadow: inset 0 -.18rem 0 rgba(255, 158, 147, .7);
+}
+
+.cal .today span {
+  background: #fff;
+  color: #0b1430;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* ---------- ряды плиток ---------- */
+
+.row h2 {
+  font-size: 1.45rem;
+  font-weight: 500;
+  margin: 1.4rem 0 0;
+  opacity: .9;
+}
+
+.row-track {
+  overflow: hidden;
+  padding: 1rem .8rem 1.2rem;
+  margin: 0 -.8rem;
+}
+
+.row-inner {
+  display: flex;
+}
+
+.tile {
+  position: relative;
+  flex-shrink: 0;
+  width: 14.5rem;
+  margin-right: 1.5rem;
+  outline: none;
+  cursor: pointer;
+  -webkit-transition: -webkit-transform .15s;
+  transition: transform .15s;
+}
+
+.tile-art {
+  height: 8.2rem;
+  border-radius: .9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 .4rem 1rem rgba(0, 0, 0, .3);
+}
+
+.tile-art img {
+  max-width: 62%;
+  max-height: 72%;
+}
+
+.tile-art.logo span {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: .03rem;
+}
+
+.tile-art.logo span.long {
+  font-size: 1.35rem;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.tile-title {
+  font-size: 1.1rem;
+  margin-top: .55rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: .85;
+}
+
+.tile-sub {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  font-size: .8rem;
+  padding: .15rem .5rem;
+  border-radius: .4rem;
+  background: rgba(0, 0, 0, .45);
+}
+
+.tile-fav {
+  position: absolute;
+  top: .6rem;
+  left: .6rem;
+  width: .9rem;
+  height: .9rem;
+  border-radius: 50%;
+  background: #e53935;
+  box-shadow: 0 0 0 .15rem rgba(255, 255, 255, .8);
+}
+
+.tile:focus {
+  -webkit-transform: scale(1.09);
+  transform: scale(1.09);
+  z-index: 2;
+}
+
+.tile:focus .tile-art {
+  box-shadow: 0 0 0 .25rem #fff, 0 1rem 2rem rgba(0, 0, 0, .5);
+}
+
+.tile:focus .tile-title {
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* ---------- настройки ---------- */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: rgba(3, 6, 18, .78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  width: 52rem;
+  background: #141b31;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 1.4rem;
+  padding: 2.4rem 2.8rem;
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, .5);
+}
+
+.panel h2 {
+  margin: 0 0 1.4rem;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.label {
+  font-size: 1.15rem;
+  opacity: .8;
+  margin-bottom: .7rem;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  font-size: 1.4rem;
+  padding: .75rem 1rem;
+  margin-right: 1rem;
+  border-radius: .7rem;
+  border: 0;
+  outline: none;
+  background: rgba(255, 255, 255, .92);
+  color: #111;
+}
+
+.input:focus {
+  box-shadow: 0 0 0 .25rem #2f7fe0;
+}
+
+.results {
+  margin-top: 1rem;
+  min-height: 2rem;
+}
+
+.results .btn {
+  display: block;
+  margin-bottom: .5rem;
+}
+
+.results .btn span {
+  opacity: .6;
+  font-size: 1rem;
+  margin-left: .5rem;
+}
+
+.muted {
+  opacity: .6;
+  font-size: 1.1rem;
+}
+
+.settings-actions {
+  margin-top: 1.6rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+}
+
+.settings-actions .btn {
+  margin-right: .8rem;
+}
+
+/* ---------- уведомление ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 3rem;
+  z-index: 20;
+  max-width: 60rem;
+  padding: .9rem 1.8rem;
+  border-radius: .8rem;
+  background: rgba(0, 0, 0, .85);
+  font-size: 1.2rem;
+  opacity: 0;
+  -webkit-transform: translate(-50%, 1rem);
+  transform: translate(-50%, 1rem);
+  -webkit-transition: opacity .25s, -webkit-transform .25s;
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  -webkit-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+}

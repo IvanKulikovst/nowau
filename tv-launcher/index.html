@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Мой ТВ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="period-day">
+  <div id="app">
+    <header class="topbar">
+      <div class="greeting" id="greeting">Добрый день</div>
+      <div class="topbar-right">
+        <div class="hint"><span class="key-red"></span>Красная кнопка — в избранное / убрать</div>
+        <div class="btn focusable" id="btnSettings" tabindex="0">
+          <svg class="gear" viewBox="0 0 24 24"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1L11 21h4l.4-2.9a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+          Настройки
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="widgets">
+        <div class="card clock-card">
+          <div class="clock"><span id="clockHM">00:00</span><span id="clockS" class="sec"></span></div>
+          <div id="clockDate" class="date"></div>
+          <div id="holiday" class="holiday"></div>
+        </div>
+        <div class="card weather-card focusable" id="weather" tabindex="0">
+          <div class="w-empty">Загрузка погоды…</div>
+        </div>
+        <div class="card calendar-card" id="calendar"></div>
+      </section>
+      <div id="rows"></div>
+    </main>
+  </div>
+
+  <div id="settings" class="overlay hidden">
+    <div class="panel">
+      <h2>Настройки</h2>
+      <div class="label">Город для погоды · сейчас: <b id="currentCity"></b></div>
+      <div class="field-row">
+        <input id="cityInput" class="input focusable" type="text" placeholder="Например, Казань">
+        <div class="btn focusable" id="citySearch" tabindex="0">Найти</div>
+      </div>
+      <div id="cityResults" class="results"></div>
+      <div class="settings-actions">
+        <div class="btn focusable" id="toggleSeconds" tabindex="0">Секунды</div>
+        <div class="btn focusable" id="resetFav" tabindex="0">Очистить избранное</div>
+        <div class="btn focusable primary" id="closeSettings" tabindex="0">Готово</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/util.js"></script>
+  <script src="js/luna.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/clock.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/apps.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
