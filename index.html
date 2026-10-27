@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<title>ПФК ВПК — расчёт компетенций</title>
+<title>ПФК ВПК</title>
 <meta name="description" content="Автономное приложение для расчёта уровня сформированности военно-профессиональных компетенций по модели полифункционального контроля">
 <style>
 /* Оформление в стиле iOS: системные цвета, «стеклянные» материалы, сгруппированные списки, капсульные кнопки.
@@ -250,6 +250,64 @@ table.bl th,table.bl td{border:1px solid #000;padding:3px 5px;background:none;wh
 abbr[title]{text-decoration:underline dotted;cursor:help;text-underline-offset:2px}
 @media print{abbr[title]{text-decoration:none}}
 
+/* ---------- Навигация v2: разделы, вкладки, «Назад» ---------- */
+.nav .t small{display:block;font-size:12px;color:var(--muted);line-height:1.25;margin-top:1px}
+.nav a.active .t small{color:rgba(255,255,255,.8)}
+.nav a.sec.open:not(.active){background:var(--fill)}
+.nav .sub{padding:4px 0 8px 52px;background:var(--fill)}
+.nav .sub a{min-height:34px;padding:6px 12px;font-size:14px;border-radius:9px;margin-right:8px}
+.nav .sub a::before{display:none}
+.nav .sub-l{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);padding:8px 12px 2px}
+.backbar{display:flex;align-items:center;gap:10px;margin:-6px 0 10px;min-height:36px}
+.backbar .back{display:inline-flex;align-items:center;gap:2px;color:var(--accent);font-size:17px;font-weight:500;text-decoration:none;padding:6px 10px 6px 2px;border-radius:10px;max-width:70%}
+.backbar .back span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.backbar .back:hover{background:var(--fill);text-decoration:none}
+.backbar svg{width:24px;height:24px;stroke:currentColor;stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.backbar .crumb{margin-left:auto;font-size:13px;color:var(--muted)}
+.main:focus{outline:none}
+@media (min-width:761px){.sectabs{display:none!important}}
+.sectabs{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 18px;align-items:flex-end}
+.sectabs .tg{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:100%}
+.sectabs .tg-l{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-left:8px}
+.sectabs .tabs{margin:0}
+.toast.has-act{display:flex;align-items:center;gap:14px;pointer-events:auto}
+.toast-btn{border:none;background:var(--accent);color:#fff;font:600 14px var(--font);border-radius:999px;padding:6px 14px;cursor:pointer}
+.busy{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(0,0,0,.18)}
+.busy[hidden]{display:none}
+.busy-box{display:flex;align-items:center;gap:12px;padding:16px 22px;border-radius:20px;background:var(--glass);-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);box-shadow:var(--glass-shadow);font-weight:600}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--fill-2);border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.state-ic{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;background:var(--fill);color:var(--muted);font-size:24px;font-weight:700}
+.state-ic.err{background:var(--danger-soft);color:var(--danger)}
+.btn .bi{width:18px;height:18px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round;margin-left:-4px}
+.obj-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.obj-head h1{margin:0}
+.obj-head .avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(160deg,#8e8ef0,#5856D6);color:#fff;font-weight:700;font-size:20px;flex:none}
+.obj-head .meta{flex:1;min-width:200px}
+.quickadd{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:10px;align-items:end}
+.onboard ol{margin:0;padding:0;list-style:none;counter-reset:st}
+.onboard li{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-top:.5px solid var(--line)}
+.onboard li:first-child{border-top:none}
+.onboard .n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:700}
+.onboard li.done .n{background:var(--ok-c);color:#fff}
+.onboard li.done b{text-decoration:line-through;color:var(--muted)}
+.pagehead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.pagehead h1{margin:0}
+.pagehead .spacer{flex:1}
+@media (max-width:760px){
+  .quickadd{grid-template-columns:1fr}
+  .backbar .crumb{display:none}
+  .sectabs{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 14px;padding:0 16px;scrollbar-width:none}
+  .sectabs::-webkit-scrollbar{display:none}
+  .sectabs .tg{flex:none}
+  .sectabs .tabs{flex-wrap:nowrap;width:max-content}
+  .sectabs .tabs a{white-space:nowrap}
+  .tabbar a.active{color:var(--accent);background:var(--fill)}
+  nav.tabs{flex-wrap:nowrap;overflow-x:auto;width:auto;scrollbar-width:none}
+  nav.tabs::-webkit-scrollbar{display:none}
+  nav.tabs a{white-space:nowrap;flex:none}
+}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
 /* ---------- Планшет ---------- */
@@ -315,57 +373,15 @@ abbr[title]{text-decoration:underline dotted;cursor:help;text-underline-offset:2
 <div class="app">
   <aside class="side" id="side" aria-label="Навигация">
     <div class="brand"><span class="logo" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12h.01"/></svg></span><div>ПФК ВПК<small>Расчёт уровня сформированности ВПК</small></div></div>
-    <div class="nav-search"><input type="search" id="navSearch" placeholder="Поиск раздела" aria-label="Поиск раздела" autocomplete="off"></div>
-    <nav class="nav" id="nav">
-      <div class="grp">
-        <a href="#/"><span class="ic" style="--c:#007AFF"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="t">Главная</span></a>
-        <a href="#/new"><span class="ic" style="--c:#34C759"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="t">Новая оценка</span></a>
-        <a href="#/batch"><span class="ic" style="--c:#30B0C7"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></span><span class="t">Групповой ввод</span></a>
-        <a href="#/import"><span class="ic" style="--c:#5AC8FA"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg></span><span class="t">Импорт Excel / CSV</span></a>
-        <a href="#/journal"><span class="ic" style="--c:#FF9500"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/></svg></span><span class="t">Журнал контроля</span></a>
-        <a href="#/objects"><span class="ic" style="--c:#5856D6"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M17 11a3 3 0 1 0 0-6M22 21v-1a5 5 0 0 0-4-4.9"/></svg></span><span class="t">Объекты оценки</span></a>
-        <a href="#/history"><span class="ic" style="--c:#8E8E93"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2"/></svg></span><span class="t">История расчётов</span></a>
-        <a href="#/summary"><span class="ic" style="--c:#007AFF"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM3 10h18M3 15h18M9 5v14"/></svg></span><span class="t">Сводная по группе</span></a>
-        <a href="#/reviews"><span class="ic" style="--c:#AF52DE"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8l-5 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg></span><span class="t">Анализ отзывов</span></a>
-      </div>
-      <div class="sep">Аналитика</div>
-      <div class="grp">
-        <a href="#/risk"><span class="ic" style="--c:#FF3B30"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20zM12 10v4M12 17v.5"/></svg></span><span class="t">Группы риска</span></a>
-        <a href="#/followup"><span class="ic" style="--c:#FF9500"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h13l-4-4M17 17H4l4 4"/></svg></span><span class="t">Выпуск ↔ войска</span></a>
-        <a href="#/groups"><span class="ic" style="--c:#34C759"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></span><span class="t">Сравнение групп</span></a>
-        <a href="#/gbatch"><span class="ic" style="--c:#007AFF"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></span><span class="t">Прогноз g по группе</span></a>
-        <a href="#/sensitivity"><span class="ic" style="--c:#5856D6"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M16 4v4M10 10v4M18 16v4"/></svg></span><span class="t">Чувствительность g</span></a>
-        <a href="#/optimize"><span class="ic" style="--c:#FF2D55"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg></span><span class="t">Оптимизация плана</span></a>
-        <a href="#/matrix"><span class="ic" style="--c:#30B0C7"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16"/></svg></span><span class="t">Матрица «дисциплины ↔ ВПК»</span></a>
-        <a href="#/stats"><span class="ic" style="--c:#00C7BE"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M7 16l3-5 3 3 4-7"/></svg></span><span class="t">Статистика</span></a>
-      </div>
-      <div class="sep">Документы</div>
-      <div class="grp">
-        <a href="#/blanks"><span class="ic" style="--c:#8E8E93"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg></span><span class="t">Печатные бланки</span></a>
-        <a href="#/preports"><span class="ic" style="--c:#FF9500"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></span><span class="t">Отчёты о практике</span></a>
-      </div>
-      <div class="sep">Методика</div>
-      <div class="grp">
-        <a href="#/method"><span class="ic" style="--c:#A2845E"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/></svg></span><span class="t">Справочник методики</span></a>
-        <a href="#/coef"><span class="ic" style="--c:#5856D6"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5H6l6 7-6 7h12"/></svg></span><span class="t">Наборы Кзнк и экспертиза</span></a>
-        <a href="#/curricula"><span class="ic" style="--c:#007AFF"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5zM6 11v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg></span><span class="t">Учебные планы (g)</span></a>
-        <a href="#/ymodels"><span class="ic" style="--c:#FF2D55"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12h.01"/></svg></span><span class="t">Модели признаков (Y)</span></a>
-        <a href="#/passports"><span class="ic" style="--c:#34C759"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM8 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM5 17c.5-2 5.5-2 6 0M14 10h4M14 14h4"/></svg></span><span class="t">Паспорта компетенций</span></a>
-      </div>
-      <div class="sep">Сервис</div>
-      <div class="grp">
-        <a href="#/data"><span class="ic" style="--c:#007AFF"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5zM8 3v5h7V3M8 21v-7h8v7"/></svg></span><span class="t">Данные и резервные копии</span></a>
-        <a href="#/trash"><span class="ic" style="--c:#8E8E93"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg></span><span class="t">Корзина</span></a>
-        <a href="#/tests"><span class="ic" style="--c:#34C759"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8 12l3 3 5-6"/></svg></span><span class="t">Самопроверка</span></a>
-      </div>
-      <div class="grp"><a href="#" data-act="help"><span class="ic" style="--c:#636366"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17v.5"/></svg></span><span class="t">Справка по разделу (F1)</span></a></div>
-    </nav>
+    <div class="nav-search"><input type="search" id="navSearch" placeholder="Найти раздел или функцию" aria-label="Поиск раздела" autocomplete="off"></div>
+    <nav class="nav" id="nav" aria-label="Разделы"></nav>
     <div class="storage" id="storageStatus"></div>
   </aside>
   <div class="side-scrim no-print" id="sideScrim" hidden></div>
   <main class="main" id="main" tabindex="-1"></main>
 </div>
-<nav class="tabbar no-print" aria-label="Быстрые разделы"><a href="#/"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Главная</span></a><a href="#/new"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Оценка</span></a><a href="#/journal"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/></svg><span>Журнал</span></a><a href="#/objects"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M17 11a3 3 0 1 0 0-6M22 21v-1a5 5 0 0 0-4-4.9"/></svg><span>Курсанты</span></a><button type="button" id="menuBtn" aria-controls="side" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Все разделы</span></button></nav>
+<nav class="tabbar no-print" aria-label="Разделы"><a href="#/" data-sec="home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Главная</span></a><a href="#/history" data-sec="assess"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg><span>Оценки</span></a><a href="#/objects" data-sec="people"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M17 11a3 3 0 1 0 0-6M22 21v-1a5 5 0 0 0-4-4.9"/></svg><span>Курсанты</span></a><a href="#/summary" data-sec="analysis"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M7 16l3-5 3 3 4-7"/></svg><span>Анализ</span></a><button type="button" id="menuBtn" aria-controls="side" aria-expanded="false"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Ещё</span></button></nav>
+<div id="busy" class="busy" hidden role="status" aria-live="assertive"><div class="busy-box"><span class="spin" aria-hidden="true"></span><span id="busyMsg">Выполняется…</span></div></div>
 <div class="toast-wrap" id="toasts" role="status" aria-live="polite"></div>
 <dialog id="dlg"><div class="dh" id="dlgTitle"></div><div class="db" id="dlgBody"></div><div class="df" id="dlgFoot"></div></dialog>
 <noscript><p style="padding:24px">Для работы приложения необходимо включить JavaScript.</p></noscript>
@@ -1485,6 +1501,159 @@ const Model = (() => {
 })();
 
 /* =====================================================================
+   МОДУЛЬ 4а. ИНФОРМАЦИОННАЯ АРХИТЕКТУРА И НАВИГАЦИЯ
+   Пять разделов (Главная · Оценки · Курсанты и выпускники · Анализ ·
+   Методика) и сервисные пункты. Внутри раздела — вкладки, сгруппированные
+   по смыслу. Детальные экраны получают кнопку «Назад» с названием экрана,
+   на который она ведёт. Все прежние адреса (#/...) сохранены.
+   ===================================================================== */
+const ICONS = {
+  house: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+  plus: 'M12 5v14M5 12h14',
+  edit: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
+  people: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M17 11a3 3 0 1 0 0-6M22 21v-1a5 5 0 0 0-4-4.9',
+  chart: 'M4 20h16M7 16l3-5 3 3 4-7',
+  book: 'M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z',
+  disk: 'M5 3h11l3 3v15H5zM8 3v5h7V3M8 21v-7h8v7',
+  trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3',
+  help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17v.5',
+  list: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
+  target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12h.01',
+  back: 'M15 5l-7 7 7 7',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-3.5-3.5'
+};
+const svgIcon = (k, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[k]}"/></svg>`;
+const iconTile = (k, color) => `<span class="ic" style="--c:${color}">${svgIcon(k)}</span>`;
+
+/* Разделы. pages: [адрес, название вкладки, краткое пояснение]. group — подпись группы вкладок. */
+const NAV = [
+  { id: 'home', title: 'Главная', icon: 'house', color: '#007AFF', href: '#/', groups: [] },
+  { id: 'assess', title: 'Оценки', icon: 'edit', color: '#34C759', href: '#/history', groups: [
+    { label: 'Ввести', pages: [['#/new', 'Новая оценка', 'анкета практики, отзыв, g₀, прогноз g, Y — пошагово'], ['#/batch', 'Ввод по группе', 'оценки всей группы в одной таблице'], ['#/import', 'Импорт из файла', 'загрузка оценок из Excel или CSV']] },
+    { label: 'Просмотреть', pages: [['#/history', 'Все оценки', 'утверждённые оценки и черновики, фильтры'], ['#/journal', 'Журнал контроля', 'экзамены, зачёты, ЕГЭ, нормативы по этапам'], ['#/preports', 'Отчёты о практике', 'отчёты руководителя практики'], ['#/blanks', 'Бланки для печати', 'пустые отзывы и анкеты для заполнения в войсках']] }] },
+  { id: 'people', title: 'Курсанты и выпускники', short: 'Курсанты', icon: 'people', color: '#5856D6', href: '#/objects', groups: [] },
+  { id: 'analysis', title: 'Анализ', icon: 'chart', color: '#FF9500', href: '#/summary', groups: [
+    { label: 'Результаты', pages: [['#/summary', 'Сводная по группе', 'средние значения и место в группе'], ['#/risk', 'Группы риска', 'кто отстаёт и почему'], ['#/reviews', 'Отзывы из войск', 'итоги отзывов по органам управления'], ['#/followup', 'Практика и служба', 'сравнение оценок практики и отзыва'], ['#/groups', 'Сравнение групп', 'контрольная и экспериментальная группы'], ['#/stats', 'Статистика', 'корреляции показателей']] },
+    { label: 'Прогноз g', pages: [['#/gbatch', 'Прогноз по группе', 'уровень подготовленности по дисциплинам'], ['#/sensitivity', 'Чувствительность', 'как g зависит от часов и мастерства'], ['#/optimize', 'Оптимизация плана', 'распределение часов по дисциплинам'], ['#/matrix', 'Дисциплины и ВПК', 'какие дисциплины формируют компетенции']] }] },
+  { id: 'method', title: 'Методика', icon: 'book', color: '#A2845E', href: '#/method', groups: [
+    { label: '', pages: [['#/method', 'Справочник', 'модель, компетенции, шкалы, формулы, термины'], ['#/coef', 'Коэффициенты Кзнк', 'наборы коэффициентов и экспертиза'], ['#/passports', 'Паспорта компетенций', 'допустимые уровни по курсам'], ['#/curricula', 'Учебные планы', 'исходные данные для расчёта g'], ['#/ymodels', 'Модели Y', 'признаки, веса и эталон'], ['#/tests', 'Проверка расчётов', 'контрольные примеры источников']] }] }
+];
+const NAV_SERVICE = [['#/data', 'Данные и резервные копии', 'disk', '#007AFF'], ['#/trash', 'Корзина', 'trash', '#8E8E93']];
+const allPages = () => NAV.flatMap(s => s.groups.flatMap(g => g.pages.map(p => ({ href: p[0], title: p[1], desc: p[2], section: s }))));
+
+/* Детальные экраны: раздел и экран по умолчанию для кнопки «Назад» */
+const DETAIL = [
+  [/^\/a\/([\w-]+)\/report$/, 'assess', m => ({ href: '#/a/' + m[1], title: 'Результат оценки' })],
+  [/^\/a\/([\w-]+)\/edit\/\d$/, 'assess', () => ({ href: '#/history', title: 'Все оценки' })],
+  [/^\/a\/([\w-]+)$/, 'assess', m => { const a = state.assessments.find(x => x.id === m[1]); return a ? { href: '#/object/' + a.objectId, title: objName(a.objectId) } : { href: '#/history', title: 'Все оценки' }; }],
+  [/^\/object\/([\w-]+)(\/\w+)?$/, 'people', () => ({ href: '#/objects', title: 'Курсанты и выпускники' })],
+  [/^\/compare\/([\w-]+)\//, 'people', m => { const a = state.assessments.find(x => x.id === m[1]); return a ? { href: '#/object/' + a.objectId, title: objName(a.objectId) } : { href: '#/objects', title: 'Курсанты и выпускники' }; }],
+  [/^\/followup\/[\w-]+$/, 'analysis', () => ({ href: '#/followup', title: 'Практика и служба' })],
+  [/^\/journal\/sheet$/, 'assess', () => ({ href: '#/journal', title: 'Журнал контроля' })],
+  [/^\/(coef|expert)\/[\w-]+$/, 'method', () => ({ href: '#/coef', title: 'Коэффициенты Кзнк' })],
+  [/^\/curriculum\/[\w-]+$/, 'method', () => ({ href: '#/curricula', title: 'Учебные планы' })],
+  [/^\/ymodel\/[\w-]+$/, 'method', () => ({ href: '#/ymodels', title: 'Модели Y' })],
+  [/^\/preport\/[\w-]+$/, 'assess', () => ({ href: '#/preports', title: 'Отчёты о практике' })]
+];
+const pageOf = path => allPages().find(p => { const h = p.href.slice(1); return path === h || (h === '/method' && path.startsWith('/method/')); });
+function locate(path) {
+  if (path === '/') return { section: NAV[0], root: true };
+  if (path === '/objects') return { section: NAV[2], root: true };
+  const pg = pageOf(path); if (pg) return { section: pg.section, page: pg, root: true };
+  for (const [re, sec, parent] of DETAIL) { const m = path.match(re); if (m) return { section: NAV.find(s => s.id === sec), detail: true, parent: parent(m) }; }
+  const sv = NAV_SERVICE.find(s => s[0].slice(1) === path); if (sv) return { service: sv, root: true };
+  return { root: true };
+}
+
+/* Стек переходов: «Назад» ведёт туда, откуда пользователь пришёл; без истории — к родительскому экрану. */
+const navStack = [];
+const stackKey = path => path.replace(/\/edit\/\d$/, '/edit');
+function trackNav(path, loc, title) {
+  const key = stackKey(path);
+  if (loc.root) { navStack.length = 0; navStack.push({ key, path, title }); return; }
+  const i = navStack.findIndex(x => x.key === key);
+  if (i >= 0) { navStack.length = i + 1; navStack[i].path = path; navStack[i].title = title || navStack[i].title; }
+  else navStack.push({ key, path, title });
+}
+function backTarget(path, loc) {
+  const key = stackKey(path); const i = navStack.findIndex(x => x.key === key);
+  const prev = i > 0 ? navStack[i - 1] : null;
+  return prev ? { href: '#' + prev.path, title: prev.title } : loc.parent;
+}
+
+/* Боковое меню: пять разделов; у текущего раздела раскрыт список его экранов. */
+function renderNav(path, loc) {
+  const cur = loc.section ? loc.section.id : null;
+  const item = (href, title, icon, color, active, extra = '') => `<a href="${href}" class="${active ? 'active' : ''}" ${active ? 'aria-current="page"' : ''} ${extra}>${iconTile(icon, color)}<span class="t">${esc(title)}</span></a>`;
+  const q = ($('#navSearch') || {}).value || '';
+  let html;
+  if (q.trim()) {
+    const s = q.trim().toLowerCase();
+    const hits = [...allPages(), { href: '#/objects', title: 'Курсанты и выпускники', desc: 'список, карточки, сведения', section: NAV[2] }, ...NAV_SERVICE.map(x => ({ href: x[0], title: x[1], desc: '', section: { icon: x[2], color: x[3], title: 'Сервис' } }))]
+      .filter(p => (p.title + ' ' + p.desc + ' ' + p.section.title).toLowerCase().includes(s));
+    html = hits.length ? `<div class="grp">${hits.map(p => `<a href="${p.href}">${iconTile(p.section.icon, p.section.color)}<span class="t">${esc(p.title)}<small>${esc(p.section.title)}${p.desc ? ' · ' + esc(p.desc) : ''}</small></span></a>`).join('')}</div>`
+      : `<p class="muted" style="padding:8px 12px">Ничего не найдено. Попробуйте другое слово или откройте «Справка».</p>`;
+  } else {
+    html = `<div class="grp">${NAV.map(s => {
+      const on = s.id === cur;
+      const sub = on && s.groups.length ? `<div class="sub">${s.groups.map(g => `${g.label ? `<div class="sub-l">${esc(g.label)}</div>` : ''}${g.pages.map(p => `<a href="${p[0]}" class="${loc.page && loc.page.href === p[0] ? 'active' : ''}">${esc(p[1])}</a>`).join('')}`).join('')}</div>` : '';
+      return item(s.href, s.title, s.icon, s.color, on && (loc.root && (!loc.page || !s.groups.length)), `data-sec="${s.id}"`).replace('class="', `class="sec ${on ? 'open ' : ''}`) + sub;
+    }).join('')}</div>
+    <div class="sep">Сервис</div><div class="grp">${NAV_SERVICE.map(x => item(x[0], x[1], x[2], x[3], loc.service === x)).join('')}<a href="#" data-act="help">${iconTile('help', '#636366')}<span class="t">Справка <small>клавиша F1</small></span></a><a href="#" data-act="tour">${iconTile('target', '#FF2D55')}<span class="t">Как пользоваться</span></a></div>`;
+  }
+  $('#nav').innerHTML = html;
+  $$('.tabbar a').forEach(a => { const id = a.dataset.sec; a.classList.toggle('active', id === cur); });
+}
+
+/* Шапка экрана: «Назад» (на детальных экранах) и вкладки раздела (на экранах раздела) */
+function pageChrome(path, loc) {
+  let top = '';
+  if (loc.detail) {
+    const b = backTarget(path, loc);
+    if (b) top += `<nav class="backbar no-print" aria-label="Возврат"><a class="back" href="${b.href}">${svgIcon('back')}<span>${esc(b.title || 'Назад')}</span></a><span class="crumb">${esc(loc.section.title)}</span></nav>`;
+  }
+  if (loc.root && loc.section && loc.section.groups.length) {
+    top += `<nav class="sectabs no-print" aria-label="${esc(loc.section.title)}">${loc.section.groups.map(g => `<div class="tg">${g.label ? `<span class="tg-l">${esc(g.label)}</span>` : ''}<div class="tabs">${g.pages.map(p => `<a href="${p[0]}" class="${loc.page && loc.page.href === p[0] ? 'active' : ''}" ${loc.page && loc.page.href === p[0] ? 'aria-current="page"' : ''}>${esc(p[1])}</a>`).join('')}</div></div>`).join('')}</nav>`;
+  }
+  return top;
+}
+
+/* Заголовок для верхней строки и для стека */
+function screenTitle(loc, main) {
+  if (loc.page) return loc.page.title;
+  if (loc.service) return loc.service[1];
+  if (loc.section && loc.root) return loc.section.title;
+  const h = main.querySelector('h1'); const t = h ? h.textContent.trim() : '';
+  return t.length > 42 ? t.slice(0, 40) + '…' : (t || 'ПФК ВПК');
+}
+
+/* Всплывающее сообщение с действием («Отменить») */
+function toastAction(msg, label, fn, ms = 6000) {
+  const t = document.createElement('div'); t.className = 'toast has-act';
+  t.innerHTML = `<span>${esc(msg)}</span><button type="button" class="toast-btn">${esc(label)}</button>`;
+  t.querySelector('button').addEventListener('click', () => { t.remove(); fn(); });
+  const box = $('#toasts'); while (box.children.length >= 3) box.firstChild.remove(); box.appendChild(t); setTimeout(() => t.remove(), ms);
+}
+/* Индикатор длительной операции: показывается, если операция идёт дольше 150 мс */
+async function withBusy(msg, fn) {
+  const b = $('#busy'); $('#busyMsg').textContent = msg || 'Выполняется…';
+  const timer = setTimeout(() => { b.hidden = false; }, 150);
+  await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+  try { return await fn(); }
+  finally { clearTimeout(timer); b.hidden = true; }
+}
+/* Экран ошибки: показывается вместо раздела, если при его построении произошёл сбой */
+function errorScreen(err) {
+  return `<div class="card empty" role="alert"><div class="state-ic err">!</div><h1 style="font-size:24px">Не удалось открыть раздел</h1>
+  <p>Данные не повреждены и сохранены. Попробуйте вернуться назад или открыть главную.</p>
+  <div class="row" style="justify-content:center"><button class="btn" data-act="nav-back">Назад</button><a class="btn primary" href="#/">На главную</a></div>
+  <details style="margin-top:16px;text-align:left"><summary>Подробности для разработчика</summary><pre class="mono" style="white-space:pre-wrap;font-size:12px">${esc(err && (err.stack || err.message) || err)}</pre></details></div>`;
+}
+/* Единое «пустое состояние»: что здесь будет и что сделать дальше */
+const emptyState = (title, text, buttons = '') => `<div class="empty"><div class="state-ic">∅</div><h3 style="margin:0 0 6px">${esc(title)}</h3>${text ? `<p class="muted" style="max-width:520px;margin:0 auto 6px">${text}</p>` : ''}${buttons ? `<div class="row" style="justify-content:center;margin-top:8px">${buttons}</div>` : ''}</div>`;
+const notFound = what => `<div class="card">${emptyState(what + ' — не найдено', 'Запись могла быть удалена (проверьте корзину) или ссылка устарела.', '<button class="btn" data-act="nav-back">Назад</button><a class="btn" href="#/trash">Корзина</a>')}</div>`;
+
+/* =====================================================================
    МОДУЛЬ 5. УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ: утилиты, маршрутизация, визуализация
    ===================================================================== */
 const $ = (s, r = document) => r.querySelector(s);
@@ -1610,27 +1779,30 @@ const route = (re, fn) => routes.push([re, fn]);
 function render() {
   const h = (location.hash || '#/').slice(1) || '/';
   const path = h.split('?')[0];
-  $$('#nav a').forEach(a => {
-    const p = a.getAttribute('href').slice(1);
-    a.classList.toggle('active', p === '/' ? path === '/' : path === p || path.startsWith(p + '/'));
-    if (a.classList.contains('active')) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
-  });
-  $$('.tabbar a').forEach(a => { const p = a.getAttribute('href').slice(1); a.classList.toggle('active', p === '/' ? path === '/' : path === p || path.startsWith(p + '/')); });
-  const act = $('#nav a.active .t'); $('#topTitle').textContent = act ? act.textContent : 'ПФК ВПК';
+  const loc = locate(path);
   $('#side').classList.remove('open'); $('#menuBtn').setAttribute('aria-expanded', 'false');
   let html = null, after = null;
-  for (const [re, fn] of routes) {
-    const m = path.match(re);
-    if (m) { const r = fn(...m.slice(1).map(decodeURIComponent)); if (typeof r === 'string') html = r; else if (r) { html = r.html; after = r.after; } break; }
-  }
-  if (html == null) html = `<div class="card empty"><h1>Страница не найдена</h1><a class="btn" href="#/">На главную</a></div>`;
-  const main = $('#main'); main.innerHTML = html;
+  try {
+    for (const [re, fn] of routes) {
+      const m = path.match(re);
+      if (m) { const r = fn(...m.slice(1).map(decodeURIComponent)); if (typeof r === 'string') html = r; else if (r) { html = r.html; after = r.after; } break; }
+    }
+    if (html == null) html = `<div class="card">${emptyState('Страница не найдена', 'Возможно, ссылка устарела или запись была удалена.', '<a class="btn primary" href="#/">На главную</a>')}</div>`;
+  } catch (err) { console.error(err); html = errorScreen(err); after = null; }
+  const main = $('#main');
+  main.innerHTML = pageChrome(path, loc) + html;
+  const title = screenTitle(loc, main);
+  trackNav(path, loc, title);
+  renderNav(path, loc);
+  $('#topTitle').textContent = title;
+  document.title = title + ' — ПФК ВПК';
   if (path !== ui.lastRoute) { window.scrollTo(0, 0); main.focus({ preventScroll: true }); ui.lastRoute = path; }
-  if (after) after(main);
+  if (after) { try { after(main); } catch (err) { console.error(err); toast('Часть экрана не загрузилась: ' + err.message, true); } }
 }
 
 /* ---------- Делегирование событий ---------- */
 const actions = {};
+actions['nav-back'] = () => history.back();
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
   if (!el || el.disabled) return;
@@ -1663,6 +1835,28 @@ document.addEventListener('change', onBind);
 document.addEventListener('input', e => { if (e.target.matches('input[type=text][data-bind],input[type=number][data-bind],textarea[data-bind],input[type=date][data-bind]')) onBind(e); });
 
 /* ---------- Главная панель ---------- */
+/* Первые шаги: показываются, пока пользователь их не выполнит или не скроет */
+function onboardingCard() {
+  if (state.meta.onboardHidden) return '';
+  const steps = [
+    [state.objects.length > 0, 'Добавьте курсантов', 'по одному или списком из Excel', '<a class="btn sm" href="#/objects">Добавить</a> <a class="btn sm" href="#/import">Импорт</a>'],
+    [state.assessments.length > 0, 'Введите оценки', 'анкету практики, отзыв из войск или сразу всю группу', '<a class="btn sm" href="#/new">Новая оценка</a> <a class="btn sm" href="#/batch">По группе</a>'],
+    [state.assessments.some(a => a.status === 'final'), 'Утвердите и посмотрите результат', 'уровни, отчёты, группы риска, сводная', '<a class="btn sm" href="#/summary">Анализ</a>'],
+    [!!state.meta.lastBackupAt, 'Сохраните резервную копию', 'данные хранятся только в этом браузере', '<a class="btn sm" href="#/data">Сохранить</a>']];
+  if (steps.every(x => x[0])) return '';
+  return `<div class="card onboard no-print"><div class="pagehead"><h2 style="margin:0">С чего начать</h2><span class="spacer"></span><button class="btn sm" data-act="ob-hide">Скрыть</button></div>
+  <p class="muted" style="margin:4px 0 6px">Четыре шага до первого результата. ${state.objects.length ? '' : 'Хотите сначала посмотреть, как всё работает? <a href="#" data-act="demo-load">Откройте демонстрационные данные</a> — они загрузятся в отдельный учебный режим и не смешаются с рабочими.'}</p>
+  <ol>${steps.map(([done, t, d, b], i) => `<li class="${done ? 'done' : ''}"><span class="n">${done ? '✓' : i + 1}</span><div style="flex:1"><b>${t}</b><div class="muted" style="font-size:14px">${d}</div></div>${done ? '' : `<div class="row">${b}</div>`}</li>`).join('')}</ol></div>`;
+}
+actions['ob-hide'] = () => { state.meta.onboardHidden = true; persist(); render(); toastAction('Подсказки скрыты', 'Вернуть', () => { state.meta.onboardHidden = false; persist(); render(); }); };
+/* Краткий тур: как устроено приложение */
+actions.tour = () => dialog('Как пользоваться', `<ol style="padding-left:20px;margin:0">
+  <li><b>Главная</b> — что требует внимания: незавершённые оценки, группы риска, резервная копия.</li>
+  <li><b>Оценки</b> — ввод (новая оценка, по группе, импорт) и просмотр (все оценки, журнал контроля, отчёты о практике, бланки).</li>
+  <li><b>Курсанты и выпускники</b> — список; в карточке курсанта — его оценки, профиль, карта этапов, отчёт и сведения.</li>
+  <li><b>Анализ</b> — сводная по группе, группы риска, отзывы, сравнения, статистика и прогноз g.</li>
+  <li><b>Методика</b> — справочник, коэффициенты, паспорта компетенций, учебные планы, проверка расчётов.</li></ol>
+  <p style="margin-top:12px">Кнопка <b>«‹ Назад»</b> над заголовком всегда показывает, куда она ведёт. Поиск в меню находит любой раздел по слову. <b>F1</b> — справка по текущему экрану. Удалённое попадает в корзину на 30 дней, сразу после удаления его можно вернуть кнопкой «Отменить».</p>`, [{ label: 'Понятно', value: true, cls: 'primary' }]);
 route(/^\/$/, () => {
   const fin = state.assessments.filter(a => a.status === 'final');
   const drafts = state.assessments.filter(a => a.status === 'draft');
@@ -1676,30 +1870,33 @@ route(/^\/$/, () => {
     ['Модели признаков для Y', state.yModels.length ? `создано: ${state.yModels.length}` : 'не созданы — признаки, веса и эталон в источниках не заданы', state.yModels.length ? 'ok' : 'warn'],
     ['Резервная копия данных', state.meta.lastBackupAt ? 'последняя: ' + fmtDT(state.meta.lastBackupAt) : 'не создавалась', state.meta.lastBackupAt ? 'ok' : 'warn']
   ];
+  const ob = onboardingCard();
+  const tiles = [['#/new', 'Новая оценка', 'анкета практики или отзыв', 'plus', '#34C759'], ['#/batch', 'Ввод по группе', 'вся группа в одной таблице', 'list', '#30B0C7'], ['#/objects', 'Курсанты и выпускники', 'список и карточки', 'people', '#5856D6'], ['#/risk', 'Группы риска', 'кто отстаёт и почему', 'chart', '#FF3B30']];
   return `
   <p class="eyebrow">${new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
   <h1>Обзор</h1>
-  <p class="muted">Расчёт уровня сформированности военно-профессиональных компетенций по модели полифункционального контроля.</p>
-  <details class="no-print" style="margin:-4px 0 12px"><summary>О программе</summary><p class="muted" style="margin-top:6px">Реализация модели полифункционального контроля сформированности ВПК курсантов и выпускников ВООВО: экспертная оценка компетенций (отзыв на выпускника, анкета войсковой практики), показатель сформированности с коэффициентами значимости, уровни сформированности, прогноз уровня подготовленности по дисциплинам учебного плана.</p></details>
+  <p class="muted">Расчёт уровня сформированности военно-профессиональных компетенций по модели полифункционального контроля. <a href="#" data-act="tour">Как пользоваться</a></p>
   ${!st.available ? '<div class="note err"><b>Хранилище браузера недоступно.</b> Данные будут потеряны после закрытия страницы. Регулярно сохраняйте резервную копию (раздел «Данные и резервные копии»).</div>' : ''}
   ${st.error && st.available ? `<div class="note warn">${esc(st.error)}</div>` : ''}
+  ${ob}
   ${typeof backupReminder === 'function' ? backupReminder() : ''}
   ${typeof riskSummaryCard === 'function' ? riskSummaryCard() : ''}
-  <div class="grid g4" style="margin:16px 0">
-    <div class="kpi"><div class="l">Объекты оценки</div><div class="v">${state.objects.length}</div><div class="s"><a href="#/objects">открыть список</a></div></div>
-    <div class="kpi"><div class="l">Утверждённые расчёты</div><div class="v">${fin.length}</div><div class="s"><a href="#/history">история</a></div></div>
+  ${drafts.length ? `<div class="card"><div class="pagehead"><h2 style="margin:0">Незавершённые оценки (${drafts.length})</h2><span class="spacer"></span><a class="btn sm" href="#/history?draft">Все черновики</a></div>
+    <div class="table-wrap" style="margin-top:8px"><table><tbody>${[...drafts].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')).slice(0, 3).map(a => `<tr class="click" data-act="go" data-href="#/a/${a.id}/edit/1"><td>${esc(objName(a.objectId))}</td><td>${esc(Model.TYPES[a.type].short)}</td><td class="muted">изменён ${fmtDT(a.updatedAt)}</td><td class="num"><span class="btn sm">Продолжить</span></td></tr>`).join('')}</tbody></table></div></div>` : ''}
+  <div class="quick no-print">${tiles.map(([h, l, d, ic, c]) => `<a href="${h}">${iconTile(ic, c)}<span>${l}<br><small class="muted">${d}</small></span></a>`).join('')}</div>
+  <div class="grid g4" style="margin:0 0 16px">
+    <div class="kpi"><div class="l">Курсанты и выпускники</div><div class="v">${state.objects.length}</div><div class="s"><a href="#/objects">открыть список</a></div></div>
+    <div class="kpi"><div class="l">Утверждённые оценки</div><div class="v">${fin.length}</div><div class="s"><a href="#/history">все оценки</a></div></div>
     <div class="kpi"><div class="l">Черновики</div><div class="v">${drafts.length}</div><div class="s">${drafts.length ? '<a href="#/history?draft">продолжить</a>' : 'нет незавершённых'}</div></div>
     <div class="kpi"><div class="l">Версия методики</div><div class="v" style="font-size:20px">${METHOD.VERSION}</div><div class="s"><a href="#/method">справочник</a></div></div>
   </div>
-  <div class="quick no-print">${[['#/new', 'Новая оценка', 'анкета или отзыв'], ['#/objects', 'Объекты оценки', 'курсанты и выпускники'], ['#/journal', 'Журнал контроля', 'формы контроля по этапам'], ['#/data', 'Резервная копия', 'сохранить и восстановить']]
-    .map(([h, l, d]) => { const ic = $(`#nav a[href="${h}"] .ic`); return `<a href="${h}">${ic ? ic.outerHTML : ''}<span>${l}<br><small class="muted">${d}</small></span></a>`; }).join('')}</div>
   <div class="grid g2">
-    <div class="card"><h2>Последние расчёты</h2>
+    <div class="card"><h2>Последние оценки</h2>
       ${last.length ? `<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Объект</th><th>Тип</th><th class="num">Показатель</th><th>Уровень</th></tr></thead><tbody>
       ${last.map(a => { const h = Model.headline(a); return `<tr class="click" data-act="go" data-href="#/a/${a.id}"><td>${fmtDate(a.meta.date)}</td><td>${esc(objName(a.objectId))}</td><td>${esc(Model.TYPES[a.type].short)}</td><td class="num">${h ? esc(h.label) + ' ' + fmt(h.value, h.digits) : '—'}</td><td>${h && h.level !== undefined ? lvBadge(h.level, false) : '—'}</td></tr>`; }).join('')}
-      </tbody></table></div>` : `<div class="empty">Утверждённых расчётов пока нет.<br><a class="btn primary" href="#/new">Начать первую оценку</a> <button class="btn" data-act="demo-load">Загрузить демонстрационные данные</button></div>`}
+      </tbody></table></div>` : emptyState('Оценок пока нет', 'Здесь появятся последние утверждённые оценки.', '<a class="btn primary" href="#/new">Новая оценка</a>')}
     </div>
-    <div class="card"><h2>Состояние исходных данных методики</h2>
+    <div class="card"><h2>Готовность методики</h2>
       ${checks.map(c => `<div class="note ${c[2]}"><b>${esc(c[0])}:</b> ${esc(c[1])}</div>`).join('')}
     </div>
   </div>
@@ -1712,11 +1909,17 @@ actions.go = el => { location.hash = el.dataset.href; };
 
 /* ---------- Объекты оценки ---------- */
 const SPECIALTIES = ['40.05.01 Правовое обеспечение национальной безопасности', '37.05.02 Психология служебной деятельности', 'иная специальность'];
-function objectForm(o) {
+function objectForm(o, quick = false) {
   o = o || { name: '', group: '', specialty: '', year: '', notes: '' };
+  const main = `<div class="field"><label class="f" for="of-name">Фамилия И.О. *</label><input type="text" id="of-name" value="${esc(o.name)}" maxlength="120" autocomplete="off" placeholder="Иванов И.И."></div>
+    <div class="field"><label class="f" for="of-group">Группа / подразделение</label><input type="text" id="of-group" value="${esc(o.group)}" maxlength="80" placeholder="41 взвод" list="groupList"></div>
+    <datalist id="groupList">${[...new Set(state.objects.map(x => x.group).filter(Boolean))].sort().map(g => `<option value="${esc(g)}">`).join('')}</datalist>`;
+  if (quick) return `<div class="quickadd">${main}<div class="field"><button class="btn primary" data-act="obj-add">Добавить</button></div></div>
+    <details><summary>Дополнительные сведения (необязательно)</summary><div style="margin-top:10px">${objectExtra(o)}</div></details>`;
+  return `<div class="grid g2">${main}</div>${objectExtra(o)}`;
+}
+function objectExtra(o) {
   return `<div class="grid g2">
-    <div class="field"><label class="f" for="of-name">Фамилия И.О. или условное обозначение *</label><input type="text" id="of-name" value="${esc(o.name)}" maxlength="120" autocomplete="off"></div>
-    <div class="field"><label class="f" for="of-group">Учебная группа / подразделение</label><input type="text" id="of-group" value="${esc(o.group)}" maxlength="80"></div>
     <div class="field"><label class="f" for="of-spec">Специальность</label><select id="of-spec"><option value="">— не указана —</option>${SPECIALTIES.map(s => `<option ${o.specialty === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
     <div class="field"><label class="f" for="of-year">Год выпуска / курс</label><input type="text" id="of-year" value="${esc(o.year)}" maxlength="20"></div>
   </div>
@@ -1737,23 +1940,43 @@ function readObjectForm() {
 }
 route(/^\/objects$/, () => {
   const list = [...state.objects].sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-  return `<h1>Объекты оценки</h1><p class="muted">Курсанты и выпускники, по которым выполняются расчёты.</p>
-  <div class="card no-print"><h2>Добавить объект</h2>${objectForm()}<button class="btn primary" data-act="obj-add">Добавить</button></div>
-  <div class="card"><div class="row"><h2 style="margin:0">Список (${list.length})</h2><span class="spacer"></span><input type="search" id="objSearch" placeholder="Поиск по ФИО или группе" style="max-width:280px" aria-label="Поиск"></div>
-  ${list.length ? `<div class="table-wrap" style="margin-top:12px"><table id="objTable"><thead><tr><th>Фамилия И.О.</th><th>Группа</th><th>Специальность</th><th>Год/курс</th><th class="num">Расчётов</th></tr></thead><tbody>
-  ${list.map(o => `<tr class="click" data-act="go" data-href="#/object/${o.id}" data-s="${esc((o.name + ' ' + o.group).toLowerCase())}"><td>${esc(o.name)}</td><td>${esc(o.group) || '—'}</td><td>${esc(o.specialty) || '—'}</td><td>${esc(o.year) || '—'}</td><td class="num">${state.assessments.filter(a => a.objectId === o.id).length}</td></tr>`).join('')}
-  </tbody></table></div>` : '<div class="empty">Объекты оценки ещё не добавлены.</div>'}</div>`;
+  const groups = [...new Set(list.map(o => o.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru', { numeric: true }));
+  const F = ui.objF || (ui.objF = { q: '', group: '', sort: 'name' });
+  const dups = typeof duplicateGroups === 'function' ? duplicateGroups() : [];
+  const cnt = {}; state.assessments.forEach(a => { cnt[a.objectId] = (cnt[a.objectId] || 0) + 1; });
+  const last = {}; state.assessments.filter(a => a.status === 'final').forEach(a => { const d = a.meta.date || ''; if (!last[a.objectId] || d > last[a.objectId].meta.date) last[a.objectId] = a; });
+  const rows = list.filter(o => !F.group || o.group === F.group);
+  if (F.sort === 'group') rows.sort((a, b) => (a.group || '').localeCompare(b.group || '', 'ru', { numeric: true }) || a.name.localeCompare(b.name, 'ru'));
+  if (F.sort === 'count') rows.sort((a, b) => (cnt[b.id] || 0) - (cnt[a.id] || 0));
+  return `<div class="pagehead"><h1>Курсанты и выпускники</h1><span class="spacer"></span>${list.length ? `<a class="btn" href="#/import">Импорт списка</a>` : ''}</div>
+  <p class="muted">Все, по кому ведутся оценки. Нажмите на строку, чтобы открыть карточку: оценки, профиль, карта этапов, отчёт.</p>
+  <div class="card no-print"><h2 style="font-size:17px;margin:0 0 10px">Добавить курсанта</h2>${objectForm(null, true)}</div>
+  ${dups.length ? `<div class="note warn no-print">Найдены возможные дубли: ${dups.length} ${dups.length === 1 ? 'группа' : 'групп(ы)'} записей с одинаковыми ФИО. <a href="#dupCard" data-act="go-dups">Проверить и объединить</a></div>` : ''}
+  <div class="card">${list.length ? `<div class="row no-print" style="margin-bottom:10px">
+    <input type="search" id="objSearch" placeholder="Поиск по ФИО" style="max-width:260px" aria-label="Поиск по ФИО" value="${esc(F.q)}">
+    <select data-objf="group" aria-label="Группа" style="max-width:200px"><option value="">Все группы (${list.length})</option>${groups.map(g => `<option ${F.group === g ? 'selected' : ''} value="${esc(g)}">${esc(g)} (${list.filter(o => o.group === g).length})</option>`).join('')}</select>
+    <select data-objf="sort" aria-label="Сортировка" style="max-width:220px"><option value="name" ${F.sort === 'name' ? 'selected' : ''}>По алфавиту</option><option value="group" ${F.sort === 'group' ? 'selected' : ''}>По группе</option><option value="count" ${F.sort === 'count' ? 'selected' : ''}>По числу оценок</option></select>
+    <span class="spacer"></span><span class="muted" id="objCount">Показано: ${rows.length}</span></div>
+  <div class="table-wrap"><table id="objTable"><thead><tr><th>Фамилия И.О.</th><th>Группа</th><th class="num">Оценок</th><th>Последний результат</th></tr></thead><tbody>
+  ${rows.map(o => { const a = last[o.id], h = a && Model.headline(a); return `<tr class="click" data-act="go" data-href="#/object/${o.id}" data-s="${esc((o.name + ' ' + o.group).toLowerCase())}" ${F.q && !(o.name + ' ' + o.group).toLowerCase().includes(F.q.toLowerCase()) ? 'hidden' : ''}><td><b style="font-weight:600">${esc(o.name)}</b></td><td>${esc(o.group) || '—'}</td><td class="num">${cnt[o.id] || 0}</td><td>${h ? `${esc(Model.TYPES[a.type].short)} · ${h.level !== undefined ? lvBadge(h.level, false) : fmt(h.value, 3)}` : '<span class="muted">нет оценок</span>'}</td></tr>`; }).join('')}
+  </tbody></table></div><div id="objNone" hidden>${emptyState('Никого не найдено', 'Измените условия поиска или выберите другую группу.')}</div>`
+  : emptyState('Список пока пуст', 'Добавьте курсанта в форме выше, загрузите список из Excel или попробуйте приложение на демонстрационных данных.', '<a class="btn" href="#/import">Импорт из файла</a><button class="btn" data-act="demo-load">Демонстрационные данные</button>')}</div>
+  ${dups.length ? `<div id="dupCard">${duplicatesCard()}</div>` : ''}`;
 });
+document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.objf; if (k) { ui.objF[k] = e.target.value; render(); } });
+actions['go-dups'] = () => { const c = $('#dupCard'); if (c) c.scrollIntoView({ behavior: 'smooth' }); };
 document.addEventListener('input', e => {
-  if (e.target.id === 'objSearch') { const q = e.target.value.toLowerCase().trim(); $$('#objTable tbody tr').forEach(tr => tr.hidden = q && !tr.dataset.s.includes(q)); }
+  if (e.target.id === 'objSearch') { const q = e.target.value.toLowerCase().trim(); ui.objF.q = q; let n = 0; $$('#objTable tbody tr').forEach(tr => { tr.hidden = !!q && !tr.dataset.s.includes(q); if (!tr.hidden) n++; }); $('#objCount').textContent = 'Показано: ' + n; $('#objNone').hidden = n > 0; }
 });
-actions['obj-add'] = () => {
+actions['obj-add'] = async () => {
   const d = readObjectForm(); if (!d) return;
-  state.objects.push({ id: Store.uid(), ...d, createdAt: Store.nowIso() }); persist(); toast('Объект добавлен'); render();
+  if (state.objects.some(o => normName(o.name) === normName(d.name) && (o.group || '') === d.group) && !await confirmDlg('Такой курсант уже есть', `<p>В группе «${esc(d.group || 'без группы')}» уже есть «${esc(d.name)}». Добавить ещё одну запись?</p>`, 'Добавить')) return;
+  const o = { id: Store.uid(), ...d, createdAt: Store.nowIso() }; state.objects.push(o); persist(); render();
+  toastAction(`Добавлен: ${d.name}`, 'Открыть карточку', () => { location.hash = '#/object/' + o.id; }); const n = $('#of-name'); if (n) n.focus();
 };
 route(/^\/object\/([\w-]+)$/, id => {
   const o = state.objects.find(x => x.id === id);
-  if (!o) return `<div class="card empty">Объект не найден. <a href="#/objects">К списку</a></div>`;
+  if (!o) return objMissing();
   const list = state.assessments.filter(a => a.objectId === id).sort((a, b) => (a.meta.date || '').localeCompare(b.meta.date || ''));
   const fin = list.filter(a => a.status === 'final');
   const dyn = ['practice', 'graduate', 'trajectory', 'g0', 'ymodel'].map(t => {
@@ -1762,19 +1985,34 @@ route(/^\/object\/([\w-]+)$/, id => {
     const h0 = Model.headline(arr[0]);
     return `<h3>${esc(typeTitle(t))}: ${esc(h0.label)}</h3>${arr.length > 1 ? lineChart({ labels: arr.map(label), series: [{ name: h0.label, color: '#007AFF', values: arr.map(a => Model.headline(a).value) }], yDigits: 3 }) : `<p class="muted">Одна оценка: ${fmt(h0.value, 3)}. Для динамики нужно не менее двух.</p>`}`;
   }).join('');
-  return `<div class="row"><h1 style="margin:0">${esc(o.name)}</h1><span class="spacer"></span><a class="btn" href="#/object/${o.id}/profile">Профиль</a><a class="btn" href="#/object/${o.id}/map">Карта этапов</a><a class="btn" href="#/object/${o.id}/report">Отчёт по объекту</a><a class="btn primary" href="#/new?obj=${o.id}">+ Новая оценка</a></div>
-  <p class="muted">${esc(o.group || 'группа не указана')} · ${esc(o.specialty || 'специальность не указана')} · ${esc(o.year || '—')}</p>
-  <div class="card"><h2>Расчёты</h2>
+  return objectChrome(o, 'overview') + `
+  <div class="card"><h2>Оценки</h2>
   ${list.length ? `<div class="table-wrap"><table><thead><tr><th class="no-print">Сравн.</th><th>Дата</th><th>Тип</th><th>Параметры</th><th>Статус</th><th class="num">Показатель</th><th>Уровень</th></tr></thead><tbody>
   ${list.map(a => { const h = Model.headline(a); return `<tr><td class="no-print">${a.status === 'final' && (a.type === 'graduate' || a.type === 'practice') ? `<input type="checkbox" class="cmp" value="${a.id}" data-type="${a.type}" aria-label="Выбрать для сравнения">` : ''}</td><td><a href="#/a/${a.id}">${fmtDate(a.meta.date)}</a></td><td>${esc(Model.TYPES[a.type].short)}</td><td>${a.type === 'practice' ? a.meta.course + ' курс' : a.type === 'graduate' ? a.meta.period + ' год службы' : ''}</td><td>${statusBadge(a)}</td><td class="num">${h ? fmt(h.value, 3) : '—'}</td><td>${h && h.level !== undefined ? lvBadge(h.level, false) : '—'}</td></tr>`; }).join('')}
-  </tbody></table></div><button class="btn sm no-print" style="margin-top:10px" data-act="compare">Сравнить выбранные (2 оценки одного типа)</button>` : '<div class="empty">Расчётов пока нет.</div>'}</div>
+  </tbody></table></div><button class="btn sm no-print" style="margin-top:10px" data-act="compare">Сравнить выбранные (2 оценки одного типа)</button>` : emptyState('Оценок пока нет', 'Начните с анкеты войсковой практики или отзыва из войск.', `<a class="btn primary" href="#/new?obj=${o.id}">Новая оценка</a>`)}</div>
   <div class="card"><h2>Динамика</h2>${dyn || '<p class="muted">Нет утверждённых расчётов.</p>'}</div>
-  <div class="card no-print"><h2>Редактировать сведения</h2>${objectForm(o)}<div class="row"><button class="btn primary" data-act="obj-save" data-id="${o.id}">Сохранить</button><span class="spacer"></span><button class="btn danger" data-act="obj-del" data-id="${o.id}">Удалить объект</button></div></div>`;
+  `;
+});
+const objMissing = () => `<div class="card">${emptyState('Курсант не найден', 'Возможно, запись удалена — её можно восстановить из корзины.', '<a class="btn" href="#/trash">Корзина</a><a class="btn primary" href="#/objects">К списку</a>')}</div>`;
+/* Шапка карточки курсанта: имя, группа, главное действие и вкладки */
+function objectChrome(o, tab) {
+  const ini = o.name.split(/\s+/).map(x => x[0] || '').join('').slice(0, 2).toUpperCase();
+  const n = state.assessments.filter(a => a.objectId === o.id).length;
+  const hasPair = typeof Calc !== 'undefined' && state.assessments.some(a => a.objectId === o.id && a.type === 'graduate' && a.status === 'final') && state.assessments.some(a => a.objectId === o.id && a.type === 'practice' && a.status === 'final');
+  const tabs = [['overview', '', 'Оценки'], ['profile', '/profile', 'Профиль'], ['map', '/map', 'Карта этапов'], ['report', '/report', 'Отчёт'], ...(hasPair ? [['follow', null, 'Практика и служба']] : []), ['edit', '/edit', 'Сведения']];
+  return `<div class="no-print"><div class="obj-head"><span class="avatar" aria-hidden="true">${esc(ini)}</span><div class="meta"><h1>${esc(o.name)}</h1><p class="muted" style="margin:2px 0 0">${esc(o.group || 'группа не указана')}${o.specialty ? ' · ' + esc(o.specialty) : ''}${o.year ? ' · ' + esc(o.year) : ''} · оценок: ${n}</p></div>
+  <a class="btn primary" href="#/new?obj=${o.id}">${svgIcon('plus', 'bi')} Новая оценка</a></div>
+  <nav class="tabs" aria-label="Карточка курсанта" style="margin-top:10px">${tabs.map(([k, suf, l]) => `<a href="${suf === null ? '#/followup/' + o.id : '#/object/' + o.id + suf}" class="${k === tab ? 'active' : ''}" ${k === tab ? 'aria-current="page"' : ''}>${l}</a>`).join('')}</nav></div>`;
+}
+route(/^\/object\/([\w-]+)\/edit$/, id => {
+  const o = state.objects.find(x => x.id === id); if (!o) return objMissing();
+  return objectChrome(o, 'edit') + `<div class="card no-print"><h2>Сведения о курсанте</h2>${objectForm(o)}<div class="row"><button class="btn primary" data-act="obj-save" data-id="${o.id}">Сохранить изменения</button><span class="spacer"></span></div></div>
+  <div class="card no-print"><h2>Удаление</h2><p class="muted">Курсант, его оценки и записи журнала переместятся в корзину. В течение 30 дней их можно восстановить.</p><button class="btn danger" data-act="obj-del" data-id="${o.id}">Удалить курсанта</button></div>`;
 });
 /* Отчёт по объекту оценки: все утверждённые расчёты, динамика, сравнение по компетенциям */
 route(/^\/object\/([\w-]+)\/report$/, id => {
   const o = state.objects.find(x => x.id === id);
-  if (!o) return '<div class="card empty">Объект не найден.</div>';
+  if (!o) return objMissing();
   const fin = state.assessments.filter(a => a.objectId === id && a.status === 'final').sort((a, b) => (a.meta.date || '').localeCompare(b.meta.date || ''));
   const lab = a => `${fmtDate(a.meta.date)}${a.type === 'practice' ? ', ' + a.meta.course + ' курс' : a.type === 'graduate' ? ', ' + a.meta.period + ' год' : ''}`;
   const matrix = t => {
@@ -1787,7 +2025,7 @@ route(/^\/object\/([\w-]+)\/report$/, id => {
       <tfoot><tr><td>Суммарный показатель ВПК (bср / Псфк)</td>${arr.map(a => `<td class="num">${fmt(a.result.vpk.meanGrade, 2)} / ${fmt(a.result.vpk.meanPsfk, 3)}</td>`).join('')}</tr></tfoot></table></div>
       ${arr.length > 1 ? lineChart({ labels: arr.map(lab), series: [{ name: 'Суммарный Псфк ВПК', color: '#007AFF', values: arr.map(a => a.result.vpk.meanPsfk) }] }) : ''}`;
   };
-  return `<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/object/${id}">← К объекту</a><button class="btn primary" data-act="print">Печать / сохранить в PDF</button></div>
+  return objectChrome(o, 'report') + `<div class="row no-print" style="margin-bottom:12px"><button class="btn primary" data-act="print">Печать / сохранить в PDF</button></div>
   <div class="report"><div class="card"><h1>Отчёт по объекту оценки</h1><dl class="spec"><dt>Фамилия И.О.</dt><dd>${esc(o.name)}</dd><dt>Группа / подразделение</dt><dd>${esc(o.group || '—')}</dd><dt>Специальность</dt><dd>${esc(o.specialty || '—')}</dd><dt>Год выпуска / курс</dt><dd>${esc(o.year || '—')}</dd><dt>Утверждённых расчётов</dt><dd>${fin.length}</dd></dl></div>
   <div class="card"><h2>Утверждённые расчёты</h2>${fin.length ? `<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Вид оценки</th><th>Параметры</th><th>Оценщик</th><th class="num">Показатель</th><th>Уровень</th><th>Методика</th></tr></thead><tbody>
     ${fin.map(a => { const h = Model.headline(a); return `<tr><td>${fmtDate(a.meta.date)}</td><td>${esc(Model.TYPES[a.type].short)}</td><td>${a.type === 'practice' ? a.meta.course + ' курс' : a.type === 'graduate' ? a.meta.period + ' год службы' : ''}</td><td>${esc(a.meta.evaluator || '—')}</td><td class="num">${h ? esc(h.label) + ' ' + fmt(h.value, 3) : '—'}</td><td>${h && h.level !== undefined ? lvBadge(h.level) : '—'}</td><td>v${esc(a.snapshot.methodVersion)}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="muted">Утверждённых расчётов нет.</p>'}</div>
@@ -1797,15 +2035,7 @@ route(/^\/object\/([\w-]+)\/report$/, id => {
 });
 actions['obj-save'] = el => {
   const o = state.objects.find(x => x.id === el.dataset.id); const d = readObjectForm(); if (!o || !d) return;
-  Object.assign(o, d); persist(); toast('Сохранено'); render();
-};
-actions['obj-del'] = async el => {
-  const n = state.assessments.filter(a => a.objectId === el.dataset.id).length;
-  if (!await confirmDlg('Удалить объект оценки?', `Будет удалён объект, все связанные расчёты (${n}) и записи журнала контроля (${(state.controlRecords || []).filter(r => r.objectId === el.dataset.id).length}). Действие необратимо — при необходимости сначала сделайте резервную копию.`, 'Удалить', true)) return;
-  state.objects = state.objects.filter(o => o.id !== el.dataset.id);
-  state.assessments = state.assessments.filter(a => a.objectId !== el.dataset.id);
-  state.controlRecords = (state.controlRecords || []).filter(r => r.objectId !== el.dataset.id);
-  persist(); toast('Объект удалён'); location.hash = '#/objects';
+  Object.assign(o, d); persist(); toast('Сведения сохранены'); render();
 };
 actions.compare = () => {
   const sel = $$('.cmp:checked');
@@ -2055,7 +2285,7 @@ function optionalGaps(a) {
 
 route(/^\/a\/([\w-]+)\/edit\/(\d)$/, (id, stepS) => {
   const a = findA(id);
-  if (!a) return '<div class="card empty">Запись не найдена.</div>';
+  if (!a) return notFound('Запись');
   if (a.status !== 'draft') { location.hash = '#/a/' + id; return ''; }
   ui.editing = id;
   const refreshed = Model.refreshDraftSnapshot(state, a);
@@ -2235,12 +2465,12 @@ function signersBlock(a) {
 }
 
 route(/^\/a\/([\w-]+)$/, id => {
-  const a = findA(id); if (!a) return '<div class="card empty">Запись не найдена. <a href="#/history">К истории</a></div>';
+  const a = findA(id); if (!a) return notFound('Запись');
   if (a.status === 'draft') return `<div class="card"><h1>${esc(typeTitle(a.type))}</h1><p>${statusBadge(a)} ${esc(objName(a.objectId))}</p><div class="note warn">Расчёт не утверждён. Черновик не является результатом оценки.</div><a class="btn primary" href="#/a/${id}/edit/1">Продолжить заполнение</a></div>`;
   const metaLine = [a.type === 'graduate' ? `${a.meta.period} год службы` : '', a.type === 'practice' ? `${a.meta.course} курс` : '', a.meta.evaluator ? 'оценщик: ' + a.meta.evaluator : '', a.meta.unit || '', (a.meta.header || {}).position || a.meta.position || '', a.meta.evaluator2 ? 'руководитель от института: ' + a.meta.evaluator2 : ''].filter(Boolean).join(' · ');
   return `<div class="row"><h1 style="margin:0">${esc(typeTitle(a.type))}</h1><span class="spacer"></span>${statusBadge(a)}</div>
   <p class="muted"><a href="#/object/${a.objectId}">${esc(objName(a.objectId))}</a> · дата: ${fmtDate(a.meta.date)}${metaLine ? ' · ' + esc(metaLine) : ''}<br>Утверждён: ${fmtDT(a.finalizedAt)} · методика v${esc(a.snapshot.methodVersion)} (снимок от ${fmtDT(a.snapshot.takenAt)})</p>
-  <div class="row no-print" style="margin-bottom:16px"><a class="btn primary" href="#/a/${id}/report">Отчёт / печать</a><button class="btn" data-act="verify" data-id="${id}">Проверить воспроизводимость</button><button class="btn" data-act="reopen" data-id="${id}">Изменить данные (новая редакция)</button><button class="btn" data-act="export-one" data-id="${id}">JSON</button><span class="spacer"></span><button class="btn danger" data-act="del-a" data-id="${id}">Удалить</button></div>
+  <div class="row no-print" style="margin-bottom:16px"><a class="btn primary" href="#/a/${id}/report" title="Отчёт с формулами и источниками — для печати или PDF">Отчёт для печати</a><button class="btn" data-act="reopen" data-id="${id}" title="Создаётся новая редакция; прежний результат сохранится в истории">Исправить оценки</button><button class="btn" data-act="verify" data-id="${id}" title="Пересчитать по сохранённому снимку методики и сравнить с утверждённым результатом">Пересчитать и сверить</button><button class="btn" data-act="export-one" data-id="${id}" title="Скачать запись в формате JSON">Скачать JSON</button><span class="spacer"></span><button class="btn danger" data-act="del-a" data-id="${id}">Удалить</button></div>
   <div class="card">${resultView(a, a.result)}</div>
   ${a.revisions.length ? `<div class="card"><h2>Предыдущие редакции (${a.revisions.length})</h2><div class="table-wrap"><table><thead><tr><th>Утверждена</th><th>Методика</th><th class="num">Показатель</th></tr></thead><tbody>${a.revisions.map(rv => { const h = Model.headline({ ...a, result: rv.result }); return `<tr><td>${fmtDT(rv.finalizedAt)}</td><td>v${esc(rv.snapshot.methodVersion)}</td><td class="num">${h ? esc(h.label) + ' ' + fmt(h.value, 3) : '—'}</td></tr>`; }).join('')}</tbody></table></div></div>` : ''}`;
 });
@@ -2257,7 +2487,7 @@ route(/^\/a\/([\w-]+)\/report$/, id => {
   const a = findA(id); if (!a || a.status !== 'final') return '<div class="card empty">Отчёт доступен только для утверждённого расчёта.</div>';
   const o = state.objects.find(x => x.id === a.objectId) || {};
   const usedSrc = new Set(['S1', 'S2', 'S3', 'S4', 'S5', 'S6'].filter(k => JSON.stringify(FORMULA_REFS[a.type]).includes(k) || (a.type === 'practice' && k === 'S2')));
-  return `<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/a/${id}">← К результату</a><button class="btn primary" data-act="print">Печать / сохранить в PDF</button></div>
+  return `<div class="row no-print" style="margin-bottom:12px"><button class="btn primary" data-act="print">Печать / сохранить в PDF</button></div>
   <div class="report">
   <div class="card"><h1>Отчёт: ${esc(typeTitle(a.type))}</h1>
     <dl class="spec"><dt>Объект оценки</dt><dd>${esc(o.name || '—')}</dd><dt>Группа / подразделение</dt><dd>${esc(o.group || '—')}</dd><dt>Специальность</dt><dd>${esc(o.specialty || '—')}</dd>
@@ -2388,7 +2618,7 @@ const DISCREPANCIES = [
 /* ---------- Наборы Кзнк ---------- */
 route(/^\/coef$/, () => {
   const builtins = Object.values(METHOD.COEF_SETS);
-  return `<h1>Наборы коэффициентов значимости (Кзнк)</h1>
+  return `<h1>Коэффициенты Кзнк</h1>
   <p class="muted">Наборы источника защищены от изменения. Пользовательские наборы создаются копированием или по результатам экспертной оценки (S4 Прил. 10). Для пользовательских наборов пороги Псфк не установлены — уровень определяется по bср.</p>
   <div class="card"><h2>Наборы источника</h2><table><thead><tr><th>Набор</th><th class="num">n</th><th class="num">ΣКзнк</th><th></th></tr></thead><tbody>
   ${builtins.map(s => `<tr><td><a href="#/coef/${s.id}">${esc(s.name)}</a><div class="src">${esc(s.src)}</div></td><td class="num">${s.items.length}</td><td class="num">${fmtK(s.items.reduce((a, c) => a + c.k, 0))}</td><td class="no-print"><button class="btn sm" data-act="coef-copy" data-id="${s.id}">Создать копию</button> <button class="btn sm" data-act="expert-new" data-id="${s.id}">Новая экспертиза</button></td></tr>`).join('')}</tbody></table></div>
@@ -2401,7 +2631,7 @@ actions['coef-copy'] = el => {
   state.coefSets.push(s); persist(); location.hash = '#/coef/' + s.id;
 };
 route(/^\/coef\/([\w-]+)$/, id => {
-  const s = Model.coefSet(state, id); if (!s) return '<div class="card empty">Набор не найден.</div>';
+  const s = Model.coefSet(state, id); if (!s) return notFound('Набор');
   const ed = !s.builtin;
   const used = state.assessments.filter(a => a.status === 'draft' && (a.meta.vpkSetId === id || a.meta.pskSetId === id)).length;
   return `<h1>${esc(s.name)}</h1><p class="src">${esc(s.src)}</p>
@@ -2435,7 +2665,7 @@ actions['expert-new'] = el => {
   state.expertStudies.push(st); persist(); location.hash = '#/expert/' + st.id;
 };
 route(/^\/expert\/([\w-]+)$/, id => {
-  const st = state.expertStudies.find(x => x.id === id); if (!st) return '<div class="card empty">Экспертиза не найдена.</div>';
+  const st = state.expertStudies.find(x => x.id === id); if (!st) return notFound('Экспертиза');
   const base = METHOD.COEF_SETS[st.baseSetId];
   let res = null, err = null;
   const filled = st.matrix.every(r => r.every(v => v !== '' && v != null));
@@ -2508,7 +2738,7 @@ actions['cur-example'] = () => {
   state.curricula.push(c); persist(); location.hash = '#/curriculum/' + c.id;
 };
 route(/^\/curriculum\/([\w-]+)$/, id => {
-  const c = state.curricula.find(x => x.id === id); if (!c) return '<div class="card empty">Учебный план не найден.</div>';
+  const c = state.curricula.find(x => x.id === id); if (!c) return notFound('Учебный план');
   return `<h1>Учебный план</h1>${c.note ? `<div class="note">${esc(c.note)}</div>` : ''}
   <div class="card"><div class="field"><label class="f" for="cu-name">Название</label><input type="text" id="cu-name" value="${esc(c.name)}"></div>
   <div class="table-wrap"><table><thead><tr><th>№</th><th>Дисциплина</th><th class="c">T1, ч</th><th class="c">T2, ч</th><th class="c">m (0…1)</th><th>Опирается на №</th><th></th></tr></thead><tbody id="cuRows">
@@ -2546,13 +2776,13 @@ actions['cu-del'] = async el => {
 };
 
 /* ---------- Модели признаков (для Y) ---------- */
-route(/^\/ymodels$/, () => `<h1>Модели признаков для Y</h1>
+route(/^\/ymodels$/, () => `<h1>Модели Y</h1>
   <div class="note warn">Формула Y = Σaᵢk_jᵢ / Σaᵢkᵢ приведена на схеме модели (S6). Перечень ключевых показателей «определяется заранее на основе профессиональных стандартов, паспортов компетенций и моделей выпускника» (S3 п. 2.3) — в предоставленных материалах он не задан, поэтому признаки, веса aᵢ и эталонные значения kᵢ вводит пользователь.</div>
   <div class="row no-print" style="margin-bottom:12px"><button class="btn primary" data-act="ym-new">+ Новая модель</button></div>
   <div class="card">${state.yModels.length ? `<table><thead><tr><th>Название</th><th class="num">Признаков</th><th>Изменена</th></tr></thead><tbody>${state.yModels.map(c => `<tr class="click" data-act="go" data-href="#/ymodel/${c.id}"><td>${esc(c.name)}</td><td class="num">${c.features.length}</td><td>${fmtDT(c.updatedAt)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Модели не созданы.</div>'}</div>`);
 actions['ym-new'] = () => { const c = { id: Store.uid(), name: 'Новая модель признаков', features: [], createdAt: Store.nowIso(), updatedAt: Store.nowIso() }; state.yModels.push(c); persist(); location.hash = '#/ymodel/' + c.id; };
 route(/^\/ymodel\/([\w-]+)$/, id => {
-  const c = state.yModels.find(x => x.id === id); if (!c) return '<div class="card empty">Модель не найдена.</div>';
+  const c = state.yModels.find(x => x.id === id); if (!c) return notFound('Модель');
   return `<h1>Модель признаков</h1><div class="card"><div class="field"><label class="f" for="ym-name">Название</label><input type="text" id="ym-name" value="${esc(c.name)}"></div>
   <div class="table-wrap"><table><thead><tr><th>№</th><th>Признак</th><th class="c">Вес aᵢ (≥ 0)</th><th class="c">Эталон kᵢ</th><th>Пояснение / источник</th><th></th></tr></thead><tbody id="ymRows">
   ${c.features.map((f, i) => `<tr><td>${i + 1}</td><td><input type="text" data-ym="name" value="${esc(f.name)}" aria-label="Признак ${i + 1}"></td><td class="c"><input type="text" class="cell" data-ym="a" value="${esc(String(f.a).replace('.', ','))}" aria-label="Вес"></td><td class="c"><input type="text" class="cell" data-ym="k" value="${esc(String(f.k).replace('.', ','))}" aria-label="Эталон"></td><td><input type="text" data-ym="note" value="${esc(f.note || '')}" aria-label="Пояснение"></td><td><button class="btn sm danger" data-act="ym-delrow" data-i="${i}" aria-label="Удалить">×</button></td></tr>`).join('')}
@@ -2620,7 +2850,7 @@ route(/^\/batch$/, () => {
   const comps = batchComps(b.type, b);
   const isP = b.type === 'practice';
   const bset = isP ? 'src-vpk13' : 'src-vpk16';
-  return `<h1>Групповой ввод оценок</h1><p class="muted">Ввод оценок 1–5 сразу по всем курсантам группы (по образцу сводной таблицы S4 Прил. 11). Можно вставить блок из Excel (Ctrl+V в первую ячейку). Таблица сохраняется автоматически до создания записей.</p>
+  return `<h1>Ввод по группе</h1><p class="muted">Ввод оценок 1–5 сразу по всем курсантам группы (по образцу сводной таблицы S4 Прил. 11). Можно вставить блок из Excel (Ctrl+V в первую ячейку). Таблица сохраняется автоматически до создания записей.</p>
   <div class="card"><div class="grid g4">
     <div class="field"><label class="f" for="bt-type">Вид оценки</label><select id="bt-type" data-bt="type"><option value="practice" ${isP ? 'selected' : ''}>Анкета войсковой практики</option><option value="graduate" ${!isP ? 'selected' : ''}>Отзыв на выпускника (раздел I)</option></select></div>
     <div class="field"><label class="f" for="bt-group">Группа</label><select id="bt-group" data-bt="group"><option value="">все объекты</option>${groups.map(g => `<option ${b.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div>
@@ -2717,7 +2947,7 @@ function importColumns(type) {
 }
 route(/^\/import$/, () => {
   const im = ui.importState || (ui.importState = { type: 'practice', rows: null, fileName: '' });
-  return `<h1>Импорт оценок из Excel / CSV</h1>
+  return `<h1>Импорт из файла</h1>
   <div class="card"><h2>1. Шаблон</h2><div class="grid g3"><div class="field"><label class="f" for="im-type">Вид оценки</label><select id="im-type" data-im="type"><option value="practice" ${im.type === 'practice' ? 'selected' : ''}>Анкета войсковой практики</option><option value="graduate" ${im.type === 'graduate' ? 'selected' : ''}>Отзыв на выпускника (раздел I)</option></select></div></div>
   <button class="btn" data-act="im-template">Скачать шаблон CSV</button>
   <p class="hint">Шаблон открывается в Excel. Заполните строки (одна строка — один курсант) и загрузите книгу .xlsx как есть (берётся первый лист) либо сохраните как CSV. Поле «Курс/год»: для практики — 4 или 5, для отзыва — 1 или 2. Пустая ячейка ПСК у отзыва означает, что ПСК не оцениваются, если у строки пусты все ПСК.</p></div>
@@ -2813,7 +3043,7 @@ route(/^\/followup$/, () => {
   const pairs = followupPairs();
   const ids = [...new Set(pairs.flatMap(p => p.cmp.rows.map(r => r.id)))];
   const byComp = ids.map(id => { const rs = pairs.map(p => p.cmp.rows.find(r => r.id === id)).filter(Boolean); return { id, n: rs.length, a: rs.reduce((s, r) => s + r.a, 0) / rs.length, b: rs.reduce((s, r) => s + r.b, 0) / rs.length, lower: rs.filter(r => r.diff < 0).length }; });
-  return `<h1>Сопоставление: выпуск ↔ войска</h1>
+  return `<h1>Сопоставление: практика и служба</h1>
   <p class="muted">Оценки компетенций, полученные курсантом на войсковой практике, сопоставляются с оценками командира в отзыве после 1 (2) лет службы — по одинаковым индексам компетенций (13 ВПК). Основание: S1 разд. II («военный институт сможет соотнести эти оценки с оценками сформированности компетенций на момент выпуска»); S4 п. 3.1 (у 15–23% выпускников оценки в войсках отличаются от результатов обучения).</p>
   <div class="card no-print"><div class="grid g3">
     <div class="field"><label class="f" for="fu-g">Группа</label><select id="fu-g" data-fu="group"><option value="">все</option>${groupList().map(g => `<option ${F.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div>
@@ -2830,11 +3060,11 @@ route(/^\/followup$/, () => {
   : '<div class="card empty">Нет выпускников, у которых есть и утверждённая анкета практики, и утверждённый отзыв за выбранный период.</div>'}`;
 });
 route(/^\/followup\/([\w-]+)$/, id => {
-  const o = state.objects.find(x => x.id === id); if (!o) return '<div class="card empty">Объект не найден.</div>';
+  const o = state.objects.find(x => x.id === id); if (!o) return objMissing();
   const p = followupPairs().find(x => x.o.id === id) || (() => { const keep = ui.follow.group; ui.follow.group = ''; const r = followupPairs().find(x => x.o.id === id); ui.follow.group = keep; return r; })();
-  if (!p) return '<div class="card empty">Для объекта нет пары «практика — отзыв» при текущих условиях. <a href="#/followup">Назад</a></div>';
-  return `<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/followup">← К сопоставлению</a><button class="btn" data-act="print">Печать / PDF</button></div>
-  <h1>${esc(o.name)}: выпуск ↔ войска</h1><p class="muted">Практика: <a href="#/a/${p.pr.id}">${p.pr.meta.course} курс, ${fmtDate(p.pr.meta.date)}</a> · отзыв: <a href="#/a/${p.gr.id}">${p.gr.meta.period} год службы, ${fmtDate(p.gr.meta.date)}</a></p>
+  if (!p) return `<div class="card">${emptyState('Сравнивать пока не с чем', 'Нужны утверждённые анкета практики и отзыв из войск с общими компетенциями.')}</div>`;
+  return `<div class="row no-print" style="margin-bottom:12px"><button class="btn" data-act="print">Печать / PDF</button></div>
+  <h1>${esc(o.name)}: практика и служба</h1><p class="muted">Практика: <a href="#/a/${p.pr.id}">${p.pr.meta.course} курс, ${fmtDate(p.pr.meta.date)}</a> · отзыв: <a href="#/a/${p.gr.id}">${p.gr.meta.period} год службы, ${fmtDate(p.gr.meta.date)}</a></p>
   <div class="card"><div class="grid g4">${kpi('bср на практике', fmt(p.cmp.meanA, 2), p.cmp.n + ' общих компетенций')}${kpi('bср в отзыве', fmt(p.cmp.meanB, 2), '')}${kpi('Δ', (p.cmp.meanDiff > 0 ? '+' : '') + fmt(p.cmp.meanDiff, 2), 'отзыв − практика')}${kpi('Выше / ниже / равно', `${p.cmp.higher} / ${p.cmp.lower} / ${p.cmp.same}`, 'число компетенций')}</div>
   <div class="table-wrap"><table><thead><tr><th>Компетенция</th><th class="num">Практика</th><th class="num">Отзыв</th><th class="num">Δ</th></tr></thead><tbody>${p.cmp.rows.map(r => `<tr><td>${esc(r.id)}</td><td class="num">${r.a}</td><td class="num">${r.b}</td><td class="num" style="${r.diff < 0 ? 'color:var(--danger);font-weight:600' : ''}">${(r.diff > 0 ? '+' : '') + r.diff}</td></tr>`).join('')}</tbody></table></div>
   ${lineChart({ labels: p.cmp.rows.map(r => r.id), yMin: 1, yMax: 5, yDigits: 0, ticks: 4, series: [{ name: 'Практика', color: '#8E8E93', values: p.cmp.rows.map(r => r.a) }, { name: 'Отзыв', color: '#007AFF', values: p.cmp.rows.map(r => r.b) }] })}</div>`;
@@ -3019,7 +3249,7 @@ route(/^\/sensitivity$/, () => {
     <div class="card"><h3>Таблица значений</h3><div class="table-wrap"><table><thead><tr><th class="num">T1, ч</th>${r.byM.map(s => `<th class="num">m = ${fmtFull(s.m)}</th>`).join('')}${r.byShare.map(s => `<th class="num">T2 = ${fmt(s.share * 100, 0)}%</th>`).join('')}</tr></thead><tbody>${r.T1s.map((T, i) => `<tr><td class="num">${T}</td>${r.byM.map(s => `<td class="num">${fmt(s.values[i], 4)}</td>`).join('')}${r.byShare.map(s => `<td class="num">${fmt(s.values[i], 4)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   } catch (e) { err = e.message; }
   const f = (k, l, hint = '') => `<div class="field"><label class="f" for="sn-${k}">${l}</label><input type="text" id="sn-${k}" data-sn="${k}" value="${esc(S[k])}">${hint ? `<div class="hint">${hint}</div>` : ''}</div>`;
-  return `<h1>Чувствительность модели подготовленности</h1><p class="muted">Как уровень подготовленности g зависит от объёма дисциплины, методического мастерства преподавателя и доли самостоятельной работы (S5 с. 89–92, рис. 7–10).</p>
+  return `<h1>Чувствительность g</h1><p class="muted">Как уровень подготовленности g зависит от объёма дисциплины, методического мастерства преподавателя и доли самостоятельной работы (S5 с. 89–92, рис. 7–10).</p>
   <div class="card no-print"><div class="grid g4">${f('g0', term('g₀'))}${f('p', term('p') + ', ч⁻¹')}
     <div class="field"><label class="f" for="sn-mode">Формула</label><select id="sn-mode" data-sn="mode"><option value="21" ${S.mode === '21' ? 'selected' : ''}>(21), c1 = c2 = c</option><option value="24" ${S.mode === '24' ? 'selected' : ''}>(24)</option></select></div>
     ${f('c', term('c') + ' (способности)', 'S5: слабые 0,5; сильные 0,9; средние 0,7')}${f('m', term('m') + ' — значения через «;»')}${f('shares', 'T2, % от T1 — через «;»')}${f('from', 'T1 от, ч')}${f('to', 'T1 до, ч')}${f('step', 'шаг, ч')}</div>
@@ -3048,7 +3278,7 @@ route(/^\/optimize$/, () => {
       <div class="field"><label class="f">Итераций</label><input type="text" data-opc="iterations" value="${esc(cfg.iterations)}"></div>
       <div class="field"><label class="f">Зерно случайного поиска</label><input type="text" data-opc="seed" value="${esc(cfg.seed)}"><div class="hint">Одинаковое зерно — одинаковый результат.</div></div>
     </div>
-    <div class="grid g3"><div class="field"><label class="f">Обучающиеся</label><select data-opc="students"><option value="typical" ${cfg.students === 'typical' ? 'selected' : ''}>типовой обучающийся (g₀, c)</option><option value="group" ${cfg.students === 'group' ? 'selected' : ''} ${gbOk ? '' : 'disabled'}>из «Прогноз g по группе» (формула 24)</option></select></div>
+    <div class="grid g3"><div class="field"><label class="f">Обучающиеся</label><select data-opc="students"><option value="typical" ${cfg.students === 'typical' ? 'selected' : ''}>типовой обучающийся (g₀, c)</option><option value="group" ${cfg.students === 'group' ? 'selected' : ''} ${gbOk ? '' : 'disabled'}>из «Анализ → Прогноз по группе» (формула 24)</option></select></div>
     <div class="field"><label class="f">g₀ типового</label><input type="text" data-opc="g0" value="${esc(String(cfg.g0).replace('.', ','))}"></div><div class="field"><label class="f">c типового (для всех дисциплин)</label><input type="text" data-opc="c" value="${esc(String(cfg.c).replace('.', ','))}"></div></div>
     <p class="hint">p = ${fmtFull(METHOD.G_MODEL.p24)} ч⁻¹ (формула 24).</p>
     <button class="btn primary" data-act="op-run">Выполнить оптимизацию</button></div>
@@ -3166,7 +3396,7 @@ route(/^\/blanks$/, () => {
   if (B.fill === 'obj') targets = objs.filter(o => o.id === B.obj);
   if (B.fill === 'group') targets = objs.filter(o => o.group === B.group);
   const make = o => B.kind === 'anketa' ? anketaBlank(o) : reviewBlank(B.kind === 'review2' ? 2 : 1, o);
-  return `<h1>Печатные бланки</h1><p class="muted no-print">Пустые формы для заполнения в войсках: служебный отзыв (S1 Прил. 1) и анкета экспертной оценки на войсковой практике (S2 Прил. 1). Кзнк в отзыв вписываются автоматически. Заполненные бланки затем вводятся через «Групповой ввод» или «Новая оценка».</p>
+  return `<h1>Бланки для печати</h1><p class="muted no-print">Пустые формы для заполнения в войсках: служебный отзыв (S1 Прил. 1) и анкета экспертной оценки на войсковой практике (S2 Прил. 1). Кзнк в отзыв вписываются автоматически. Заполненные бланки затем вводятся через «Ввод по группе» или «Новая оценка».</p>
   <div class="card no-print"><div class="grid g4">
     <div class="field"><label class="f" for="bl-k">Бланк</label><select id="bl-k" data-bl="kind"><option value="review1" ${B.kind === 'review1' ? 'selected' : ''}>Служебный отзыв — 1 год службы</option><option value="review2" ${B.kind === 'review2' ? 'selected' : ''}>Служебный отзыв — 2 года службы</option><option value="anketa" ${B.kind === 'anketa' ? 'selected' : ''}>Анкета войсковой практики</option></select></div>
     <div class="field"><label class="f" for="bl-f">Заполнить ФИО</label><select id="bl-f" data-bl="fill"><option value="none" ${B.fill === 'none' ? 'selected' : ''}>нет (пустой бланк)</option><option value="obj" ${B.fill === 'obj' ? 'selected' : ''}>для одного объекта</option><option value="group" ${B.fill === 'group' ? 'selected' : ''}>для всей группы (по бланку на человека)</option></select></div>
@@ -3192,18 +3422,18 @@ const PREPORT_ITEMS = [
   ['graduates', 'Анализ работы выпускников военного института, положительные стороны в их подготовке, трудности, конкретные предложения по изменению программ учебных дисциплин и улучшению подготовки курсантов']
 ];
 const PREPORT_DOCS = ['Отзывы непосредственных руководителей войсковой практики, утверждённые командиром воинской части', 'Заполненные бланки «Анкета экспертной оценки уровня достижения компетенций…»', 'Обобщённые выводы и предложения командира воинской части', 'Выписки из приказов командира воинской части об организации и итогах войсковой практики', 'Журналы учёта и контроля руководителя и помощника руководителя войсковой практики'];
-route(/^\/preports$/, () => `<h1>Отчёты об итогах войсковой практики</h1><p class="muted">Отчёт руководителя практики от военного института, представляемый в учебный отдел в срок не более 2 рабочих дней после прибытия (S2 разд. III, п. 3.1 «г»). Краткая характеристика курсантов дополняется результатами расчёта по анкетам.</p>
+route(/^\/preports$/, () => `<h1>Отчёты о практике</h1><p class="muted">Отчёт руководителя практики от военного института, представляемый в учебный отдел в срок не более 2 рабочих дней после прибытия (S2 разд. III, п. 3.1 «г»). Краткая характеристика курсантов дополняется результатами расчёта по анкетам.</p>
   <div class="row no-print" style="margin-bottom:12px"><button class="btn primary" data-act="pr-new">+ Новый отчёт</button></div>
   <div class="card">${(state.practiceReports || []).length ? `<table><thead><tr><th>Группа</th><th>Курс</th><th>Дата</th><th>Руководитель</th></tr></thead><tbody>${state.practiceReports.map(r => `<tr class="click" data-act="go" data-href="#/preport/${r.id}"><td>${esc(r.group || '—')}</td><td>${r.course}</td><td>${fmtDate(r.date)}</td><td>${esc(r.author || '—')}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Отчётов нет.</div>'}</div>`);
 actions['pr-new'] = () => { if (!state.practiceReports) state.practiceReports = []; const r = { id: Store.uid(), group: groupList()[0] || '', course: 4, date: new Date().toISOString().slice(0, 10), author: '', items: {}, chars: {}, docs: {}, createdAt: Store.nowIso() }; state.practiceReports.push(r); persist(); location.hash = '#/preport/' + r.id; };
 route(/^\/preport\/([\w-]+)$/, id => {
-  const R = (state.practiceReports || []).find(x => x.id === id); if (!R) return '<div class="card empty">Отчёт не найден.</div>';
+  const R = (state.practiceReports || []).find(x => x.id === id); if (!R) return notFound('Отчёт');
   const list = state.assessments.filter(a => a.status === 'final' && a.type === 'practice' && String(a.meta.course) === String(R.course) && (state.objects.find(o => o.id === a.objectId) || {}).group === R.group);
   const per = new Map(); list.forEach(a => { const p = per.get(a.objectId); if (!p || (a.meta.date || '') > (p.meta.date || '')) per.set(a.objectId, a); });
   const rows = [...per.values()].sort((a, b) => objName(a.objectId).localeCompare(objName(b.objectId), 'ru'));
   const ranks = Calc.rank(rows.map(a => a.result.vpk.meanPsfk));
   const st = Calc.groupStats(rows.map(a => ({ meanGrade: a.result.vpk.meanGrade, meanPsfk: a.result.vpk.meanPsfk, level: (a.result.vpk.levelBsr || {}).code, leader: a.input.leaderMark, commission: a.input.commissionMark })));
-  return `<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/preports">← К списку</a><button class="btn primary" data-act="print">Печать / PDF</button><span class="spacer"></span><button class="btn danger" data-act="pr-del" data-id="${id}">Удалить отчёт</button></div>
+  return `<div class="row no-print" style="margin-bottom:12px"><button class="btn primary" data-act="print">Печать / PDF</button><span class="spacer"></span><button class="btn danger" data-act="pr-del" data-id="${id}">Удалить отчёт</button></div>
   <div class="report"><div class="card"><h1 style="text-align:center">ОТЧЁТ<br><span style="font-size:16px;font-weight:600">об итогах войсковой практики курсантов ${R.course} курса</span></h1>
   <div class="grid g4 no-print">
     <div class="field"><label class="f">Группа</label><select data-pr="${id}|group">${groupList().map(g => `<option ${R.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div>
@@ -3215,7 +3445,7 @@ route(/^\/preport\/([\w-]+)$/, id => {
   <h3>12. Краткая характеристика на каждого курсанта с выставлением оценки</h3>
   ${rows.length ? `<p class="muted">По утверждённым анкетам экспертной оценки (${rows.length}): средний балл группы ${fmt(st.meanGrade, 2)}, средний Псфк ${fmt(st.meanPsfk, 3)}.</p>
   <div class="table-wrap"><table><thead><tr><th>Курсант</th><th class="num">${term('bср')}</th><th class="num">${term('Псфк')}</th><th class="num">Место</th><th>Уровень (по bср)</th><th class="c">Оценка руководителя</th><th>Положительные и отрицательные черты</th></tr></thead><tbody>
-  ${rows.map((a, i) => `<tr><td>${esc(objName(a.objectId))}</td><td class="num">${fmt(a.result.vpk.meanGrade, 2)}</td><td class="num">${fmt(a.result.vpk.meanPsfk, 3)}</td><td class="num">${ranks[i]}</td><td>${lvBadge(a.result.vpk.levelBsr, false)}</td><td class="c">${esc(a.input.leaderMark || '—')}</td><td><textarea class="no-print" style="min-height:44px" data-pr="${id}|chars|${a.objectId}">${esc(R.chars[a.objectId] || '')}</textarea><span class="only-print">${esc(R.chars[a.objectId] || '')}</span></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Утверждённых анкет практики для этой группы и курса нет — заполните их через «Групповой ввод».</p>'}
+  ${rows.map((a, i) => `<tr><td>${esc(objName(a.objectId))}</td><td class="num">${fmt(a.result.vpk.meanGrade, 2)}</td><td class="num">${fmt(a.result.vpk.meanPsfk, 3)}</td><td class="num">${ranks[i]}</td><td>${lvBadge(a.result.vpk.levelBsr, false)}</td><td class="c">${esc(a.input.leaderMark || '—')}</td><td><textarea class="no-print" style="min-height:44px" data-pr="${id}|chars|${a.objectId}">${esc(R.chars[a.objectId] || '')}</textarea><span class="only-print">${esc(R.chars[a.objectId] || '')}</span></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Утверждённых анкет практики для этой группы и курса нет — заполните их через «Ввод по группе».</p>'}
   <h3>Вместе с отчётом представляются</h3>${PREPORT_DOCS.map((d, i) => `<p><label><input type="checkbox" data-pr="${id}|docs|${i}" ${R.docs[i] ? 'checked' : ''}> ${esc(d)}</label></p>`).join('')}
   <p style="margin-top:24px">Руководитель войсковой практики от военного института ${filled(R.author, 280)}</p></div></div>`;
 });
@@ -3314,7 +3544,7 @@ route(/^\/journal$/, () => {
     return (!F.group || o.group === F.group) && (F.stage === '' || String(r.stage) === F.stage) && (!F.block || r.block === F.block) && (!F.form || r.form === F.form) && (!q || (o.name || '').toLowerCase().includes(q) || (r.discipline || '').toLowerCase().includes(q)); })
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const st = Calc.journalStats(list);
-  return `<h1>Журнал форм контроля</h1><p class="muted">Блок полифункционального контроля модели (S6): результаты мониторинга и диагностики по этапам подготовки — курсовые, контрольные, летучки, зачёты, экзамены, нормативы, ГИА и другие формы (S7). Записи дают <b>эмпирические оценочные показатели</b> результативного блока; в расчёт уровня сформированности ВПК они не входят — правил такого пересчёта источники не содержат.</p>
+  return `<h1>Журнал контроля</h1><p class="muted">Блок полифункционального контроля модели (S6): результаты мониторинга и диагностики по этапам подготовки — курсовые, контрольные, летучки, зачёты, экзамены, нормативы, ГИА и другие формы (S7). Записи дают <b>эмпирические оценочные показатели</b> результативного блока; в расчёт уровня сформированности ВПК они не входят — правил такого пересчёта источники не содержат.</p>
   <div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/journal/sheet">Ведомость группы</a><button class="btn" data-act="jr-csv" ${list.length ? '' : 'disabled'}>CSV</button></div>
   <div class="card no-print"><h2>${jr.id ? 'Изменить запись' : 'Новая запись'}</h2>${recordFields(jr, true)}
     <div class="grid g4"><div class="field"><label class="f">Результат *</label>${markInput(jr, 'data-jr="mark"')}</div><div class="field" style="grid-column:span 3"><label class="f">Примечание</label><input type="text" data-jr="note" value="${esc(jr.note || '')}"></div></div>
@@ -3372,7 +3602,6 @@ route(/^\/journal\/sheet$/, () => {
   const S = ui.js || (ui.js = { group: groupList()[0] || '', rec: newRecord(), marks: {} });
   const objs = state.objects.filter(o => o.group === S.group).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   return `<h1>Ведомость группы</h1><p class="muted">Одна форма контроля — результаты всех курсантов группы. Можно вставить столбец из Excel.</p>
-  <div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/journal">← К журналу</a></div>
   <div class="card"><div class="field" style="max-width:300px"><label class="f">Группа</label>${sel('data-jsg="1"', groupList().map(g => [g, g]), S.group)}</div>${recordFields(S.rec, false)}</div>
   ${objs.length ? `<div class="card"><table><thead><tr><th>№</th><th>Курсант</th><th>Результат (${esc(pairName(C.markTypes, S.rec.markType))})</th></tr></thead><tbody>
   ${objs.map((o, i) => `<tr><td>${i + 1}</td><td>${esc(o.name)}</td><td><input type="text" class="cell" style="width:120px" data-grid="js" data-rc="${i},0" data-jsm="${o.id}" value="${esc(S.marks[o.id] ?? '')}" aria-label="Результат ${esc(o.name)}"></td></tr>`).join('')}</tbody></table>
@@ -3400,7 +3629,7 @@ actions['js-save'] = () => {
 
 /* ---------- Карта этапов курсанта (по схеме модели S6) ---------- */
 route(/^\/object\/([\w-]+)\/map$/, id => {
-  const o = state.objects.find(x => x.id === id); if (!o) return '<div class="card empty">Объект не найден.</div>';
+  const o = state.objects.find(x => x.id === id); if (!o) return objMissing();
   const recs = recordsOf(id);
   const fin = state.assessments.filter(a => a.objectId === id && a.status === 'final');
   const ap = o.applicant || {};
@@ -3420,8 +3649,8 @@ route(/^\/object\/([\w-]+)\/map$/, id => {
   const empir = stage => { const s = Calc.journalStats(recs.filter(r => r.stage === stage)); return s.n ? `записей ${s.n}${s.grades ? `; ср. балл ${fmt(s.meanGrade, 2)}` : ''}${s.pass ? `; зачтено ${s.passed}/${s.pass}` : ''}` : '<span class="muted">—</span>'; };
   const traj = fin.filter(a => a.type === 'trajectory');
   const stages = C.stages;
-  return `<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/object/${id}">← К объекту</a><a class="btn" href="#/journal">Журнал контроля</a><button class="btn" data-act="print">Печать / PDF</button></div>
-  <h1>${esc(o.name)}: карта этапов подготовки</h1><p class="muted">По схеме «Модель полифункционального контроля» (S6): этапы подготовки → блок контроля (мониторинг, диагностика) → математический блок → результативный и выходной блоки.${o.group ? ' Группа: ' + esc(o.group) + '.' : ''}</p>
+  return objectChrome(o, 'map') + `<div class="row no-print" style="margin-bottom:12px"><button class="btn" data-act="print">Печать / PDF</button></div>
+  <h1 class="only-print">${esc(o.name)}: карта этапов подготовки</h1><p class="muted">По схеме «Модель полифункционального контроля» (S6): этапы подготовки → блок контроля (мониторинг, диагностика) → математический блок → результативный и выходной блоки.${o.group ? ' Группа: ' + esc(o.group) + '.' : ''}</p>
   <div class="card"><div class="table-wrap"><table style="min-width:1100px"><thead><tr><th style="width:150px">Блок модели</th>${stages.map(s => `<th>${esc(s.name)}${s.semesters.length ? `<div class="muted" style="font-weight:400">${s.semesters.join(' и ')} семестры</div>` : s.id === 6 ? '<div class="muted" style="font-weight:400">1 и 2 год службы</div>' : ''}</th>`).join('')}</tr></thead><tbody>
     <tr><td><b>Входной блок</b></td><td>${[ap.education ? 'до поступления: ' + esc(ap.education) : '', ...METHOD.APPLICANT.flags.filter(([k]) => (ap.flags || {})[k]).map(([, l]) => esc(l)), ap.experience ? esc(ap.experience) : ''].filter(Boolean).map(x => `<div style="font-size:12.5px">${x}</div>`).join('') || '<span class="muted">сведения не внесены</span>'}</td>${stages.slice(1).map(() => '<td class="muted">—</td>').join('')}</tr>
     <tr><td><b>Контроль: мониторинг</b></td>${stages.map(s => `<td>${cell(s.id, 'monitoring')}</td>`).join('')}</tr>
@@ -3504,7 +3733,7 @@ route(/^\/risk$/, () => {
   <div class="card no-print"><div class="row"><div class="field" style="min-width:220px"><label class="f">Группа</label>${sel('data-risk="group"', groupList().map(g => [g, g]), R.group, 'все')}</div><span class="spacer"></span><button class="btn" data-act="print">Печать / PDF</button></div></div>
   <div class="card">${list.length ? `<p><b>Курсантов с признаками риска: ${list.length}</b> из ${state.objects.filter(o => !R.group || o.group === R.group).length}.</p><div class="table-wrap"><table><thead><tr><th>Курсант</th><th>Группа</th><th>Признаки</th></tr></thead><tbody>
   ${list.map(x => `<tr><td style="white-space:nowrap"><a href="#/object/${x.o.id}/profile">${esc(x.o.name)}</a></td><td>${esc(x.o.group || '—')}</td><td>${x.items.map(i => `<div style="margin-bottom:4px"><span class="badge ${i.sev === 2 ? 'b-draft' : 'b-info'}" style="${i.sev === 2 ? 'color:var(--danger)' : ''}">${i.sev === 2 ? 'критично' : 'внимание'}</span> <a href="${i.href}">${esc(i.text)}</a></div>`).join('')}</td></tr>`).join('')}
-  </tbody></table></div>` : '<div class="empty">Признаков риска не выявлено.</div>'}</div>`;
+  </tbody></table></div>` : emptyState('Признаков риска не выявлено', 'По введённым данным ни у кого нет признаков отставания. Список обновляется после каждой утверждённой оценки.')}</div>`;
 });
 document.addEventListener('change', e => { if (e.target.dataset && e.target.dataset.risk) { ui.risk.group = e.target.value; render(); } });
 function riskSummaryCard() {
@@ -3538,9 +3767,9 @@ function groupMeanByComp(a) {
   return { m, n: list.length };
 }
 route(/^\/object\/([\w-]+)\/profile$/, id => {
-  const o = state.objects.find(x => x.id === id); if (!o) return '<div class="card empty">Объект не найден.</div>';
+  const o = state.objects.find(x => x.id === id); if (!o) return objMissing();
   const cand = finalsOf(id).filter(a => a.type === 'practice' || a.type === 'graduate');
-  if (!cand.length) return `<div class="card empty">У ${esc(o.name)} нет утверждённых анкет практики или отзывов. <a href="#/object/${id}">К объекту</a></div>`;
+  if (!cand.length) return objectChrome(o, 'profile') + `<div class="card">${emptyState('Профиль пока не построен', 'Профиль строится по утверждённой анкете войсковой практики или отзыву из войск.', `<a class="btn primary" href="#/new?obj=${id}">Новая оценка</a>`)}</div>`;
   const P = ui.prof && ui.prof.obj === id ? ui.prof : (ui.prof = { obj: id, aid: cand[cand.length - 1].id });
   const a = cand.find(x => x.id === P.aid) || cand[cand.length - 1];
   const rows = rowsOfResult(a.result); const { m: gm, n: gn } = groupMeanByComp(a);
@@ -3550,7 +3779,7 @@ route(/^\/object\/([\w-]+)\/profile$/, id => {
   const lag = rows.filter(r => r.grade < 5 && (r.grade === minG || (isNumV(gm[r.id]) && r.grade < gm[r.id]))).sort((x, y) => y.k - x.k);
   const pv = a.type === 'practice' ? Calc.passportCheck(rows, passports(), a.meta.course, S) : [];
   const risks = riskOf(o);
-  return `<div class="row no-print" style="margin-bottom:12px"><a class="btn" href="#/object/${id}">← К объекту</a><button class="btn primary" data-act="print">Печать / PDF</button>
+  return objectChrome(o, 'profile') + `<div class="row no-print" style="margin-bottom:12px"><button class="btn primary" data-act="print">Печать / PDF</button>
   <div class="field" style="margin:0 0 0 auto;min-width:280px"><select data-prof="aid" aria-label="Оценка">${cand.map(x => `<option value="${x.id}" ${x.id === a.id ? 'selected' : ''}>${esc(Model.TYPES[x.type].short)}: ${x.type === 'practice' ? x.meta.course + ' курс' : x.meta.period + ' год службы'}, ${fmtDate(x.meta.date)}</option>`).join('')}</select></div></div>
   <div class="report"><div class="card"><h1>Диагностический профиль: ${esc(o.name)}</h1><p class="muted">${esc(o.group || '')} · ${esc(typeTitle(a.type))}, ${a.type === 'practice' ? a.meta.course + ' курс' : a.meta.period + ' год службы'}, ${fmtDate(a.meta.date)}</p>
   <div class="grid g4">${kpi('bср', fmt(a.result.vpk.meanGrade, 2), lvBadge(a.result.vpk.levelBsr))}${kpi('Псфк ВПК', fmt(a.result.vpk.meanPsfk, 3), a.type === 'graduate' ? lvBadge(a.result.vpk.levelPsfk) : 'уровень по bср')}${kpi('Степень сформированности', fmt(a.result.vpk.meanPct, 1) + '%', '')}${kpi('Сравнение с группой', gn > 1 ? gn + ' чел.' : '—', gn > 1 ? 'средние по той же оценке группы' : 'нет данных по группе')}</div>
@@ -3569,7 +3798,7 @@ document.addEventListener('change', e => { if (e.target.dataset && e.target.data
 route(/^\/passports$/, () => {
   const P = passports(); const custom = !!(state.settings && state.settings.passports);
   const comps = METHOD.COEF_SETS['src-vpk16'].items;
-  return `<h1>Паспорта компетенций: уровни по курсам</h1><p class="muted">«Уровни и последовательность формирования компетенции» (S3 п. 2.3, табл. 2): знак «+» — уровень, достижимый на данном курсе. В источнике таблица приведена только для ВПК-11; для остальных компетенций отметьте уровни по паспортам компетенций вашей образовательной программы. Если таблица для компетенции не заполнена, проверка не выполняется.</p>
+  return `<h1>Паспорта компетенций</h1><p class="muted">«Уровни и последовательность формирования компетенции» (S3 п. 2.3, табл. 2): знак «+» — уровень, достижимый на данном курсе. В источнике таблица приведена только для ВПК-11; для остальных компетенций отметьте уровни по паспортам компетенций вашей образовательной программы. Если таблица для компетенции не заполнена, проверка не выполняется.</p>
   ${custom ? '<div class="note">Действуют изменённые пользователем паспорта. <button class="btn sm" data-act="pp-reset">Вернуть значения источника (только ВПК-11)</button></div>' : ''}
   ${comps.map(c => { const p = P[c.id]; return `<details class="card" ${p ? 'open' : ''}><summary style="cursor:pointer"><b>${esc(c.id)}</b> ${p ? '<span class="badge b-info">задан</span>' : '<span class="muted">не задан</span>'} <span class="muted" style="font-size:13px">${esc(c.text.slice(0, 110))}…</span></summary>
     <div class="table-wrap" style="margin-top:8px"><table style="max-width:560px"><thead><tr><th>Степень сформированности</th>${[1, 2, 3, 4, 5].map(k => `<th class="c">${k} курс</th>`).join('')}</tr></thead><tbody>
@@ -3609,7 +3838,7 @@ route(/^\/matrix$/, () => {
     <div class="table-wrap"><table><thead><tr><th>ВПК</th><th class="num">Дисциплин</th><th class="num">Записей журнала</th><th class="num">Оценок 2–5</th><th class="num">Средний балл</th><th class="num">Зачтено</th></tr></thead><tbody>
     ${cov.map(x => `<tr><td title="${esc(x.k.text)}">${esc(x.k.id)}</td><td class="num">${x.ds.length}</td><td class="num">${x.st.n}</td><td class="num">${x.st.grades}</td><td class="num">${fmt(x.st.meanGrade, 2)}</td><td class="num">${x.st.pass ? x.st.passed + '/' + x.st.pass : '—'}</td></tr>`).join('')}</tbody></table></div></div>`;
   }
-  return `<h1>Матрица «дисциплины ↔ ВПК»</h1><p class="muted">Матрица соответствия (формирования) компетенций — часть образовательной программы (S3 п. 2.3). Отметьте, какие дисциплины учебного плана формируют каждую ВПК; отметки сохраняются в учебном плане.</p>
+  return `<h1>Дисциплины и ВПК</h1><p class="muted">Матрица соответствия (формирования) компетенций — часть образовательной программы (S3 п. 2.3). Отметьте, какие дисциплины учебного плана формируют каждую ВПК; отметки сохраняются в учебном плане.</p>
   <div class="card no-print"><div class="field" style="max-width:420px"><label class="f">Учебный план</label>${sel('data-mxc="1"', state.curricula.map(x => [x.id, x.name]), M.curriculumId, '— выберите —')}</div>${state.curricula.length ? '' : '<p class="muted">Учебных планов нет. <a href="#/curricula">Создайте план</a>.</p>'}</div>${body}`;
 });
 document.addEventListener('change', e => {
@@ -3731,7 +3960,7 @@ document.addEventListener('change', async e => {
   e.stopImmediatePropagation();
   const f = e.target.files[0]; e.target.value = '';
   let table;
-  try { table = /\.xlsx$/i.test(f.name) ? await readXlsx(await f.arrayBuffer()) : parseCsv(await f.text()); }
+  try { table = await withBusy('Чтение файла «' + f.name + '»…', async () => /\.xlsx$/i.test(f.name) ? await readXlsx(await f.arrayBuffer()) : parseCsv(await f.text())); }
   catch (err) { toast('Не удалось прочитать файл: ' + err.message, true); return; }
   if (table.length < 2) { toast('Файл пуст или не содержит строк данных', true); return; }
   ui.importState.rows = table; ui.importState.fileName = f.name; ui.importState.analysis = importAnalyze(ui.importState.type, table); render();
@@ -3743,8 +3972,10 @@ const excelDate = v => { const n = Number(v); if (!/^\d+(\.\d+)?$/.test(String(v
 const TRASH_DAYS = 30;
 function toTrash(kind, label, payload) {
   if (!state.trash) state.trash = [];
-  state.trash.push({ id: Store.uid(), kind, label, payload, deletedAt: Store.nowIso() });
+  const id = Store.uid(); state.trash.push({ id, kind, label, payload, deletedAt: Store.nowIso() }); ui.lastTrashId = id; return id;
 }
+/* Сообщение после удаления с кнопкой «Отменить» (возврат из корзины без перехода в неё) */
+function undoToast(msg) { const id = ui.lastTrashId; toastAction(msg, 'Отменить', () => { if (restoreTrash(id)) { toast('Удаление отменено'); render(); } }, 8000); }
 function purgeTrash() {
   if (!state.trash) return;
   const lim = Date.now() - TRASH_DAYS * 86400000; const n = state.trash.length;
@@ -3759,24 +3990,24 @@ actions['obj-del'] = async el => {
   if (!await confirmDlg('Удалить объект оценки?', `<p>Объект «${esc(o.name)}», его расчёты (${as.length}) и записи журнала (${rs.length}) переместятся в корзину и хранятся ${TRASH_DAYS} дней.</p>`, 'Удалить', true)) return;
   toTrash('object', o.name, { object: o, assessments: as, records: rs });
   state.objects = state.objects.filter(x => x.id !== o.id); state.assessments = state.assessments.filter(a => a.objectId !== o.id); state.controlRecords = (state.controlRecords || []).filter(r => r.objectId !== o.id);
-  persist(); toast('Объект перемещён в корзину'); location.hash = '#/objects';
+  persist(); location.hash = '#/objects'; undoToast(`«${o.name}» удалён`);
 };
 actions['del-a'] = async el => {
   const a = findA(el.dataset.id); if (!a) return;
   if (!await trashDlg(a.status === 'draft' ? 'черновик' : 'расчёт')) return;
   toTrash('assessment', `${Model.TYPES[a.type].short}: ${objName(a.objectId)}, ${fmtDate(a.meta.date)}`, a);
-  state.assessments = state.assessments.filter(x => x.id !== a.id); ui.editing = null; persist(); toast('Перемещено в корзину'); location.hash = '#/history';
+  state.assessments = state.assessments.filter(x => x.id !== a.id); ui.editing = null; persist(); location.hash = '#/history'; undoToast(a.status === 'draft' ? 'Черновик удалён' : 'Оценка удалена');
 };
 actions['jr-del'] = async el => {
   const r = (state.controlRecords || []).find(x => x.id === el.dataset.id); if (!r || !await trashDlg('запись журнала')) return;
   toTrash('record', `${formName(r.form)}: ${objName(r.objectId)}, ${fmtDate(r.date)}`, r);
-  state.controlRecords = state.controlRecords.filter(x => x.id !== r.id); persist(); render();
+  state.controlRecords = state.controlRecords.filter(x => x.id !== r.id); persist(); render(); undoToast('Запись журнала удалена');
 };
 const simpleDel = (kind, arr, back, labelOf) => async el => {
   const item = (state[arr] || []).find(x => x.id === el.dataset.id); if (!item) return;
   if (kind === 'coefSet') { const used = state.assessments.filter(a => a.status === 'draft' && (a.meta.vpkSetId === item.id || a.meta.pskSetId === item.id)).length; if (used) { toast(`Набор используется в черновиках (${used}). Смените набор в них или удалите черновики.`, true); return; } }
   if (!await trashDlg(TRASH_KINDS[kind].toLowerCase())) return;
-  toTrash(kind, labelOf(item), item); state[arr] = state[arr].filter(x => x.id !== item.id); persist(); toast('Перемещено в корзину'); location.hash = back;
+  toTrash(kind, labelOf(item), item); state[arr] = state[arr].filter(x => x.id !== item.id); persist(); location.hash = back; undoToast('Удалено: ' + labelOf(item));
 };
 actions['cu-del'] = simpleDel('curriculum', 'curricula', '#/curricula', x => x.name);
 actions['ym-del'] = simpleDel('ymodel', 'yModels', '#/ymodels', x => x.name);
@@ -3789,23 +4020,24 @@ route(/^\/trash$/, () => {
   return `<h1>Корзина</h1><p class="muted">Удалённые записи хранятся ${TRASH_DAYS} дней, затем удаляются окончательно. Полная очистка данных («Удалить все данные») корзину не использует.</p>
   <div class="card">${T.length ? `<div class="table-wrap"><table><thead><tr><th>Удалено</th><th>Что</th><th>Описание</th><th>Удаляется окончательно</th><th></th></tr></thead><tbody>
   ${T.map(t => `<tr><td>${fmtDT(t.deletedAt)}</td><td>${esc(TRASH_KINDS[t.kind] || t.kind)}</td><td>${esc(t.label)}</td><td>${fmtDate(new Date(new Date(t.deletedAt).getTime() + TRASH_DAYS * 86400000).toISOString())}</td><td style="white-space:nowrap"><button class="btn sm" data-act="tr-restore" data-id="${t.id}">Восстановить</button> <button class="btn sm danger" data-act="tr-purge" data-id="${t.id}">Удалить навсегда</button></td></tr>`).join('')}
-  </tbody></table></div><button class="btn danger" style="margin-top:10px" data-act="tr-empty">Очистить корзину</button>` : '<div class="empty">Корзина пуста.</div>'}</div>`;
+  </tbody></table></div><button class="btn danger" style="margin-top:10px" data-act="tr-empty">Очистить корзину</button>` : emptyState('Корзина пуста', 'Удалённые курсанты, оценки и записи попадают сюда и хранятся 30 дней.')}</div>`;
 });
-actions['tr-restore'] = el => {
-  const t = state.trash.find(x => x.id === el.dataset.id); if (!t) return;
+function restoreTrash(tid) {
+  const t = (state.trash || []).find(x => x.id === tid); if (!t) return false;
   const has = (arr, id) => (state[arr] || []).some(x => x.id === id);
   if (t.kind === 'object') {
-    if (has('objects', t.payload.object.id)) { toast('Объект уже существует', true); return; }
+    if (has('objects', t.payload.object.id)) { toast('Курсант уже существует', true); return false; }
     state.objects.push(t.payload.object);
     t.payload.assessments.forEach(a => { if (!has('assessments', a.id)) state.assessments.push(a); });
     if (!state.controlRecords) state.controlRecords = []; t.payload.records.forEach(r => { if (!has('controlRecords', r.id)) state.controlRecords.push(r); });
   } else if (t.kind === 'assessment' || t.kind === 'record') {
-    if (!state.objects.some(o => o.id === t.payload.objectId)) { toast('Объект оценки удалён — сначала восстановите объект', true); return; }
+    if (!state.objects.some(o => o.id === t.payload.objectId)) { toast('Курсант удалён — сначала восстановите курсанта', true); return false; }
     const arr = t.kind === 'assessment' ? 'assessments' : 'controlRecords'; if (!state[arr]) state[arr] = [];
     if (!has(arr, t.payload.id)) state[arr].push(t.payload);
   } else { const arr = TRASH_ARR[t.kind]; if (!state[arr]) state[arr] = []; if (!has(arr, t.payload.id)) state[arr].push(t.payload); }
-  state.trash = state.trash.filter(x => x.id !== t.id); persist(); toast('Восстановлено'); render();
-};
+  state.trash = state.trash.filter(x => x.id !== t.id); persist(); return true;
+}
+actions['tr-restore'] = el => { if (restoreTrash(el.dataset.id)) { toast('Восстановлено'); render(); } };
 actions['tr-purge'] = async el => { if (!await confirmDlg('Удалить навсегда?', 'Восстановить запись будет невозможно.', 'Удалить навсегда', true)) return; state.trash = state.trash.filter(x => x.id !== el.dataset.id); persist(); render(); };
 actions['tr-empty'] = async () => { if (!await confirmDlg('Очистить корзину?', 'Все записи корзины будут удалены без возможности восстановления.', 'Очистить', true)) return; state.trash = []; persist(); render(); };
 
@@ -3825,34 +4057,34 @@ const HELP = [
   [/^\/$/, 'Главная', 'Сводка: число объектов и расчётов, предупреждения (группы риска, резервная копия), последние расчёты и состояние исходных данных методики.'],
   [/^\/new/, 'Новая оценка', 'Выберите курсанта и вид оценки. Мастер ведёт по шагам: параметры → ввод данных → проверка → утверждение. Черновик сохраняется автоматически; неполные данные утвердить нельзя.'],
   [/^\/a\/[\w-]+\/edit/, 'Ввод данных оценки', 'Оценки 1–5 выставляются кнопками; незаполненные строки отмечены жёлтой полосой. На последнем шаге — предварительный результат; «Утвердить расчёт» фиксирует результат вместе со снимком методики.'],
-  [/^\/a\//, 'Результат расчёта', 'Показатели, уровни, таблица по компетенциям и «Как получено» с промежуточными значениями. «Проверить воспроизводимость» пересчитывает по сохранённым данным; «Изменить данные» создаёт новую редакцию, прежняя сохраняется.'],
-  [/^\/batch/, 'Групповой ввод', 'Оценки всей группы в одной таблице. Вставка из Excel — Ctrl+V в первую ячейку; переход между ячейками — стрелки и Enter. Полные строки утверждаются, неполные становятся черновиками.'],
-  [/^\/import/, 'Импорт', 'Скачайте шаблон, заполните в Excel и загрузите как .xlsx или CSV. Перед импортом каждая строка проверяется; объекты сопоставляются по ФИО и группе.'],
+  [/^\/a\//, 'Результат расчёта', 'Показатели, уровни, таблица по компетенциям и «Как получено» с промежуточными значениями. «Пересчитать и сверить» пересчитывает по сохранённым данным; «Изменить данные» создаёт новую редакцию, прежняя сохраняется.'],
+  [/^\/batch/, 'Ввод по группе', 'Оценки всей группы в одной таблице. Вставка из Excel — Ctrl+V в первую ячейку; переход между ячейками — стрелки и Enter. Полные строки утверждаются, неполные становятся черновиками.'],
+  [/^\/import/, 'Импорт из файла', 'Скачайте шаблон, заполните в Excel и загрузите как .xlsx или CSV. Перед импортом каждая строка проверяется; объекты сопоставляются по ФИО и группе.'],
   [/^\/journal/, 'Журнал контроля', 'Результаты форм контроля (экзамены, зачёты, летучки, курсовые, нормативы, ЕГЭ, ГИА…) по этапам и семестрам с видом, типом и методом контроля по схеме. Дают эмпирические показатели; в уровень ВПК не входят. «Ведомость группы» — одна форма на всю группу.'],
   [/^\/objects?\/[\w-]+\/map/, 'Карта этапов', 'Курсант по схеме модели: входной блок, мониторинг и диагностика по этапам, расчёты по методике, математический блок, эмпирические показатели.'],
   [/^\/objects?\/[\w-]+\/profile/, 'Профиль курсанта', 'Лепестковая диаграмма оценок по компетенциям в сравнении со средним по группе и максимумом; компетенции, требующие работы (по убыванию значимости); признаки риска.'],
-  [/^\/objects?/, 'Объекты оценки', 'Курсанты и выпускники. В карточке — расчёты, динамика, сравнение, профиль, карта этапов, отчёт. Сведения абитуриента — входной блок модели.'],
-  [/^\/history/, 'История расчётов', 'Все расчёты с фильтрами по виду, статусу, дате и ФИО. Черновики открываются для продолжения ввода. CSV — исходные данные и результаты по фильтру.'],
+  [/^\/objects?/, 'Курсанты и выпускники', 'Курсанты и выпускники. В карточке — расчёты, динамика, сравнение, профиль, карта этапов, отчёт. Сведения абитуриента — входной блок модели.'],
+  [/^\/history/, 'Все оценки', 'Все расчёты с фильтрами по виду, статусу, дате и ФИО. Черновики открываются для продолжения ввода. CSV — исходные данные и результаты по фильтру.'],
   [/^\/summary/, 'Сводная по группе', 'Средние значения и место в группе (как в табл. 8–9 гл. III), распределение по уровням. Для практики можно включить пользовательское правило выявления расхождений.'],
-  [/^\/reviews/, 'Анализ отзывов', 'Форма Прил. 2 методички по отзывам: по органам военного управления — поступило отзывов и сколько оценено на 5/4/3/2. Основание оценки выберите сами.'],
+  [/^\/reviews/, 'Отзывы из войск', 'Форма Прил. 2 методички по отзывам: по органам военного управления — поступило отзывов и сколько оценено на 5/4/3/2. Основание оценки выберите сами.'],
   [/^\/risk/, 'Группы риска', 'Курсанты с признаками отставания: низкий или критический уровень, снижение показателя, компетенции с оценкой 1–2, нарушения паспорта, неудовлетворительные оценки в журнале.'],
-  [/^\/followup/, 'Выпуск ↔ войска', 'Сравнение оценок одних и тех же компетенций на практике и в отзыве через 1 (2) года.'],
+  [/^\/followup/, 'Практика и служба', 'Сравнение оценок одних и тех же компетенций на практике и в отзыве через 1 (2) года.'],
   [/^\/groups/, 'Сравнение групп', 'Средние показатели 2–3 групп (например, контрольной и экспериментальной) и распределение по уровням.'],
-  [/^\/gbatch/, 'Прогноз g по группе', 'Алгоритм рис. 12 для всей группы: g₀ и способности каждого обучающегося по дисциплинам. Результат можно сохранить как расчёты.'],
+  [/^\/gbatch/, 'Прогноз по группе', 'Алгоритм рис. 12 для всей группы: g₀ и способности каждого обучающегося по дисциплинам. Результат можно сохранить как расчёты.'],
   [/^\/sensitivity/, 'Чувствительность g', 'Графики зависимости уровня подготовленности от объёма дисциплины, мастерства преподавателя и доли самостоятельной работы (рис. 7–10).'],
   [/^\/optimize/, 'Оптимизация плана', 'Распределение часов T1/T2 по дисциплинам при ограничениях по семестрам (ф. 25–28), метод случайного поиска. Укажите семестры, минимальные объёмы, выпускающие дисциплины и лимиты.'],
-  [/^\/matrix/, 'Матрица «дисциплины ↔ ВПК»', 'Отметьте, какие дисциплины формируют каждую ВПК; приложение покажет непокрытые компетенции и данные журнала по каждой ВПК.'],
+  [/^\/matrix/, 'Дисциплины и ВПК', 'Отметьте, какие дисциплины формируют каждую ВПК; приложение покажет непокрытые компетенции и данные журнала по каждой ВПК.'],
   [/^\/stats/, 'Статистика', 'Коэффициенты корреляции между расчётным показателем и оценками, практикой и отзывом, журналом и анкетой. Метод не из методики — помечен.'],
-  [/^\/blanks/, 'Печатные бланки', 'Служебный отзыв и анкета практики для заполнения в войсках — пустые или с ФИО на всю группу. Печать в PDF через диалог печати.'],
+  [/^\/blanks/, 'Бланки для печати', 'Служебный отзыв и анкета практики для заполнения в войсках — пустые или с ФИО на всю группу. Печать в PDF через диалог печати.'],
   [/^\/preport/, 'Отчёты о практике', 'Отчёт руководителя практики по пунктам методички; характеристика курсантов дополняется результатами анкет.'],
   [/^\/method/, 'Справочник методики', 'Модель, компетенции, шкалы, спецификации формул, схема контроля, термины, источники и выявленные расхождения.'],
-  [/^\/coef|^\/expert/, 'Наборы Кзнк и экспертиза', 'Наборы коэффициентов значимости. Экспертиза: матрица рангов → согласованность W, критерий χ², коэффициенты λ (Прил. 10 гл. III).'],
+  [/^\/coef|^\/expert/, 'Коэффициенты Кзнк', 'Наборы коэффициентов значимости. Экспертиза: матрица рангов → согласованность W, критерий χ², коэффициенты λ (Прил. 10 гл. III).'],
   [/^\/curricul/, 'Учебные планы', 'Дисциплины, часы T1 и T2, коэффициент m и предшествующие дисциплины — исходные данные для расчёта g.'],
-  [/^\/ymodel/, 'Модели признаков', 'Признаки, веса и эталон для уровня компетентности Y.'],
+  [/^\/ymodel/, 'Модели Y', 'Признаки, веса и эталон для уровня компетентности Y.'],
   [/^\/passports/, 'Паспорта компетенций', 'Уровни, достижимые на каждом курсе (табл. 2 гл. II). Нарушения показываются в анкете практики, профиле и группах риска.'],
   [/^\/data/, 'Данные и резервные копии', 'Резервная копия в файл и восстановление, экспорт CSV/JSON, поиск дублей, учебный режим и демонстрационные данные.'],
   [/^\/trash/, 'Корзина', 'Удалённое хранится 30 дней и восстанавливается одной кнопкой.'],
-  [/^\/tests/, 'Самопроверка', 'Контрольные примеры из источников и проверки граничных случаев вычислительного модуля.']
+  [/^\/tests/, 'Проверка расчётов', 'Контрольные примеры из источников и проверки граничных случаев вычислительного модуля.']
 ];
 actions.help = () => {
   const path = (location.hash || '#/').slice(1).split('?')[0] || '/';
@@ -3984,7 +4216,7 @@ actions['demo-load'] = async () => {
   if (Store.mode() !== 'demo') { const c = await dialog('Загрузить демонстрационные данные?', '<p>Рекомендуется загружать их в учебном режиме, чтобы не смешивать с рабочими данными. В основном режиме записи будут помечены как демонстрационные и удаляются одной кнопкой.</p>', [{ label: 'Отмена', value: null }, { label: 'В основной режим', value: 'main' }, { label: 'Перейти в учебный и загрузить', value: 'demo', cls: 'primary' }]);
     if (!c) return; if (c === 'demo') { persist(); Store.setMode('demo'); state = Store.load(); modeBanner(); } }
   if (hasDemo()) { toast('Демонстрационные данные уже загружены', true); return; }
-  loadDemo(); toast('Демонстрационные данные загружены: 60 человек'); location.hash = '#/'; render();
+  await withBusy('Загрузка демонстрационных данных: 60 человек…', () => loadDemo()); toast('Демонстрационные данные загружены: 60 человек'); location.hash = '#/'; render();
 };
 actions['demo-remove'] = async () => { if (!await confirmDlg('Удалить демонстрационные данные?', 'Будут удалены все записи, помеченные как демонстрационные (без корзины). Остальные данные не затрагиваются.', 'Удалить', true)) return; removeDemo(); toast('Демонстрационные данные удалены'); render(); };
 
@@ -3999,7 +4231,8 @@ route(/^\/history$/, () => {
     && (!q || objName(a.objectId).toLowerCase().includes(q) || (a.meta.evaluator || '').toLowerCase().includes(q))
     && (!f.from || (a.meta.date || '') >= f.from) && (!f.to || (a.meta.date || '') <= f.to))
     .sort((a, b) => (b.meta.date || '').localeCompare(a.meta.date || '') || b.updatedAt.localeCompare(a.updatedAt));
-  return `<h1>История расчётов</h1>
+  return `<div class="pagehead"><h1>Все оценки</h1><span class="spacer"></span><a class="btn primary" href="#/new">${svgIcon('plus', 'bi')} Новая оценка</a></div>
+  <p class="muted">Утверждённые оценки и черновики. Черновик открывается для продолжения ввода, утверждённая оценка — для просмотра результата.</p>
   <div class="card no-print"><div class="grid g4">
     <div class="field"><label class="f" for="hf-q">Поиск (ФИО, оценщик)</label><input type="search" id="hf-q" value="${esc(f.q)}" data-filter="q"></div>
     <div class="field"><label class="f" for="hf-type">Вид оценки</label><select id="hf-type" data-filter="type"><option value="">все</option>${Object.entries(Model.TYPES).map(([k, t]) => `<option value="${k}" ${f.type === k ? 'selected' : ''}>${esc(t.short)}</option>`).join('')}</select></div>
@@ -4008,7 +4241,7 @@ route(/^\/history$/, () => {
   </div><div class="row"><button class="btn sm" data-act="hf-reset">Сбросить фильтры</button><span class="spacer"></span><button class="btn sm" data-act="csv-assess">CSV: исходные данные и результаты (по фильтру)</button></div></div>
   <div class="card"><p class="muted">Найдено: ${list.length}</p>${list.length ? `<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Объект</th><th>Вид</th><th>Параметры</th><th>Статус</th><th class="num">Показатель</th><th>Уровень</th><th>Изменён</th></tr></thead><tbody>
   ${list.map(a => { const h = Model.headline(a); return `<tr class="click" data-act="go" data-href="${a.status === 'draft' ? `#/a/${a.id}/edit/1` : '#/a/' + a.id}"><td>${fmtDate(a.meta.date)}</td><td>${esc(objName(a.objectId))}</td><td>${esc(Model.TYPES[a.type].short)}</td><td>${a.type === 'practice' ? a.meta.course + ' курс' : a.type === 'graduate' ? a.meta.period + ' год' : ''}</td><td>${statusBadge(a)}${a.revisions.length ? ` <span class="badge b-info">ред. ${a.revisions.length + 1}</span>` : ''}</td><td class="num">${h ? fmt(h.value, 3) : '—'}</td><td>${h && h.level !== undefined ? lvBadge(h.level, false) : '—'}</td><td>${fmtDT(a.updatedAt)}</td></tr>`; }).join('')}
-  </tbody></table></div>` : '<div class="empty">Нет записей, удовлетворяющих фильтру.</div>'}</div>`;
+  </tbody></table></div>` : state.assessments.length ? emptyState('Ничего не найдено', 'Под выбранные условия не подходит ни одна оценка.', '<button class="btn" data-act="hf-reset">Сбросить фильтры</button>') : emptyState('Оценок пока нет', 'Здесь появятся все анкеты, отзывы и расчёты — утверждённые и черновики.', '<a class="btn primary" href="#/new">Новая оценка</a><a class="btn" href="#/batch">Ввод по группе</a>')}</div>`;
 });
 document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.filter; if (!k) return; ui.filters[k] = e.target.value; if (location.hash.includes('draft')) location.hash = '#/history'; else render(); });
 document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.filter === 'q') { ui.filters.q = e.target.value; clearTimeout(ui.qt); ui.qt = setTimeout(() => { const pos = e.target.selectionStart; render(); const el = $('#hf-q'); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }, 250); } });
@@ -4056,7 +4289,7 @@ route(/^\/summary$/, () => {
   const counts = {}; list.forEach(a => { const lv = S.type === 'graduate' ? (a.result.vpk.levelPsfk || a.result.vpk.levelBsr) : a.result.vpk.levelBsr; if (lv) counts[lv.code] = (counts[lv.code] || 0) + 1; });
   const avg = list.length ? list.reduce((s, a) => s + a.result.vpk.meanGrade, 0) / list.length : NaN;
   ui.summaryRows = list.map((a, i) => ({ a, rank: ranks[i] }));
-  return `<h1>Сводная таблица по группе</h1><p class="muted">Средние значения критериев показателя сформированности компетенций и ранжирование (по образцу S4 табл. 8, 9). Учитываются только утверждённые расчёты.</p>
+  return `<h1>Сводная по группе</h1><p class="muted">Средние значения критериев показателя сформированности компетенций и ранжирование (по образцу S4 табл. 8, 9). Учитываются только утверждённые расчёты.</p>
   <div class="card no-print"><div class="grid g3">
     <div class="field"><label class="f" for="sm-type">Вид оценки</label><select id="sm-type" data-sum="type"><option value="practice" ${S.type === 'practice' ? 'selected' : ''}>Войсковая практика</option><option value="graduate" ${S.type === 'graduate' ? 'selected' : ''}>Отзыв на выпускника</option></select></div>
     <div class="field"><label class="f" for="sm-group">Группа / подразделение</label><select id="sm-group" data-sum="group"><option value="">все</option>${groups.map(g => `<option ${S.group === g ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select></div>
@@ -4118,7 +4351,7 @@ route(/^\/reviews$/, () => {
   const sent = state.reviewSent || {};
   const tot = rows.reduce((t, r) => { t.n += r.n; t.u += r.undet; for (const m of [5, 4, 3, 2]) t[m] += r.marks[m]; const v = Number(sent[sentKey(r.organ)]); if (Number.isFinite(v)) t.sent += v; return t; }, { n: 0, u: 0, 5: 0, 4: 0, 3: 0, 2: 0, sent: 0 });
   const basisText = { total: 'по итоговой оценке сформированности компетенций (ВПК + ПСК)', vpkPsfk: 'по суммарному Псфк ВПК (таблица S1)', bsr: 'по среднему баллу bср ВПК' }[F.basis];
-  return `<h1>Анализ отзывов на выпускников</h1><p class="muted">Форма S1 Прил. 2: «Анализ отзывов на выпускников, прослуживших 1 год (2 года) после выпуска». Учитываются утверждённые отзывы.</p>
+  return `<h1>Отзывы из войск</h1><p class="muted">Форма S1 Прил. 2: «Анализ отзывов на выпускников, прослуживших 1 год (2 года) после выпуска». Учитываются утверждённые отзывы.</p>
   <div class="card no-print"><div class="grid g3">
     <div class="field"><label class="f" for="rv-p">Период</label><select id="rv-p" data-rv="period"><option value="1" ${F.period === '1' ? 'selected' : ''}>1 год службы</option><option value="2" ${F.period === '2' ? 'selected' : ''}>2 года службы</option></select></div>
     <div class="field"><label class="f" for="rv-y">Год выпуска (из шапки отзыва)</label><select id="rv-y" data-rv="year"><option value="">все</option>${years.map(y => `<option ${F.year === y ? 'selected' : ''}>${esc(y)}</option>`).join('')}</select></div>
@@ -4200,7 +4433,7 @@ route(/^\/tests$/, () => {
   const storage = (() => { try { const k = 'pfk-selftest'; localStorage.setItem(k, JSON.stringify({ v: 1 })); const ok = JSON.parse(localStorage.getItem(k)).v === 1; localStorage.removeItem(k); return ok; } catch (e) { return false; } })();
   res.push({ group: 'Среда', name: 'Запись и чтение localStorage', ok: storage, detail: storage ? '' : 'хранилище недоступно — используйте резервные копии' });
   const failed = res.filter(r => !r.ok);
-  return `<h1>Самопроверка вычислительного модуля</h1>
+  return `<h1>Проверка расчётов</h1>
   <div class="note ${failed.length ? 'err' : 'ok'}"><b>${res.length - failed.length} из ${res.length} проверок пройдено</b> за ${dt.toFixed(0)} мс. ${failed.length ? 'Обнаружены ошибки — результаты расчётов могут быть недостоверны.' : 'Контрольные примеры источников воспроизводятся.'}</div>
   <div class="card"><div class="table-wrap"><table><thead><tr><th>Группа</th><th>Проверка</th><th>Результат</th></tr></thead><tbody>
   ${res.map(r => `<tr><td>${esc(r.group)}</td><td>${esc(r.name)}${r.detail ? `<div class="src" style="color:var(--danger)">${esc(r.detail)}</div>` : ''}</td><td>${r.ok ? '<span class="badge b-final">пройдено</span>' : '<span class="badge b-draft" style="color:var(--danger)">ошибка</span>'}</td></tr>`).join('')}
@@ -4211,13 +4444,13 @@ route(/^\/tests$/, () => {
 $('#menuBtn').addEventListener('click', () => { const s = $('#side'); s.classList.toggle('open'); $('#menuBtn').setAttribute('aria-expanded', s.classList.contains('open')); });
 $('#sideScrim').addEventListener('click', () => { $('#side').classList.remove('open'); $('#menuBtn').setAttribute('aria-expanded', 'false'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#side').classList.contains('open')) { $('#side').classList.remove('open'); $('#menuBtn').setAttribute('aria-expanded', 'false'); } });
-/* Поиск раздела в меню */
-$('#navSearch').addEventListener('input', e => {
-  const q = e.target.value.trim().toLowerCase();
-  $$('#nav a').forEach(a => a.classList.toggle('hide', !!q && !a.textContent.toLowerCase().includes(q)));
-  $$('#nav .grp').forEach(g => { const none = !g.querySelector('a:not(.hide)'); g.classList.toggle('empty-grp', none); const sep = g.previousElementSibling; if (sep && sep.classList.contains('sep')) sep.classList.toggle('empty-grp', none); });
+/* Поиск раздела в меню: по названиям и пояснениям всех экранов */
+$('#navSearch').addEventListener('input', () => { const path = (location.hash || '#/').slice(1).split('?')[0] || '/'; renderNav(path, locate(path)); });
+$('#navSearch').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const a = $('#nav a[href^="#/"]'); if (a) { e.target.value = ''; location.hash = a.getAttribute('href'); } }
+  if (e.key === 'Escape') { e.target.value = ''; e.target.dispatchEvent(new Event('input')); }
 });
-$('#navSearch').addEventListener('keydown', e => { if (e.key === 'Enter') { const a = $('#nav a:not(.hide)'); if (a) { a.click(); e.target.value = ''; e.target.dispatchEvent(new Event('input')); } } });
+$('#nav').addEventListener('click', e => { if (e.target.closest('a[href^="#/"]') && $('#navSearch').value) { $('#navSearch').value = ''; } });
 window.addEventListener('hashchange', () => { if (!/^#\/a\/[\w-]+\/edit/.test(location.hash)) { if (ui.editing) persist(); ui.editing = null; ui.snapNote = null; } render(); });
 window.addEventListener('beforeunload', () => { clearTimeout(ui.saveTimer); Store.save(state); });
 window.addEventListener('storage', e => { if (e.key && e.key.startsWith('pfk-vpk-calculator')) { state = Store.load(); render(); toast('Данные обновлены в другой вкладке'); } });

@@ -10,7 +10,7 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   const url = 'file://' + path.resolve(__dirname, '..', 'index.html');
   await page.goto(url + '#/objects');
   await page.fill('#of-name', 'Сердюк М.А.'); await page.fill('#of-group', '41');
-  await page.click('text=Сведения абитуриента'); await page.selectOption('#of-edu', 'колледж'); await page.check('.of-flag[value=combat]'); await page.fill('#of-exp', 'контрактная служба 2 года');
+  await page.click('text=Дополнительные сведения'); await page.click('text=Сведения абитуриента'); await page.selectOption('#of-edu', 'колледж'); await page.check('.of-flag[value=combat]'); await page.fill('#of-exp', 'контрактная служба 2 года');
   await page.click('[data-act=obj-add]');
   await page.fill('#of-name', 'Дорогань И.О.'); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]');
   let s = await store(page);
@@ -76,7 +76,7 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   assert(!(await page.textContent('#main')).includes('изменённые пользователем'), 'возврат связей со схемы');
 
   // удаление объекта удаляет записи журнала
-  await page.goto(url + '#/object/' + sId); await page.click('[data-act=obj-del]'); await page.click('#dlgFoot .danger'); await page.waitForTimeout(80);
+  await page.goto(url + '#/object/' + sId + '/edit'); await page.click('[data-act=obj-del]'); await page.click('#dlgFoot .danger'); await page.waitForTimeout(80);
   s = await store(page);
   assert(s.controlRecords.every(r => r.objectId !== sId), 'удаление объекта удаляет его записи журнала');
   assert(errs.length === 0, 'нет ошибок JavaScript' + (errs.length ? ': ' + errs.join(' | ') : ''));

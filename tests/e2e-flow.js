@@ -102,7 +102,7 @@ const assert = (c, m) => { if (!c) { console.log('FAIL:', m); process.exitCode =
   assert(g2.includes('Предыдущие редакции (1)'), 'сохранена предыдущая редакция');
 
   // report
-  await page.click('text=Отчёт / печать'); await page.waitForTimeout(50);
+  await page.click('text=Отчёт для печати'); await page.waitForTimeout(50);
   const rep = await page.textContent('#main');
   assert(rep.includes('Применённые формулы') && rep.includes('S1'), 'отчёт содержит формулы и источники');
 

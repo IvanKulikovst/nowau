@@ -113,10 +113,11 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   s = await store(page); assert(s.practiceReports[0].items.program === 'выполнена полностью', 'отчёт о практике сохраняется');
 
   // 11. Дубли
-  await page.goto(url + '#/objects'); await page.fill('#of-name', 'сердюк  м.а.'); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]');
+  await page.goto(url + '#/objects'); await page.fill('#of-name', 'сердюк  м.а.'); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]'); await page.waitForTimeout(80);
+  assert(await page.isVisible('#dlg[open]'), 'предупреждение: такой курсант уже есть'); await page.click('#dlgFoot .primary'); await page.waitForTimeout(80);
   const dupId = (await store(page)).objects.find(o => o.name === 'сердюк  м.а.').id;
   await page.goto(url + '#/new?obj=' + dupId); await page.check('input[name=nw-type][value=g0]'); await page.click('[data-act=nw-create]'); await page.waitForTimeout(80);
-  await page.goto(url + '#/data'); await page.waitForTimeout(80);
+  await page.goto(url + '#/objects'); await page.waitForTimeout(80);
   assert((await page.textContent('#main')).includes('Поиск дублей') && (await page.$$('[data-act=dup-merge]')).length === 1, 'найдена 1 группа дублей');
   await page.click('[data-act=dup-merge]'); await page.click('#dlgFoot .primary'); await page.waitForTimeout(100);
   s = await store(page);

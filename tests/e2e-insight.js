@@ -71,7 +71,7 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   assert(ta && ta.status === 'final' && ta.result.vpk.meanPsfk.toFixed(3) === '0.251' && ta.meta.date === '2022-05-16', 'импорт .xlsx: дата Excel преобразована, Псфк 0,251');
 
   // корзина
-  await page.goto(url + '#/object/' + t.id); await page.click('[data-act=obj-del]'); await page.click('#dlgFoot .danger'); await page.waitForTimeout(80);
+  await page.goto(url + '#/object/' + t.id + '/edit'); await page.click('[data-act=obj-del]'); await page.click('#dlgFoot .danger'); await page.waitForTimeout(80);
   let s3 = await st(DEMO);
   assert(!s3.objects.some(o => o.id === t.id) && s3.trash.length === 1 && s3.trash[0].payload.assessments.length === 1, 'удаление объекта → корзина (с расчётом)');
   await page.goto(url + '#/trash'); await page.click('[data-act=tr-restore]'); await page.waitForTimeout(80);
@@ -80,7 +80,7 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
 
   // справка
   await page.goto(url + '#/matrix'); await page.keyboard.press('F1'); await page.waitForTimeout(60);
-  assert((await page.textContent('#dlgTitle')).includes('Матрица'), 'справка по разделу (F1)');
+  assert((await page.textContent('#dlgTitle')).includes('Дисциплины и ВПК'), 'справка по разделу (F1)');
   await page.click('#dlgFoot .primary');
 
   // напоминание о копии
