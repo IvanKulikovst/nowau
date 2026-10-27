@@ -12,9 +12,9 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   const wait = (ms = 80) => page.waitForTimeout(ms);
   await page.goto(url + '#/'); await page.evaluate(() => localStorage.clear()); await page.reload(); await wait(150);
 
-  // меню: пять разделов и сервис
+  // меню: шесть разделов и сервис
   const secs = await page.$$eval('#nav a.sec .t', a => a.map(x => x.textContent));
-  assert(secs.join('|') === 'Главная|Оценки|Курсанты и выпускники|Анализ|Методика', 'меню: пять разделов (' + secs + ')');
+  assert(secs.join('|') === 'Главная|Оценки|Курсанты и выпускники|Анализ|Отчёты|Методика', 'меню: шесть разделов (' + secs + ')');
   assert((await main()).includes('С чего начать'), 'главная: первые шаги для нового пользователя');
 
   // пустые состояния
@@ -60,6 +60,32 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   await page.click('.toast-btn'); await wait();
   const s2 = await st();
   assert(s2.objects.length === 1 && s2.assessments.length === 1 && s2.trash.length === 0, 'кнопка «Отменить» вернула курсанта и его оценки');
+
+  // действия над несколькими курсантами
+  await page.goto(url + '#/objects');
+  for (const n of ['Петров П.П.', 'Сидоров С.С.']) { await page.fill('#of-name', n); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]'); await wait(); }
+  assert(await page.isHidden('#bulkBar'), 'панель действий скрыта, пока никто не выбран');
+  await page.check('#selAll'); await wait();
+  assert((await page.textContent('#bulkN')) === '3' && await page.isVisible('#bulkBar'), '«выбрать всех» отмечает всех показанных');
+  await page.click('[data-act=bulk-group]'); await page.fill('#bgName', '51 взвод'); await page.click('#dlgFoot .primary'); await wait();
+  assert((await st()).objects.every(o => o.group === '51 взвод'), 'перевод выбранных в другую группу');
+  await page.click('.toast:last-child .toast-btn'); await wait();
+  assert((await st()).objects.every(o => o.group === '41'), '«Отменить» вернул прежние группы');
+  await page.check('#objTable tbody tr:nth-child(1) .osel'); await page.check('#objTable tbody tr:nth-child(2) .osel'); await wait();
+  assert(page.url().endsWith('#/objects'), 'отметка строки не открывает карточку');
+  await page.click('[data-act=bulk-del]'); await page.click('#dlgFoot .danger'); await wait();
+  assert((await st()).objects.length === 1, 'удаление выбранных (2) с подтверждением');
+  await page.click('.toast:last-child .toast-btn'); await wait();
+  assert((await st()).objects.length === 3, '«Отменить» вернул удалённых');
+
+  // раздел «Отчёты»
+  await page.goto(url + '#/reports'); await wait();
+  assert(await page.isDisabled('[data-act=rep-open][data-to=report]'), 'отчёты: без выбора курсанта кнопка неактивна');
+  await page.selectOption('#repObj', oid); await wait();
+  await page.click('[data-act=rep-open][data-to=report]'); await wait();
+  assert(page.url().endsWith('#/object/' + oid + '/report') && (await main()).includes('Отчёт по объекту'), 'отчёты: открыт отчёт по выбранному курсанту');
+  await page.goto(url + '#/reports'); await page.selectOption('#repGroup', '41'); await wait(); await page.click('[data-act=rep-group][data-to=risk]'); await wait();
+  assert(page.url().endsWith('#/risk') && (await page.inputValue('[data-risk=group]')) === '41', 'отчёты: группа передаётся в выбранный отчёт');
 
   // не найдено и ошибки
   await page.goto(url + '#/a/net-takoy'); await wait();

@@ -36,6 +36,8 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   const pf = await page.textContent('#main');
   assert((await page.$$('svg.chart polygon')).length >= 6 && pf.includes('Среднее по группе') && pf.includes('целенаправленной работы'), 'профиль: лепестковая диаграмма, среднее по группе, отстающие компетенции');
 
+  assert(pf.includes('Характеристика') && pf.includes('Сильные стороны') && pf.includes('Зоны развития') && pf.includes('Соблюдение законодательства'), 'профиль: автоматическая характеристика, сильные стороны и зоны развития, описание компетенций');
+
   // паспорта компетенций
   await page.goto(url + '#/passports'); await page.waitForTimeout(60);
   await page.$eval('[data-pp="ВПК-1|4|crit"]', e => { e.closest('details').open = true; }); await page.check('[data-pp="ВПК-1|4|crit"]'); await page.waitForTimeout(60);

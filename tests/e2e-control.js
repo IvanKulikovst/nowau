@@ -9,10 +9,10 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => m.type() === 'error' && errs.push(m.text()));
   const url = 'file://' + path.resolve(__dirname, '..', 'index.html');
   await page.goto(url + '#/objects');
-  await page.fill('#of-name', 'Сердюк М.А.'); await page.fill('#of-group', '41');
+  await page.fill('#of-name', 'Савченко А.А.'); await page.fill('#of-group', '41');
   await page.click('text=Дополнительные сведения'); await page.click('text=Сведения абитуриента'); await page.selectOption('#of-edu', 'колледж'); await page.check('.of-flag[value=combat]'); await page.fill('#of-exp', 'контрактная служба 2 года');
   await page.click('[data-act=obj-add]');
-  await page.fill('#of-name', 'Дорогань И.О.'); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]');
+  await page.fill('#of-name', 'Гончаренко Б.Б.'); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]');
   let s = await store(page);
   assert(s.objects[0].applicant.education === 'колледж' && s.objects[0].applicant.flags.combat === true, 'сведения абитуриента сохранены');
   const sId = s.objects[0].id;

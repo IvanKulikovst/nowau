@@ -15,7 +15,7 @@ const assert = (c, m) => { if (!c) { console.log('FAIL:', m); process.exitCode =
   // validation: empty name
   await page.click('[data-act=obj-add]');
   assert(await page.$('#of-name.invalid'), 'пустое ФИО отклоняется');
-  for (const [n, g] of [['Сердюк М.А.', '41 взвод'], ['Дорогань И.О.', '41 взвод'], ['Иванов И.И.', 'выпуск 2023']]) {
+  for (const [n, g] of [['Савченко А.А.', '41 взвод'], ['Гончаренко Б.Б.', '41 взвод'], ['Иванов И.И.', 'выпуск 2023']]) {
     await page.fill('#of-name', n); await page.fill('#of-group', g); await page.click('[data-act=obj-add]'); await page.waitForTimeout(30);
   }
   assert((await page.$$('#objTable tbody tr')).length === 3, '3 объекта созданы');
@@ -48,13 +48,13 @@ const assert = (c, m) => { if (!c) { console.log('FAIL:', m); process.exitCode =
   assert(page.url().includes('/edit/4'), 'после попытки утверждения остаёмся в черновике');
   await page.click('[data-act=del-a]'); await page.click('#dlgFoot .danger'); await page.waitForTimeout(50);
 
-  const r1 = await practice('Сердюк М.А.', [4,3,5,5,4,4,3,5,4,4,4,3,4], 4, 4);
+  const r1 = await practice('Савченко А.А.', [4,3,5,5,4,4,3,5,4,4,4,3,4], 4, 4);
   assert(r1.prog.includes('13 из 13'), 'прогресс 13 из 13');
-  assert(r1.body.includes('0,251') && r1.body.includes('4,00') && r1.body.includes('80,00%'), 'Сердюк: 0,251 / 4,00 / 80% (контрольный пример)');
+  assert(r1.body.includes('0,251') && r1.body.includes('4,00') && r1.body.includes('80,00%'), 'Савченко: 0,251 / 4,00 / 80% (контрольный пример)');
   assert(r1.body.includes('«средний»'), 'уровень по bср = 4,0 — «средний»');
-  const r2 = await practice('Дорогань И.О.', [4,4,5,5,4,4,5,5,5,5,5,5,4], 4, 4);
-  assert(r2.body.includes('0,289') && r2.body.includes('4,62') && r2.body.includes('92,31%'), 'Дорогань: 0,289 / 4,62 / 92,31%');
-  const r3 = await practice('Сердюк М.А.', [5,5,5,5,5,5,5,5,5,5,5,5,5], 5, 5);
+  const r2 = await practice('Гончаренко Б.Б.', [4,4,5,5,4,4,5,5,5,5,5,5,4], 4, 4);
+  assert(r2.body.includes('0,289') && r2.body.includes('4,62') && r2.body.includes('92,31%'), 'Гончаренко: 0,289 / 4,62 / 92,31%');
+  const r3 = await practice('Савченко А.А.', [5,5,5,5,5,5,5,5,5,5,5,5,5], 5, 5);
   assert(r3.body.includes('0,313'), 'все 5: 0,313');
 
   // reload persistence
@@ -104,7 +104,7 @@ const assert = (c, m) => { if (!c) { console.log('FAIL:', m); process.exitCode =
   // report
   await page.click('text=Отчёт для печати'); await page.waitForTimeout(50);
   const rep = await page.textContent('#main');
-  assert(rep.includes('Применённые формулы') && rep.includes('S1'), 'отчёт содержит формулы и источники');
+  assert(rep.includes('Применённые формулы') && rep.includes('Основания расчёта'), 'отчёт содержит формулы и основания расчёта');
 
   // summary
   await page.goto(url + '#/summary'); await page.selectOption('#sm-sub', '4'); await page.waitForTimeout(50);
@@ -158,7 +158,7 @@ const assert = (c, m) => { if (!c) { console.log('FAIL:', m); process.exitCode =
   await page.goto(url + '#/summary'); await page.selectOption('#sm-type', 'graduate'); await page.waitForTimeout(80);
   assert((await page.textContent('#main thead')).includes('Итоговый уровень'), 'сводная по отзывам: столбцы ПСК и итог');
   // отчёт по объекту
-  const objId = await page.evaluate(() => JSON.parse(localStorage.getItem('pfk-vpk-calculator-v1')).objects.find(o => o.name.startsWith('Сердюк')).id);
+  const objId = await page.evaluate(() => JSON.parse(localStorage.getItem('pfk-vpk-calculator-v1')).objects.find(o => o.name.startsWith('Савченко')).id);
   await page.goto(url + '#/object/' + objId + '/report'); await page.waitForTimeout(80);
   const orep = await page.textContent('#main');
   assert(orep.includes('Отчёт по объекту') && orep.includes('4 курс') && orep.includes('5 курс') && orep.includes('ВПК-16'), 'отчёт по объекту: расчёты и матрица компетенций');

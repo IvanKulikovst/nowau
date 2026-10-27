@@ -11,13 +11,13 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => m.type() === 'error' && errs.push(m.text()));
   const url = 'file://' + path.resolve(__dirname, '..', 'index.html');
   await page.goto(url + '#/objects');
-  for (const [n, g] of [['Сердюк М.А.', '41'], ['Дорогань И.О.', '41'], ['Петров П.П.', '42'], ['Сидоров С.С.', '42']]) { await page.fill('#of-name', n); await page.fill('#of-group', g); await page.click('[data-act=obj-add]'); }
+  for (const [n, g] of [['Савченко А.А.', '41'], ['Гончаренко Б.Б.', '41'], ['Петров П.П.', '42'], ['Сидоров С.С.', '42']]) { await page.fill('#of-name', n); await page.fill('#of-group', g); await page.click('[data-act=obj-add]'); }
 
   // 8. Групповой ввод: практика 4 курса группы 41, вставка из Excel
   await page.goto(url + '#/batch'); await page.selectOption('#bt-group', '41'); await page.waitForTimeout(80);
   await paste(page, '[data-bg="0,0"]', '4\t4\t5\t5\t4\t4\t5\t5\t5\t5\t5\t5\t4\t4\t5\n4\t3\t5\t5\t4\t4\t3\t5\t4\t4\t4\t3\t4\t5\t4');
   await page.waitForTimeout(80);
-  assert(JSON.stringify(await page.$$eval('[data-st=p]', t => t.map(x => x.textContent))) === '["0,289","0,251"]', 'групповой ввод: Дорогань 0,289, Сердюк 0,251 (контрольные примеры)');
+  assert(JSON.stringify(await page.$$eval('[data-st=p]', t => t.map(x => x.textContent))) === '["0,289","0,251"]', 'групповой ввод: Гончаренко 0,289, Савченко 0,251 (контрольные примеры)');
   await page.reload(); await page.waitForTimeout(80);
   assert((await page.inputValue('[data-bg="1,1"]')) === '3', 'таблица группового ввода сохраняется после перезагрузки');
   await page.click('[data-act=bt-commit][data-final="1"]'); await page.click('#dlgFoot .primary'); await page.waitForTimeout(120);
@@ -30,7 +30,7 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   const tpl = fs.readFileSync(await dl.path(), 'utf8').trim();
   assert(tpl.includes('ВПК-16') && tpl.includes('ПСК-5'), 'шаблон CSV для отзыва');
   const g16 = n => Array(16).fill(n);
-  const csv = '﻿' + tpl + '\r\n' + ['Сердюк М.А.', '41', '1', '01.12.2023', 'майор А', ...g16('3'), '', '', '', '', ''].join(';') + '\r\n' + ['Дорогань И.О.', '41', '1', '2023-12-01', 'майор Б', ...g16('5'), '5', '5', '5', '5', '5'].join(';') + '\r\n' + ['Новиков Н.Н.', '43', '3', '', '', '6'].join(';') + '\r\n';
+  const csv = '﻿' + tpl + '\r\n' + ['Савченко А.А.', '41', '1', '01.12.2023', 'майор А', ...g16('3'), '', '', '', '', ''].join(';') + '\r\n' + ['Гончаренко Б.Б.', '41', '1', '2023-12-01', 'майор Б', ...g16('5'), '5', '5', '5', '5', '5'].join(';') + '\r\n' + ['Новиков Н.Н.', '43', '3', '', '', '6'].join(';') + '\r\n';
   const f = path.join(os.tmpdir(), 'pfk-import.csv'); fs.writeFileSync(f, csv);
   await page.setInputFiles('#imFile', f); await page.waitForTimeout(100);
   const prev = await page.textContent('#main');
@@ -43,13 +43,13 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   // 1. Выпуск ↔ войска
   await page.goto(url + '#/followup'); await page.waitForTimeout(80);
   const fu = await page.textContent('#main');
-  assert(fu.includes('Сердюк') && fu.includes('Дорогань'), 'выпуск ↔ войска: обе пары найдены');
-  const sId = s.objects.find(o => o.name.startsWith('Сердюк')).id;
+  assert(fu.includes('Савченко') && fu.includes('Гончаренко'), 'выпуск ↔ войска: обе пары найдены');
+  const sId = s.objects.find(o => o.name.startsWith('Савченко')).id;
   await page.goto(url + '#/followup/' + sId); await page.waitForTimeout(80);
   const fd = await page.textContent('#main');
   assert(fd.includes('13 общих компетенций'), 'выпуск ↔ войска: 13 общих компетенций');
   const kp = await page.$$eval('.kpi .v', t => t.map(x => x.textContent));
-  assert(kp[0] === '4,00' && kp[1] === '3,00' && kp[2] === '-1,00', 'Сердюк: практика 4,00 → отзыв 3,00, Δ = −1,00 (' + kp + ')');
+  assert(kp[0] === '4,00' && kp[1] === '3,00' && kp[2] === '-1,00', 'Савченко: практика 4,00 → отзыв 3,00, Δ = −1,00 (' + kp + ')');
 
   // 2. Сравнение групп
   await page.goto(url + '#/batch'); await page.selectOption('#bt-group', '42'); await page.waitForTimeout(80);
@@ -102,20 +102,20 @@ const store = page => page.evaluate(() => JSON.parse(localStorage.getItem('pfk-v
   const bl = await page.textContent('#main');
   assert(bl.includes('СЛУЖЕБНЫЙ ОТЗЫВ') && bl.includes('0,06689') && bl.includes('КОЛОНКА ВЫПУСКНИКА'), 'бланк отзыва с Кзнк и колонкой выпускника');
   await page.selectOption('#bl-k', 'anketa'); await page.waitForTimeout(50); await page.selectOption('#bl-f', 'group'); await page.waitForTimeout(50); await page.selectOption('#bl-g', '41'); await page.waitForTimeout(80);
-  assert((await page.$$('#main .blank')).length === 2 && (await page.textContent('#main')).includes('Дорогань И.О.'), 'бланки анкет на группу (2 шт., с ФИО)');
+  assert((await page.$$('#main .blank')).length === 2 && (await page.textContent('#main')).includes('Гончаренко Б.Б.'), 'бланки анкет на группу (2 шт., с ФИО)');
 
   // 7. Отчёт о практике
   await page.goto(url + '#/preports'); await page.click('[data-act=pr-new]'); await page.waitForTimeout(80);
   await page.selectOption('select[data-pr$="|group"]', '41'); await page.waitForTimeout(80);
   await page.fill('textarea[data-pr$="|items|program"]', 'выполнена полностью'); await page.waitForTimeout(400);
   const pr = await page.textContent('#main');
-  assert(pr.includes('средний балл группы 4,31') && pr.includes('Сердюк М.А.'), 'отчёт о практике: характеристика курсантов из анкет');
+  assert(pr.includes('средний балл группы 4,31') && pr.includes('Савченко А.А.'), 'отчёт о практике: характеристика курсантов из анкет');
   s = await store(page); assert(s.practiceReports[0].items.program === 'выполнена полностью', 'отчёт о практике сохраняется');
 
   // 11. Дубли
-  await page.goto(url + '#/objects'); await page.fill('#of-name', 'сердюк  м.а.'); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]'); await page.waitForTimeout(80);
+  await page.goto(url + '#/objects'); await page.fill('#of-name', 'савченко  а.а.'); await page.fill('#of-group', '41'); await page.click('[data-act=obj-add]'); await page.waitForTimeout(80);
   assert(await page.isVisible('#dlg[open]'), 'предупреждение: такой курсант уже есть'); await page.click('#dlgFoot .primary'); await page.waitForTimeout(80);
-  const dupId = (await store(page)).objects.find(o => o.name === 'сердюк  м.а.').id;
+  const dupId = (await store(page)).objects.find(o => o.name === 'савченко  а.а.').id;
   await page.goto(url + '#/new?obj=' + dupId); await page.check('input[name=nw-type][value=g0]'); await page.click('[data-act=nw-create]'); await page.waitForTimeout(80);
   await page.goto(url + '#/objects'); await page.waitForTimeout(80);
   assert((await page.textContent('#main')).includes('Поиск дублей') && (await page.$$('[data-act=dup-merge]')).length === 1, 'найдена 1 группа дублей');
