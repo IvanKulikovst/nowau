@@ -4,7 +4,7 @@
   var KEY = {
     LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13,
     BACK: 461, ESC: 27, BACKSPACE: 8,
-    RED: 403, GREEN: 404
+    RED: 403, GREEN: 404, BLUE: 406
   };
   var exitArmedUntil = 0;
 
@@ -24,6 +24,13 @@
 
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode;
+    // Любая кнопка закрывает заставку и больше ничего не делает.
+    if (Screensaver.isActive()) {
+      Screensaver.stop();
+      e.preventDefault();
+      return;
+    }
+    Screensaver.resetIdle();
     var active = document.activeElement;
     var inInput = active && active.tagName === 'INPUT';
 
@@ -44,7 +51,7 @@
         break;
       case KEY.ENTER:
         if (inInput) {
-          Settings.search();
+          Settings.submitInput(active);
         } else if (Nav.current()) {
           Nav.current().click();
         } else {
@@ -61,6 +68,10 @@
         break;
       case KEY.RED:
         if (!Settings.isOpen() && hasClass(Nav.current(), 'tile')) Apps.toggleFavorite(Nav.current());
+        break;
+      case KEY.BLUE:
+        if (Settings.isOpen()) Settings.close();
+        Screensaver.start();
         break;
       case KEY.GREEN:
         Weather.refresh();
@@ -95,6 +106,7 @@
   Clock.start();
   Weather.init();
   Settings.init();
+  Screensaver.init();
   Apps.init($('rows'), function (target) {
     if (Settings.isOpen()) return;
     if (target) {

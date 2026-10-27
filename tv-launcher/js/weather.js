@@ -8,6 +8,7 @@ var Weather = (function () {
   var city = Store.get('city', DEFAULT_CITY);
   var timer = null;
   var lastOk = 0;
+  var lastData = null;
 
   var CODES = {
     0: ['Ясно', 'sun'],
@@ -145,6 +146,7 @@ var Weather = (function () {
   }
 
   function render(data) {
+    lastData = data;
     var c = data.current;
     var info = describe(c.weather_code);
     var upd = new Date(data.fetchedAt);
@@ -243,7 +245,20 @@ var Weather = (function () {
     });
   }
 
+  function getSummary() {
+    if (!lastData) return null;
+    var c = lastData.current;
+    var info = describe(c.weather_code);
+    return {
+      city: city.name,
+      temp: fmtTemp(c.temperature_2m),
+      text: info[0],
+      icon: iconSvg(info[1], c.is_day !== 0)
+    };
+  }
+
   function setCity(c) {
+    lastData = null;
     city = { name: c.name, lat: c.lat, lon: c.lon };
     Store.set('city', city);
     $('weather').innerHTML = '<div class="w-empty">Загрузка погоды…</div>';
@@ -256,6 +271,7 @@ var Weather = (function () {
     refreshIfStale: refreshIfStale,
     searchCity: searchCity,
     setCity: setCity,
+    getSummary: getSummary,
     getCity: function () { return city; }
   };
 })();

@@ -1,3 +1,6 @@
 dist/
 *.ipk
 node_modules/
+# личные фото для заставки не попадают в git
+tv-launcher/photos/*
+!tv-launcher/photos/list.js

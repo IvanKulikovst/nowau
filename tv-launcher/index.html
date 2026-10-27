@@ -11,7 +11,7 @@
     <header class="topbar">
       <div class="greeting" id="greeting">Добрый день</div>
       <div class="topbar-right">
-        <div class="hint"><span class="key-red"></span>Красная кнопка — в избранное / убрать</div>
+        <div class="hint"><span class="key-dot red"></span>в избранное <span class="key-dot blue"></span>заставка</div>
         <div class="btn focusable" id="btnSettings" tabindex="0">
           <svg class="gear" viewBox="0 0 24 24"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1L11 21h4l.4-2.9a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
           Настройки
@@ -44,12 +44,35 @@
         <div class="btn focusable" id="citySearch" tabindex="0">Найти</div>
       </div>
       <div id="cityResults" class="results"></div>
+      <div class="label section">Заставка со слайд-шоу фото</div>
+      <div class="settings-line">
+        <div class="btn focusable" id="saverTimeout" tabindex="0"></div>
+        <div class="btn focusable" id="saverSource" tabindex="0"></div>
+        <div class="btn focusable" id="saverInterval" tabindex="0"></div>
+        <div class="btn focusable" id="saverStart" tabindex="0">Показать сейчас</div>
+      </div>
+      <div class="field-row" id="saverUrlRow">
+        <input id="saverUrl" class="input focusable" type="text" placeholder="Ссылка на файл со списком фото (https://…)">
+        <div class="btn focusable" id="saverUrlSave" tabindex="0">Сохранить</div>
+      </div>
       <div class="settings-actions">
         <div class="btn focusable" id="toggleSeconds" tabindex="0">Секунды</div>
         <div class="btn focusable" id="resetFav" tabindex="0">Очистить избранное</div>
         <div class="btn focusable primary" id="closeSettings" tabindex="0">Готово</div>
       </div>
     </div>
+  </div>
+
+  <div id="saver" class="saver hidden">
+    <div id="saverA" class="saver-layer"></div>
+    <div id="saverB" class="saver-layer"></div>
+    <div class="saver-shade"></div>
+    <div id="saverInfo" class="saver-info left">
+      <div id="saverTime" class="saver-time"></div>
+      <div id="saverDate" class="saver-date"></div>
+      <div id="saverWeather" class="saver-weather"></div>
+    </div>
+    <div id="saverNote" class="saver-note"></div>
   </div>
 
   <div id="toast" class="toast"></div>
@@ -61,6 +84,8 @@
   <script src="js/weather.js"></script>
   <script src="js/apps.js"></script>
   <script src="js/nav.js"></script>
+  <script src="photos/list.js"></script>
+  <script src="js/screensaver.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/main.js"></script>
 </body>
