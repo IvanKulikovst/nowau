@@ -15,20 +15,22 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   await page.goto(url + '#/data'); await page.click('[data-act=demo-load]'); await page.click('#dlgFoot .primary'); await page.waitForTimeout(400);
   assert(await page.isVisible('#modeBanner'), 'учебный режим: баннер показан');
   const d = await st(DEMO), m = await st(MAIN);
-  assert(d.objects.length === 60 && d.objects.every(o => o.demo) && new Set(d.objects.map(o => o.name)).size === 60 && new Set(d.objects.map(o => o.group)).size === 4, 'демо: 60 разных вымышленных курсантов (4 взвода) в учебном хранилище');
+  assert(d.objects.length === 73 && d.objects.every(o => o.demo) && new Set(d.objects.map(o => o.name)).size === 73 && new Set(d.objects.map(o => o.group)).size === 3, 'демо: 73 обезличенных курсанта трёх групп в учебном хранилище');
   assert(m.objects.length === 1 && m.objects[0].name === 'Рабочий Р.Р.', 'рабочие данные не затронуты');
-  const types = t => d.assessments.filter(a => a.type === t && a.status === 'final').length;
-  assert(types('practice') === 117 && types('graduate') === 72 && types('g0') === 60 && types('trajectory') === 30 && d.controlRecords.length === 60 * 14, `демо: практика ${types('practice')}, отзывы ${types('graduate')}, g₀ ${types('g0')}, траектории ${types('trajectory')}, журнал ${d.controlRecords.length}`);
-  const ab = d.objects.find(o => o.name.startsWith('Абрамов ')), be = d.objects.find(o => o.name.startsWith('Белов '));
-  const p4 = id => d.assessments.find(a => a.type === 'practice' && a.meta.course === 4 && a.objectId === id).result.vpk;
-  assert(p4(ab.id).meanPsfk.toFixed(3) === '0.289' && p4(be.id).meanPsfk.toFixed(3) === '0.251', 'демо: контрольные примеры источников внутри (0,289 и 0,251)');
+  const fin = d.assessments.filter(a => a.status === 'final');
+  assert(fin.length === 73 && fin.every(a => a.type === 'practice') && d.coefSets.filter(c => c.demo).length === 2 && d.expertStudies.length === 1, `демо: 73 утверждённые анкеты практики, 2 набора Кзнк из данных, экспертиза (${fin.length}, ${d.coefSets.length}, ${d.expertStudies.length})`);
+  const ab = d.objects.find(o => o.name === 'Курсант А1'), be = d.objects.find(o => o.name === 'Курсант А3');
+  const p4 = id => d.assessments.find(a => a.type === 'practice' && a.objectId === id).result.vpk;
+  assert(p4(ab.id).meanPsfk.toFixed(3) === '0.289' && p4(be.id).meanPsfk.toFixed(3) === '0.251', 'демо: значения из файла воспроизводятся (А1 — 0,289, А3 — 0,251)');
+  const b1 = d.objects.find(o => o.name === 'Курсант Б1'), b1a = d.assessments.find(a => a.objectId === b1.id);
+  assert(b1a.result.vpk.rows.length === 16 && b1a.result.vpk.meanPsfk.toFixed(3) === '0.321' && b1a.snapshot.sets.vpk.id === 'demo-set-b', 'демо: группа Б — 16 компетенций со своими Кзнк, Псфк 0,321 как в файле');
 
   // группы риска
   await page.goto(url + '#/'); await page.waitForTimeout(80);
   assert((await page.textContent('#main')).includes('Группы риска:'), 'главная: предупреждение о группах риска');
   await page.goto(url + '#/risk'); await page.waitForTimeout(80);
   const rk = await page.textContent('#main');
-  const weakest = d.assessments.filter(a => a.type === 'practice' && a.meta.course === 4).sort((x, y) => x.result.vpk.meanPsfk - y.result.vpk.meanPsfk)[0];
+  const weakest = d.assessments.filter(a => a.type === 'practice' && a.snapshot.sets.vpk.id === 'src-vpk13').sort((x, y) => x.result.vpk.meanPsfk - y.result.vpk.meanPsfk)[0];
   assert(rk.includes(d.objects.find(o => o.id === weakest.objectId).name) && /критично|внимание/.test(rk), 'группы риска: слабый курсант выявлен');
 
   // профиль
@@ -44,11 +46,12 @@ const assert = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) pro
   const pp = (await st(DEMO)).settings.passports;
   assert(pp['ВПК-1'] && pp['ВПК-1'][4].includes('crit') && pp['ВПК-11'], 'паспорта: можно задать для любой ВПК, ВПК-11 из источника сохранён');
   await page.click('[data-act=pp-reset]'); await page.waitForTimeout(60);
-  const a4 = d.assessments.find(a => a.type === 'practice' && a.meta.course === 4 && a.result.vpk.rows.find(r => r.id === 'ВПК-11').grade <= 2);
+  const a4 = d.assessments.find(a => a.type === 'practice' && a.snapshot.sets.vpk.id === 'src-vpk13' && a.result.vpk.rows.find(r => r.id === 'ВПК-11').grade <= 2);
   if (a4) { await page.goto(url + '#/a/' + a4.id); await page.waitForTimeout(60); assert((await page.textContent('#main')).includes('Паспорт компетенции'), 'анкета: нарушение паспорта ВПК-11 показано'); }
   else assert(true, 'анкета: нарушений паспорта ВПК-11 в демо нет (проверка пропущена)');
 
-  // матрица
+  // матрица (учебный план — из контрольного примера)
+  await page.goto(url + '#/curricula'); await page.click('[data-act=cur-example]'); await page.waitForTimeout(80);
   await page.goto(url + '#/matrix'); await page.waitForTimeout(80);
   const mx = await page.textContent('#main');
   assert(mx.includes('Не формируются') && mx.includes('ВПК-7') && mx.includes('Контроль по компетенциям'), 'матрица: непокрытые ВПК и данные журнала по компетенциям');
