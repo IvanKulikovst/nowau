@@ -1,0 +1,20 @@
+@import "./tokens.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { font-family: var(--font-sans); }
+body { background: var(--color-bg); color: var(--color-text); font-size: var(--text-base); line-height: var(--leading-base); -webkit-font-smoothing: antialiased; }
+
+/* Правила устойчивости вёрстки (ТЗ 12.1) */
+.text-safe { overflow-wrap: anywhere; word-break: break-word; }
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.amount { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.table-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+:focus-visible { outline: 2px solid var(--color-info); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

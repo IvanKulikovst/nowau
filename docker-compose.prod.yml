@@ -1,0 +1,67 @@
+# Версия 2.0 (публичный деплой): ./scripts/deploy.sh  (или docker compose -f docker-compose.prod.yml up -d --build)
+# Требует .env с PUBLIC_MODE=true, SSL_ENABLED=true, DOMAIN, SECRET_KEY, ADMIN_PASSWORD, POSTGRES_PASSWORD
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: creditor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD}
+    volumes: [pgdata:/var/lib/postgresql/data, ./backups:/backups]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d creditor"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+
+  backend:
+    build: ./backend
+    restart: always
+    env_file: [{path: .env, required: false}]
+    environment:
+      ENVIRONMENT: prod
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@db:5432/creditor
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_started}
+    volumes: [storage:/app/storage]
+
+  frontend:
+    build: {context: ./frontend, target: prod}
+    restart: always
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: always
+    depends_on: [backend, frontend]
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/certbot-www:/var/www/certbot
+    environment: {DOMAIN: "${DOMAIN}"}
+    ports: ["80:80", "443:443"]
+
+  backup:   # ежедневный pg_dump в ./backups (cron внутри контейнера)
+    image: postgres:15-alpine
+    restart: always
+    depends_on: [db]
+    environment: {PGPASSWORD: "${POSTGRES_PASSWORD}"}
+    volumes: [./backups:/backups]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          pg_dump -h db -U postgres creditor | gzip > /backups/creditor_$$(date +%F).sql.gz
+          find /backups -name 'creditor_*.sql.gz' -mtime +14 -delete
+          sleep 86400
+        done
+
+volumes:
+  pgdata:
+  storage:

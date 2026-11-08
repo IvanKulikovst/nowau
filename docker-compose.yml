@@ -1,0 +1,58 @@
+# Версия 1.0 (локальный запуск): docker compose up --build
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: creditor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d creditor"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file: [{path: .env, required: false}]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/creditor
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    volumes: [storage:/app/storage]
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build: {context: ./frontend, target: dev}
+    depends_on: [backend]
+    ports: ["5173:5173"]
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+
+  nginx:   # опционально: единая точка входа http://localhost:8080
+    image: nginx:1.27-alpine
+    profiles: ["proxy"]
+    depends_on: [backend, frontend]
+    volumes: [./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro]
+    ports: ["8080:80"]
+
+volumes:
+  pgdata:
+  storage:

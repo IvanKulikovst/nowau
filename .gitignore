@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+*.db
+node_modules/
+dist/
+test-results/
+playwright-report/
+backups/
+backend/storage/
+nginx/ssl/*.pem
+nginx/certbot-www/
