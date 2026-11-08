@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     DOMAIN: str = "localhost"
     SSL_ENABLED: bool = False
 
+    # Автономная сборка (desktop): каталог со сборкой фронтенда, раздаётся самим backend
+    FRONTEND_DIST: str = ""
+
     # Celery
     CELERY_TASK_ALWAYS_EAGER: bool = True
 

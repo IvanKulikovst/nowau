@@ -49,3 +49,23 @@ app.include_router(api_router)
 if settings.METRICS_ENABLED:
     from prometheus_fastapi_instrumentator import Instrumentator
     Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
+
+
+if settings.FRONTEND_DIST:
+    # Автономный режим: backend раздаёт собранный фронтенд (SPA с fallback на index.html)
+    from pathlib import Path
+
+    from fastapi import HTTPException
+    from fastapi.responses import FileResponse
+
+    _dist = Path(settings.FRONTEND_DIST).resolve()
+    _API = ("api/", "docs", "openapi.json", "health", "ready", "metrics")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    async def spa(path: str):
+        if path.startswith(_API):
+            raise HTTPException(404, "Not found")
+        f = (_dist / path).resolve()
+        if path and f.is_file() and _dist in f.parents:
+            return FileResponse(f)
+        return FileResponse(_dist / "index.html")

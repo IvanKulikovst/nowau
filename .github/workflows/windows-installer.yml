@@ -1,0 +1,46 @@
+name: Windows installer
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Frontend build
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npx vite build
+      - name: Backend deps + tests
+        working-directory: backend
+        run: |
+          pip install -r requirements-dev.txt pyinstaller
+          python -m pytest -q
+      - name: PyInstaller
+        working-directory: desktop
+        run: pyinstaller --noconfirm --distpath ../dist --workpath ../build creditor.spec
+      - name: Smoke-test exe
+        shell: pwsh
+        run: |
+          $env:CP_PORT = "8799"
+          $p = Start-Process -FilePath dist\ProfilKreditora.exe -PassThru -WindowStyle Hidden
+          $ok = $false
+          foreach ($i in 1..30) { Start-Sleep 2; try { if ((Invoke-RestMethod http://127.0.0.1:8799/health).status -eq "ok") { $ok = $true; break } } catch {} }
+          Stop-Process -Id $p.Id -Force
+          if (-not $ok) { throw "exe не запустился" }
+      - name: Inno Setup installer
+        run: |
+          choco install innosetup -y --no-progress
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" desktop\installer.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ProfilKreditora-Setup
+          path: |
+            dist/ProfilKreditora-Setup-*.exe
+            dist/ProfilKreditora.exe

@@ -33,6 +33,13 @@ DATABASE_URL=sqlite+aiosqlite:///./dev.db ENVIRONMENT=local uvicorn app.main:app
 cd frontend && npm install && npm run dev        # http://localhost:5173, проксирует /api на :8000
 ```
 
+## Установщик для Windows (.exe)
+
+Автономная версия без Docker, Postgres и Redis: один `.exe`, SQLite, данные в `%LOCALAPPDATA%\CreditorProfile`, браузер открывается сам (http://127.0.0.1:8765, вход `admin@local` / `admin`).
+
+Сборка: GitHub → Actions → **Windows installer** → Run workflow; готовый `ProfilKreditora-Setup-1.0.0.exe` — в Artifacts. Либо вручную на Windows: `npm run build` во `frontend`, затем `pyinstaller desktop/creditor.spec` и `iscc desktop/installer.iss`.
+Режим данных в автономной версии — демо (`PARSERS_MODE=mock`) + ручной ввод. OCR сканов требует отдельной установки Tesseract; Playwright (live-КАД) в exe не входит.
+
 ## Тесты
 
 ```bash
