@@ -14,6 +14,8 @@ export default function Home() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [more, setMore] = useState(false);
+  const [caseOpen, setCaseOpen] = useState(false);
+  const [c, setC] = useState({ filing: "", assets: "", expenses: "", sigma3: "", jN: "", jRate: "", jSig: false, colC: "", colL: "0.6" });
   const [f, setF] = useState({ amount: "", executed: "", execDate: "", construction: "supply", status: "independent", credit: false });
   const m = useMutation({
     mutationFn: (b: AnalyzeBody) => api.analyze(b),
@@ -31,7 +33,14 @@ export default function Home() {
       execution_date: f.execDate || undefined,
       construction_type: f.construction, status: f.status,
     };
-    m.mutate({ ...(isInn ? { inn: digits } : { case_number: q.trim() }), claim });
+    const num = (v: string) => (v ? Number(v) : undefined);
+    const manual = {
+      filing_date: c.filing || undefined, total_assets: num(c.assets), current_expenses: num(c.expenses), sigma3: num(c.sigma3),
+      judge: c.jN && c.jRate ? { n_cases: Number(c.jN), approval_rate: Number(c.jRate) / 100, is_significant: c.jSig } : undefined,
+      collateral: c.colC ? [{ C: Number(c.colC), L: Number(c.colL) }] : undefined,
+    };
+    const hasManual = Object.values(manual).some((v) => v !== undefined);
+    m.mutate({ ...(isInn ? { inn: digits } : { case_number: q.trim() }), claim, ...(hasManual ? { manual } : {}) });
   };
 
   return (
@@ -53,6 +62,21 @@ export default function Home() {
               <Field label="Связь с должником"><Select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}>
                   <option value="independent">Независимый кредитор</option><option value="affiliated">Аффилированное лицо</option><option value="kdl">Контролирующее лицо (КДЛ)</option>
                 </Select></Field>
+            </div>
+          )}
+          <button type="button" className="block text-sm text-info" onClick={() => setCaseOpen(!caseOpen)} aria-expanded={caseOpen}>
+            {caseOpen ? "Скрыть данные дела" : "Ввести данные дела вручную (если источники недоступны)"}
+          </button>
+          {caseOpen && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Дата принятия заявления"><Input type="date" value={c.filing} onChange={(e) => setC({ ...c, filing: e.target.value })} /></Field>
+              <Field label="Активы должника, ₽"><Input type="number" min="0" value={c.assets} onChange={(e) => setC({ ...c, assets: e.target.value })} /></Field>
+              <Field label="Текущие расходы, ₽"><Input type="number" min="0" value={c.expenses} onChange={(e) => setC({ ...c, expenses: e.target.value })} /></Field>
+              <Field label="Требования третьей очереди (Σ3), ₽"><Input type="number" min="0" value={c.sigma3} onChange={(e) => setC({ ...c, sigma3: e.target.value })} /></Field>
+              <Field label="Судья: число дел"><Input type="number" min="0" value={c.jN} onChange={(e) => setC({ ...c, jN: e.target.value })} /></Field>
+              <Field label="Судья: доля удовлетворённых, %"><Input type="number" min="0" max="100" value={c.jRate} onChange={(e) => setC({ ...c, jRate: e.target.value })} /></Field>
+              <Field label="Залог: стоимость, ₽"><Input type="number" min="0" value={c.colC} onChange={(e) => setC({ ...c, colC: e.target.value })} /></Field>
+              <Field label="Залог: ликвидность (0–1)"><Input type="number" min="0.01" max="1" step="0.05" value={c.colL} onChange={(e) => setC({ ...c, colL: e.target.value })} /></Field>
             </div>
           )}
           {m.error && <ErrorBox error={m.error} />}

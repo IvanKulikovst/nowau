@@ -36,7 +36,7 @@ cd frontend && npm install && npm run dev        # http://localhost:5173, про
 ## Тесты
 
 ```bash
-cd backend && python -m pytest --cov=app                         # 91 тест, SQLite
+cd backend && python -m pytest --cov=app                         # 93 теста, SQLite
 TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/creditor_test python -m pytest   # на PostgreSQL
 cd frontend && npm run build && npm run preview &                # E2E: нужен запущенный backend на :8000
 cd frontend && npx playwright test --trace off                   # при необходимости PW_CHROMIUM=/путь/к/chromium
@@ -84,6 +84,10 @@ frontend/src/pages/                     Главная, Вход, Регистр
 8. Проверить `/health`, `/docs`, `/pricing`.
 
 Резервные копии: `scripts/backup.sh`, `scripts/restore.sh`; в prod-compose работает сервис `backup` (ежедневно, хранение 14 дней).
+
+## Ручной ввод данных дела
+
+Реальные ЕФРСБ/КАД из среды разработки недоступны (хосты закрыты), поэтому ручной ввод — полноценный путь: на главной «Ввести данные дела вручную» (или поле `manual` в `POST /api/v1/analyze`): дата заявления, активы, расходы, Σ3, статистика судьи, залог. Эти данные перекрывают данные парсеров, сохраняются в запросе (не теряются при смене режима и подтверждении фактов) и помечаются в сводке как «введено вручную».
 
 ## Допущения расчёта (где ТЗ неоднозначно)
 

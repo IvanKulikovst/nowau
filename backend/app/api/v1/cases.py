@@ -41,7 +41,7 @@ async def set_mode(case_id: int, body: SetModeIn, db: AsyncSession = Depends(get
     base = await _latest_profile(db, case_id, user)
     req = (base.report or {}).get("_request", {})
     new = await svc.run_analysis(db, user, inn=req.get("inn"), case_number=req.get("case_number"),
-                                 claim=req.get("claim"), mode_override=body.mode, base_profile=base)
+                                 claim=req.get("claim"), manual=req.get("manual"), mode_override=body.mode, base_profile=base)
     return {**svc.summary_view(new), "warning": "Вы выбрали режим вручную. Автоматический расчёт может "
             "отличаться. Убедитесь, что данные актуальны."}
 

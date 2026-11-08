@@ -108,6 +108,6 @@ async def confirm(doc_id: int, body: ConfirmIn, db: AsyncSession = Depends(get_d
         req = (base.report or {}).get("_request", {})
         mode = base.mode if (base.report or {}).get("mode_manual") else None
         new = await svc.run_analysis(db, user, inn=req.get("inn"), case_number=req.get("case_number"),
-                                     claim=req.get("claim"), mode_override=mode, base_profile=base)
+                                     claim=req.get("claim"), manual=req.get("manual"), mode_override=mode, base_profile=base)
         new_id = new.id
     return {"confirmed": sum(f.confirmed for f in facts), "total": len(facts), "analysis_id": new_id}

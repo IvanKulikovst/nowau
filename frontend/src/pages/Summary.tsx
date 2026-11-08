@@ -25,6 +25,7 @@ export default function Summary() {
   return (
     <AnalysisShell title={title}>
       {s.demo_data && <Banner tone="info">Демонстрационные данные: источники КАД/ЕФРСБ работают в режиме mock. Для реального анализа включите PARSERS_MODE=live.</Banner>}
+      {s.manual_data && <Banner tone="info">Часть данных введена вручную и не проверена системой.</Banner>}
       {s.status === "partial" && <Banner tone="warn">Часть источников недоступна{s.manual_input_required ? " — требуется ручной ввод" : ""}: {s.warnings.join("; ")}</Banner>}
 
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">

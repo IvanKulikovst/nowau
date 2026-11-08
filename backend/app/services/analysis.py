@@ -99,10 +99,43 @@ def build_input(bundle: dict, claim: dict, mode: str, doc_flags: dict, facts_con
     return inp, notes
 
 
+def apply_manual(bundle: dict, manual: dict) -> dict:
+    """Ручной ввод данных дела перекрывает данные источников (для partial/live и для точной настройки)."""
+    if not manual:
+        return bundle
+    b = dict(bundle)
+    b["found"] = True if any(manual.get(k) is not None for k in
+                             ("filing_date", "total_assets", "sigma3", "judge", "au")) else b.get("found")
+    deb = dict(b.get("debtor") or {})
+    for k in ("total_assets", "current_expenses", "first_priority", "second_priority", "industry", "type"):
+        if manual.get(k) is not None:
+            deb[k] = manual[k]
+    b["debtor"] = deb
+    reg = dict(b.get("registry") or {})
+    for k in ("sigma3", "sigma_sub"):
+        if manual.get(k) is not None:
+            reg[k] = manual[k]
+    b["registry"] = reg
+    for k in ("filing_date", "judge", "au", "au_signals", "court_avg", "case_number"):
+        if manual.get(k) is not None:
+            b[k] = manual[k]
+    if manual.get("collateral") is not None:
+        b["collateral"] = manual["collateral"]
+    b.setdefault("messages", [])
+    b["status"] = "ok"
+    b["manual_input_required"] = False
+    b["source"] = "manual" if b.get("source") != "mock" else "mock+manual"
+    b["warnings"] = [w for w in b.get("warnings", []) if "mock" not in w] + \
+        ["Часть данных введена вручную и не проверена системой."]
+    return b
+
+
 async def run_analysis(session, user, *, inn=None, case_number=None, claim: dict | None = None,
+                       manual: dict | None = None,
                        mode_override: str | None = None, base_profile: CreditorProfile | None = None) -> CreditorProfile:
     claim = claim or {}
-    bundle = await fetch_case_bundle(inn=inn, case_number=case_number)
+    manual = manual or {}
+    bundle = apply_manual(await fetch_case_bundle(inn=inn, case_number=case_number), manual)
     auto = mode_from_bundle(bundle)
     mode = mode_override or auto["mode"]
 
@@ -137,7 +170,7 @@ async def run_analysis(session, user, *, inn=None, case_number=None, claim: dict
                     if bundle.get("au") else None)
     result["registry_rows"] = build_registry_view(result, bundle)
     result["checklist"], result["calendar"] = _checklist_calendar(result, bundle)
-    result["_request"] = {"inn": inn, "case_number": case_number, "claim": claim}
+    result["_request"] = {"inn": inn, "case_number": case_number, "claim": claim, "manual": manual}
 
     # --- сохранение ---
     case_id = None
@@ -269,6 +302,7 @@ def summary_view(p: CreditorProfile) -> dict:
         "status": r.get("status"), "manual_input_required": r.get("manual_input_required", False),
         "mode_manual": r.get("mode_manual", False), "auto_mode": r.get("auto_mode"),
         "demo_data": r.get("bundle_source") == "mock",
+        "manual_data": "manual" in (r.get("bundle_source") or ""),
         "disclaimers": {"general": DISCLAIMERS["general"], "ads": DISCLAIMERS["ads"]},
     }
 

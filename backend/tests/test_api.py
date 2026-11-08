@@ -163,3 +163,28 @@ async def test_change_password(client, auth):
         u = (await db.execute(select(User).where(User.email == "admin@local"))).scalar_one()
         u.password_hash = hash_password("admin")
         await db.commit()
+
+
+async def test_manual_input_overrides_and_fills_gaps(client, auth):
+    body = {"inn": "7701234000", "manual": {
+        "filing_date": "2026-06-01", "total_assets": 150e6, "current_expenses": 10e6, "sigma3": 120e6,
+        "judge": {"n_cases": 45, "approval_rate": 0.70, "is_significant": True},
+        "au": {"n_cases": 10, "filed_on_your_deal": True},
+        "collateral": [{"C": 100e6, "L": 0.9}]},
+        "claim": {"amount": 8e6, "executed_amount": 2e6, "execution_date": "2026-04-01"}, "mode": "P4"}
+    r = await client.post("/api/v1/analyze", json=body, headers=auth)
+    s = r.json()
+    assert r.status_code == 200 and s["manual_data"] is True and s["status"] == "ok"
+    a = (await client.get(f"/api/v1/analysis/{s['id']}/audit", headers=auth)).json()
+    assert a["audit"]["M0"] == 150e6 and a["audit"]["sigma3"] == 120e6
+    assert a["probabilities"]["p_ch"] == 0.75        # окно 6 мес. 0,50 + судья 0,15 + АУ 0,10, потолок 1
+    # set-mode не теряет ручные данные
+    cid = s["case_id"]
+    r2 = await client.post(f"/api/v1/cases/{cid}/set-mode", json={"mode": "P5"}, headers=auth)
+    a2 = (await client.get(f"/api/v1/analysis/{r2.json()['id']}/audit", headers=auth)).json()
+    assert a2["audit"]["M0"] == 150e6
+
+
+async def test_manual_input_validation(client, auth):
+    r = await client.post("/api/v1/analyze", json={"inn": "7701234567", "manual": {"judge": {"n_cases": 5, "approval_rate": 2}}}, headers=auth)
+    assert r.status_code == 422

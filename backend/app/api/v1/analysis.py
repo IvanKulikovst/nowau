@@ -36,10 +36,50 @@ class ClaimIn(BaseModel):
     is_interested: bool = False
 
 
+class JudgeIn(BaseModel):
+    name: str = "Судья (ввод вручную)"
+    n_cases: int = Field(ge=0)
+    approval_rate: float = Field(ge=0, le=1)
+    is_significant: bool = False
+
+
+class AUIn(BaseModel):
+    name: str = "АУ (ввод вручную)"
+    sro: str | None = None
+    n_cases: int = Field(ge=0)
+    filed_on_your_deal: bool = False
+    filed_similar: int = Field(default=0, ge=0)
+    passive_on_suspicious: bool = False
+    losses_recovered: bool = False
+    rau_top20: bool = False
+
+
+class CollateralIn(BaseModel):
+    C: float = Field(gt=0, description="Рыночная стоимость")
+    L: float = Field(gt=0, le=1, description="Ликвидность 0…1")
+
+
+class ManualIn(BaseModel):
+    """Данные дела, введённые вручную (перекрывают данные парсеров)."""
+    filing_date: date | None = None
+    total_assets: float | None = Field(default=None, ge=0)
+    current_expenses: float | None = Field(default=None, ge=0)
+    first_priority: float | None = Field(default=None, ge=0)
+    second_priority: float | None = Field(default=None, ge=0)
+    sigma3: float | None = Field(default=None, gt=0, description="Сумма требований третьей очереди")
+    sigma_sub: float | None = Field(default=None, ge=0)
+    court_avg: float | None = Field(default=None, ge=0, le=1)
+    judge: JudgeIn | None = None
+    au: AUIn | None = None
+    au_signals: dict[str, bool] | None = None
+    collateral: list[CollateralIn] | None = None
+
+
 class AnalyzeIn(BaseModel):
     inn: str | None = Field(default=None, pattern=r"^(\d{10}|\d{12})$")
     case_number: str | None = Field(default=None, max_length=50)
     claim: ClaimIn | None = None
+    manual: ManualIn | None = None
     mode: MODES | None = None
 
     @model_validator(mode="after")
@@ -54,6 +94,7 @@ async def analyze(body: AnalyzeIn, request: Request, db: AsyncSession = Depends(
                   user: User = Depends(get_current_user)):
     claim = body.claim.model_dump(mode="json") if body.claim else {}
     p = await svc.run_analysis(db, user, inn=body.inn, case_number=body.case_number, claim=claim,
+                               manual=body.manual.model_dump(mode="json", exclude_none=True) if body.manual else None,
                                mode_override=body.mode)
     await audit(db, request, user, "analyze", "creditor_profile", p.id)
     return svc.summary_view(p)
