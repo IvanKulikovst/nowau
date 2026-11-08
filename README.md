@@ -35,9 +35,9 @@ cd frontend && npm install && npm run dev        # http://localhost:5173, про
 
 ## Установщик для Windows (.exe)
 
-Автономная версия без Docker, Postgres и Redis: один `.exe`, SQLite, данные в `%LOCALAPPDATA%\CreditorProfile`, браузер открывается сам (http://127.0.0.1:8765, вход `admin@local` / `admin`).
+Автономная версия без Docker, Postgres и Redis: один `.exe` открывается **в собственном окне** (pywebview / Edge WebView2), без консоли; SQLite и лог `creditor.log` — в `%LOCALAPPDATA%\CreditorProfile`. Вход `admin@local` / `admin`. Закрытие окна останавливает сервер. Если WebView2 нет — запасной вариант: браузер. Для отладки `CP_HEADLESS=1` запускает только сервер.
 
-Сборка: GitHub → Actions → **Windows installer** → Run workflow; готовый `ProfilKreditora-Setup-1.0.0.exe` — в Artifacts. Либо вручную на Windows: `npm run build` во `frontend`, затем `pyinstaller desktop/creditor.spec` и `iscc desktop/installer.iss`.
+Сборка: GitHub → Actions → **Windows installer** → Run workflow; готовый `ProfilKreditora-Setup-1.0.0.exe` — в Artifacts. Либо вручную на Windows: `npm run build` во `frontend`, затем `pip install -r desktop/requirements-desktop.txt` и `pyinstaller desktop/creditor.spec` и `iscc desktop/installer.iss`.
 Режим данных в автономной версии — демо (`PARSERS_MODE=mock`) + ручной ввод. OCR сканов требует отдельной установки Tesseract; Playwright (live-КАД) в exe не входит.
 
 ## Тесты

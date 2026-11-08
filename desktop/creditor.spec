@@ -5,7 +5,7 @@ datas = [("../frontend/dist", "frontend_dist")]
 hidden = collect_submodules("app") + collect_submodules("uvicorn") + ["aiosqlite", "sqlalchemy.dialects.sqlite",
                                                                        "sqlalchemy.ext.asyncio", "greenlet"]
 binaries = []
-for pkg in ("pdfplumber", "pdfminer", "docx", "pytesseract", "prometheus_fastapi_instrumentator", "structlog"):
+for pkg in ("webview", "pdfplumber", "pdfminer", "docx", "pytesseract", "prometheus_fastapi_instrumentator", "structlog"):
     try:
         d, b, h = collect_all(pkg)
         datas += d; binaries += b; hidden += h
@@ -15,5 +15,5 @@ for pkg in ("pdfplumber", "pdfminer", "docx", "pytesseract", "prometheus_fastapi
 a = Analysis(["launcher.py"], pathex=["../backend", "."], datas=datas, binaries=binaries, hiddenimports=hidden,
              excludes=["playwright", "celery", "asyncpg", "tkinter", "pytest"])
 pyz = PYZ(a.pure)
-exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name="ProfilKreditora", console=True,
+exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], name="ProfilKreditora", console=False,
           icon="../frontend/public/icons/icon.ico" if __import__("os").path.exists("../frontend/public/icons/icon.ico") else None)

@@ -20,15 +20,17 @@ jobs:
       - name: Backend deps + tests
         working-directory: backend
         run: |
-          pip install -r requirements-dev.txt pyinstaller
+          pip install -r requirements-dev.txt
           python -m pytest -q
+      - name: Desktop deps
+        run: pip install -r desktop/requirements-desktop.txt
       - name: PyInstaller
         working-directory: desktop
         run: pyinstaller --noconfirm --distpath ../dist --workpath ../build creditor.spec
       - name: Smoke-test exe
         shell: pwsh
         run: |
-          $env:CP_PORT = "8799"
+          $env:CP_PORT = "8799"; $env:CP_HEADLESS = "1"
           $p = Start-Process -FilePath dist\ProfilKreditora.exe -PassThru -WindowStyle Hidden
           $ok = $false
           foreach ($i in 1..30) { Start-Sleep 2; try { if ((Invoke-RestMethod http://127.0.0.1:8799/health).status -eq "ok") { $ok = $true; break } } catch {} }
