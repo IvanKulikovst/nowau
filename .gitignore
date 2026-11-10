@@ -12,3 +12,4 @@ backups/
 backend/storage/
 nginx/ssl/*.pem
 nginx/certbot-www/
+desktop/redist/

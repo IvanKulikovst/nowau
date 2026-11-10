@@ -36,6 +36,11 @@ jobs:
           foreach ($i in 1..30) { Start-Sleep 2; try { if ((Invoke-RestMethod http://127.0.0.1:8799/health).status -eq "ok") { $ok = $true; break } } catch {} }
           Stop-Process -Id $p.Id -Force
           if (-not $ok) { throw "exe не запустился" }
+      - name: Скачать загрузчик WebView2 (включается в установщик)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force desktop\redist | Out-Null
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile desktop\redist\MicrosoftEdgeWebview2Setup.exe
       - name: Inno Setup installer
         run: |
           choco install innosetup -y --no-progress

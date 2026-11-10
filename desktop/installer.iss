@@ -23,6 +23,8 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [Files]
 Source: "..\dist\ProfilKreditora.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Загрузчик WebView2 (скачивается на сборке, см. workflow); ставится только если компонента нет
+Source: "redist\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: NeedsWebView2
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\ProfilKreditora.exe"
@@ -32,8 +34,23 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\ProfilKreditora.exe"; Tasks: 
 Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; Flags: unchecked
 
 [Run]
+Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Установка компонента Microsoft Edge WebView2..."; Check: NeedsWebView2; Flags: waituntilterminated
 Filename: "{app}\ProfilKreditora.exe"; Description: "Запустить {#AppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 ; данные пользователя (%LOCALAPPDATA%\CreditorProfile) при удалении НЕ трогаем
 Type: filesandordirs; Name: "{app}"
+
+[Code]
+// WebView2 Runtime: есть в Windows 11 и в обновлённой Windows 10; иначе ставим вместе с программой
+const WV2 = '{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
+
+function NeedsWebView2(): Boolean;
+var v: String;
+begin
+  Result := not (
+    RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\' + WV2, 'pv', v) or
+    RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\' + WV2, 'pv', v) or
+    RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\' + WV2, 'pv', v));
+  if not Result then Result := (v = '') or (v = '0.0.0.0');
+end;
