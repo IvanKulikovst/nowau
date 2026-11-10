@@ -23,8 +23,9 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [Files]
 Source: "..\dist\ProfilKreditora.exe"; DestDir: "{app}"; Flags: ignoreversion
-; Загрузчик WebView2 (скачивается на сборке, см. workflow); ставится только если компонента нет
-Source: "redist\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: NeedsWebView2
+; Полный офлайн-пакет WebView2 (скачивается на сборке, см. workflow): интернет при установке не нужен.
+; Ставится только если компонента на компьютере нет.
+Source: "redist\WebView2RuntimeX64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall nocompression; Check: NeedsWebView2
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\ProfilKreditora.exe"
@@ -34,7 +35,7 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\ProfilKreditora.exe"; Tasks: 
 Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; Flags: unchecked
 
 [Run]
-Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Установка компонента Microsoft Edge WebView2..."; Check: NeedsWebView2; Flags: waituntilterminated
+Filename: "{tmp}\WebView2RuntimeX64.exe"; Parameters: "/silent /install"; StatusMsg: "Установка встроенного компонента отображения (WebView2)..."; Check: NeedsWebView2; Flags: waituntilterminated
 Filename: "{app}\ProfilKreditora.exe"; Description: "Запустить {#AppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]

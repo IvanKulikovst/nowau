@@ -36,11 +36,18 @@ jobs:
           foreach ($i in 1..30) { Start-Sleep 2; try { if ((Invoke-RestMethod http://127.0.0.1:8799/health).status -eq "ok") { $ok = $true; break } } catch {} }
           Stop-Process -Id $p.Id -Force
           if (-not $ok) { throw "exe не запустился" }
-      - name: Скачать загрузчик WebView2 (включается в установщик)
+      - name: Скачать офлайн-пакет WebView2 (включается в установщик целиком)
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force desktop\redist | Out-Null
-          Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile desktop\redist\MicrosoftEdgeWebview2Setup.exe
+          $f = "desktop\redist\WebView2RuntimeX64.exe"
+          # Evergreen Standalone Installer x64 (официальная ссылка Microsoft)
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/?linkid=2124701" -OutFile $f
+          $mb = [math]::Round((Get-Item $f).Length / 1MB)
+          $sig = Get-AuthenticodeSignature $f
+          "Размер: $mb МБ; подпись: $($sig.Status) / $($sig.SignerCertificate.Subject)"
+          if ($mb -lt 100) { throw "Скачан не офлайн-пакет (слишком мал: $mb МБ)" }
+          if ($sig.Status -ne "Valid" -or $sig.SignerCertificate.Subject -notmatch "Microsoft Corporation") { throw "Подпись пакета не Microsoft" }
       - name: Inno Setup installer
         run: |
           choco install innosetup -y --no-progress
