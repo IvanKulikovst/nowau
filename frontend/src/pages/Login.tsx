@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Disclaimer } from "../components/Disclaimer";
 import { Button, Card, ErrorBox, Input, Field } from "../components/ui";
@@ -14,6 +14,14 @@ export default function Login() {
     mutationFn: () => api.login(email, password),
     onSuccess: (t) => { setToken(t.access_token); qc.invalidateQueries({ queryKey: ["me"] }); nav("/"); },
   });
+  // Десктоп-версия: сервер разрешает вход без пароля — сразу заходим
+  const [auto, setAuto] = useState(true);
+  useEffect(() => {
+    api.localLogin()
+      .then((t) => { setToken(t.access_token); qc.invalidateQueries({ queryKey: ["me"] }); nav("/", { replace: true }); })
+      .catch(() => setAuto(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (auto) return null;
   return (
     <div className="mx-auto mt-12 max-w-sm px-4">
       <h1 className="mb-6 text-2xl font-semibold">Вход</h1>

@@ -78,12 +78,15 @@ def main() -> None:
     os.environ.setdefault("REDIS_URL", "redis://127.0.0.1:1/0")   # Redis нет → кэш и лимиты в памяти
     os.environ.setdefault("CORS_ORIGINS", f"http://127.0.0.1:{port}")
     os.environ["FRONTEND_DIST"] = str(dist)
+    os.environ.setdefault("LOCAL_AUTOLOGIN", "true")   # одна машина, один пользователь — без окна входа
     key = d / "secret.key"          # SECRET_KEY генерируется один раз и хранится рядом с БД
     if not key.exists():
         import secrets
         key.write_text(secrets.token_urlsafe(48))
     os.environ.setdefault("SECRET_KEY", key.read_text().strip())
 
+    if not getattr(sys, "frozen", False):          # запуск из исходников: backend рядом
+        sys.path.insert(0, str(resource("backend")))
     import uvicorn
     from app.main import app
 

@@ -188,3 +188,15 @@ async def test_manual_input_overrides_and_fills_gaps(client, auth):
 async def test_manual_input_validation(client, auth):
     r = await client.post("/api/v1/analyze", json={"inn": "7701234567", "manual": {"judge": {"n_cases": 5, "approval_rate": 2}}}, headers=auth)
     assert r.status_code == 422
+
+
+async def test_local_autologin_flag(client, monkeypatch):
+    from app.core.config import settings
+    assert (await client.post("/api/v1/auth/local")).status_code == 403          # по умолчанию выключено
+    monkeypatch.setattr(settings, "LOCAL_AUTOLOGIN", True)
+    r = await client.post("/api/v1/auth/local")
+    assert r.status_code == 200
+    me = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"})
+    assert me.json()["email"].startswith("admin")
+    monkeypatch.setattr(settings, "PUBLIC_MODE", True)                             # в публичном режиме запрещено всегда
+    assert (await client.post("/api/v1/auth/local")).status_code == 403

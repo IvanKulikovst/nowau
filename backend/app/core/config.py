@@ -52,6 +52,8 @@ class Settings(BaseSettings):
 
     # Автономная сборка (desktop): каталог со сборкой фронтенда, раздаётся самим backend
     FRONTEND_DIST: str = ""
+    # Вход без пароля для локальной однопользовательской программы (включает только desktop-лаунчер)
+    LOCAL_AUTOLOGIN: bool = False
 
     # Celery
     CELERY_TASK_ALWAYS_EAGER: bool = True

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -62,4 +62,16 @@ async def refresh(body: RefreshIn, db: AsyncSession = Depends(get_db)):
         raise Unauthorized("Недействительный токен")
     if user is None:
         raise Unauthorized("Недействительный токен")
+    return _tokens(user.id)
+
+
+@router.post("/local")
+async def local_login(request: Request, db: AsyncSession = Depends(get_db)):
+    """Вход без пароля: только при LOCAL_AUTOLOGIN=true, не в публичном режиме и только с этого же компьютера."""
+    host = request.client.host if request.client else ""
+    if not settings.LOCAL_AUTOLOGIN or settings.PUBLIC_MODE or host not in ("127.0.0.1", "::1"):
+        raise Forbidden("Автовход недоступен")
+    user = (await db.execute(select(User).where(User.email == "admin@local"))).scalar_one_or_none()
+    if user is None:
+        raise Unauthorized("Пользователь не найден")
     return _tokens(user.id)

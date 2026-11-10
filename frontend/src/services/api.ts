@@ -25,6 +25,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 export const api = {
   login: (email: string, password: string) =>
     request<{ access_token: string }>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  localLogin: () => request<{ access_token: string }>("/auth/local", { method: "POST" }),
   register: (email: string, password: string) =>
     request<{ access_token: string }>("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }),
   me: () => request<Me>("/users/me"),
