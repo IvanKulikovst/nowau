@@ -34,6 +34,7 @@ npm install
 npm start               # запуск приложения (index.html берётся из корня репозитория)
 npm test                # тесты файлового хранилища
 xvfb-run -a node test/e2e.test.js   # сквозной тест на Linux (нужен виртуальный экран); на Windows — node test/e2e.test.js
+xvfb-run -a node test/pdf.test.js   # просмотр PDF-вложений в отдельном окне (11 проверок)
 ```
 
 ## Сборка установщика

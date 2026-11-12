@@ -2926,6 +2926,36 @@ button.cp-tile[data-empty] .f-stat-value{opacity:.55}
 img.is-missing { visibility: hidden; }
 @media print { .vf-panel, .vf-mini, .vf-card-ph, .vf-cover { display: none !important; } }
 
+/* ---- Удобство работы (27i) ---- */
+body .f-toasts { top: auto; bottom: max(16px, env(safe-area-inset-bottom)); }
+.f-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.f-panel-head .f-panel-title { margin: 0; }
+.f-metric-wide { grid-column: 1 / -1; order: 9; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--g-border); }
+.f-metric-wide .f-metric-value { margin-top: 0; }
+.qh-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.qh-count { font-size: 13px; color: var(--label-secondary); }
+.qh-scroll { max-height: 52vh; overflow: auto; }
+.qh-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px 170px 34px; gap: 12px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--g-border); }
+.qh-row:last-child { border-bottom: 0; }
+.qh-name, .qh-cur { min-width: 0; font-size: 13.5px; }
+.qh-name > span:last-child, .qh-cur > span { display: block; font-size: 12px; color: var(--label-secondary); margin-top: 2px; }
+.qh-cur b { font-variant-numeric: tabular-nums; } .qh-cur small { font-weight: 500; color: var(--label-secondary); }
+@media (max-width: 640px) { .qh-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px; } .qh-name { grid-column: 1 / -1; } }
+.qh-err { font-size: 11.5px; color: var(--danger, #d70015); margin-top: 3px; }
+.qh-old { font-size: 11px; padding: 1px 6px; border-radius: 99px; background: var(--st-urgent-bg, rgba(255,149,0,.16)); color: var(--st-urgent-text, #b25000); }
+.ob-panel { margin-bottom: 18px; }
+.ob-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ob-step { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--g-border); border-radius: 10px; }
+.ob-step.is-next { background: var(--fill-tertiary); }
+.ob-step.is-done { opacity: .62; }
+.ob-num { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; border: 1.5px solid var(--g-border); }
+.ob-step.is-done .ob-num { background: var(--success, #34c759); border-color: transparent; color: #fff; }
+.ob-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.ob-body span { font-size: 12.5px; color: var(--label-secondary); }
+.ob-ok { font-size: 12px; color: var(--label-secondary); }
+@media (max-width: 640px) { .ob-step { flex-wrap: wrap; } .ob-step .f-btn { margin-left: 38px; } }
+@media print { .ob-panel { display: none !important; } }
+
 </style>
 <style id="krpd-print-styles">
 /* =====================================================================
@@ -10060,7 +10090,12 @@ function toast(type, title, text, timeout, opts) {
   const act = node.querySelector('.f-toast-action');
   if (act) act.addEventListener('click', () => { kill('action'); if (opts.onAction) opts.onAction(); });
   setTimeout(() => kill('timeout'), ms);
+  node._kill = kill; node._keep = !!opts.action;
+  const live = Array.from(host.children).filter(n => !n.classList.contains('is-out'));
+  let extra = live.length - TOAST_MAX;
+  for (const n of live) { if (extra <= 0) break; if (n !== node && !n._keep && n._kill) { n._kill('limit'); extra--; } }
 }
+const TOAST_MAX = 2;
 
 /* =========================================================================
    10a. УДАЛЕНИЕ С ОТМЕНОЙ
@@ -10732,7 +10767,7 @@ function renderVehicle() {
           <div class="f-metric-value">${fmtNum(st.hoursSince, 0)}<small>мото·ч</small></div></div>
         <div><div class="f-metric-label">Последнее ТО</div>
           <div class="f-metric-value" style="font-size:16px">${st.lastMaint ? fmtDate(st.lastMaint.date) : '—'}</div></div>
-        <div><div class="f-metric-label">Следующее ТО</div>
+        <div class="f-metric-wide"><div class="f-metric-label">Следующее ТО</div>
           <div class="f-metric-value" style="font-size:16px">${st.level === 'retired' || st.level === 'none' ? esc(nextText) : esc(nextMaintKind(v) + ' ' + dueText(st))}</div></div>
         <div><div class="f-metric-label">Осталось моточасов</div>
           <div class="f-metric-value" ${st.remainingHours != null && st.remainingHours <= 0 ? 'style="color:var(--st-overdue-text)"' : ''}>
@@ -14193,6 +14228,9 @@ function onFleetClick(e) {
     case 'cp-task':      commandTask(node.dataset.list); break;
     case 'cp-range':     ui.cp.range = node.dataset.range; renderView(); break;
     case 'cp-report':    commandReport(); break;
+    case 'cp-hours':     quickHoursModal(); break;
+    case 'ob-hide':      onboardingSet('hidden'); rerender(); break;
+    case 'ob-settings':  onboardingSet('interval'); go('settings'); break;
     case 'native-open':  if (NATIVE()) NATIVE().openDataDir(); break;
     case 'native-choose': nativeChooseDir(); break;
     case 'season':       commandListModal('season'); break;
@@ -15721,9 +15759,11 @@ function renderCommand() {
         <div class="f-page-sub">Состояние парка технических средств тыла на ${fmtDate(today)} · каждое число открывает перечень техники</div>
       </div>
       <div class="f-page-actions">
+        <button type="button" class="f-btn f-btn-primary" data-act="cp-hours">${FI.gauge(15)}<span>Внести показания</span></button>
         <button type="button" class="f-btn" data-act="cp-report">${FI.pdf(15)}<span>Доклад о состоянии парка</span></button>
       </div>
     </div>
+    ${renderOnboarding()}
 
     <div class="cp-section-title">Техническое состояние</div>
     <div class="f-stats cp-stats">
@@ -16538,8 +16578,8 @@ function renderVehicleFiles(v) {
           ${meta ? `<div class="vf-doc-meta">${esc(meta)}</div>` : ''}
           ${d.note ? `<div class="vf-doc-note">${esc(d.note)}</div>` : ''}
           <div class="vf-doc-files">${(d.files || []).length ? d.files.map(f => `
-            <button type="button" class="f-btn f-btn-sm" data-act="vf" data-do="docfile" data-did="${esc(d.id)}" data-fid="${esc(f.id)}" title="${vfIsImg(f) ? 'Открыть' : 'Скачать'}: ${esc(f.name)}">
-              ${vfIsImg(f) ? FI.file(13) : FI.download(13)}<span>${esc(f.name)}</span><small>${fmtSize(f.size || 0)}</small></button>`).join('')
+            <button type="button" class="f-btn f-btn-sm" data-act="vf" data-do="docfile" data-did="${esc(d.id)}" data-fid="${esc(f.id)}" title="${vfIsImg(f) || (canViewPdf() && isPdfFile(f)) ? 'Открыть' : 'Скачать'}: ${esc(f.name)}">
+              ${vfIsImg(f) || (canViewPdf() && isPdfFile(f)) ? FI.file(13) : FI.download(13)}<span>${esc(f.name)}</span><small>${fmtSize(f.size || 0)}</small></button>`).join('')
             : '<span class="f-td-muted">Скан не приложен — документ учтён по бумажному экземпляру</span>'}</div>
         </div>
         <div class="f-row-actions">
@@ -16776,7 +16816,7 @@ function vfAction(node) {
         const imgs = (doc.files || []).filter(vfIsImg).map(x => ({ id: x.id, name: x.name, title: x.name, sub: doc.kind + (doc.number ? ' № ' + doc.number : '') }));
         vfViewer(imgs, Math.max(0, imgs.findIndex(x => x.id === f.id)), { photos: false });
       } else {
-        fileGet(f.id).then(r => r && r.blob ? downloadBlob(r.blob, r.name || f.name) : toast('warning', 'Файл недоступен', 'Не найден в локальном хранилище.'));
+        openPdfOrDownload(f);
       }
       break;
     }
@@ -16807,6 +16847,135 @@ function vfBindInputs() {
 vfBindInputs();
 if (document.body) vfWatch(); else document.addEventListener('DOMContentLoaded', vfWatch);
 
+
+/* =========================================================================
+   27i. УДОБСТВО РАБОТЫ: быстрый ввод показаний, «Начало работы», просмотр PDF
+   ========================================================================= */
+
+/* ---------- Быстрый ввод показаний моточасов по всему парку ---------- */
+function quickHoursModal() {
+  const list = DB.vehicles.filter(v => v.status !== 'Списано')
+    .sort((a, b) => String(a.unit || '').localeCompare(String(b.unit || ''), 'ru') || String(a.name).localeCompare(String(b.name), 'ru'));
+  if (!list.length) { toast('info', 'Техники нет', 'Сначала поставьте технику на учёт.'); return; }
+  const m = openModal(`
+    <div class="f-modal-head">
+      <div><div class="f-modal-title">Внести показания моточасов</div>
+        <div class="f-modal-sub">Заполните только те строки, по которым есть новые показания</div></div>
+      <button type="button" class="f-modal-close" data-close aria-label="Закрыть">${FI.x(16)}</button>
+    </div>
+    <div class="f-modal-body">
+      <div class="qh-top">
+        <div><label class="f-fld-label" for="qhDate">Дата снятия показаний</label>
+          <input id="qhDate" class="f-input" type="date" value="${todayISO()}" max="${todayISO()}"></div>
+        <div class="qh-count" id="qhCount">Заполнено: 0</div>
+      </div>
+      <div class="qh-table qh-scroll">${list.map(v => `
+        <div class="qh-row ${hoursStale(v) ? 'qh-stale' : ''}" data-vid="${esc(v.id)}">
+          <div class="qh-name"><b>${esc(v.name)}</b>${v.regNumber ? ` <span class="f-plate">${esc(v.regNumber)}</span>` : ''}<span>${esc(v.unit || 'Подразделение не указано')}</span></div>
+          <div class="qh-cur"><b>${fmtNum(v.currentHours, 0)} <small>мото·ч</small></b><span>${v.hoursUpdatedAt ? 'на ' + fmtDate(v.hoursUpdatedAt) : 'не обновлялись'}${hoursStale(v) ? ' <span class="qh-old">давно</span>' : ''}</span></div>
+          <div class="qh-new"><input class="f-input qh-in" inputmode="decimal" data-cur="${Number(v.currentHours || 0)}" aria-label="Новое показание: ${esc(v.name)}" placeholder="новое показание">
+            <div class="qh-err" hidden></div></div>
+          <button type="button" class="f-icon-btn" data-qh-maint="${esc(v.id)}" title="Запись ТО" aria-label="Запись ТО: ${esc(v.name)}">${FI.wrench(15)}</button>
+        </div>`).join('')}
+    </div>
+    <div class="f-modal-foot">
+      <button type="button" class="f-btn" data-close>Отмена</button>
+      <button type="button" class="f-btn f-btn-primary" id="qhSave">${FI.save(15)}<span>Сохранить показания</span></button>
+    </div>`);
+  const R = m.root;
+  const inputs = Array.from(R.querySelectorAll('.qh-in'));
+  const parse = inp => parseFloat(String(inp.value).replace(',', '.').replace(/\s/g, ''));
+  const check = inp => {
+    const raw = inp.value.trim(), err = inp.nextElementSibling;
+    let msg = '';
+    if (raw) {
+      const val = parse(inp);
+      if (!/^\d+([.,]\d+)?$/.test(raw.replace(/\s/g, '')) || !validHours(val)) msg = 'Введите число';
+      else if (val < Number(inp.dataset.cur)) msg = 'Меньше текущего — исправление вносится в карточке';
+    }
+    inp.classList.toggle('is-invalid', !!msg);
+    err.hidden = !msg; err.textContent = msg;
+    return !msg;
+  };
+  const count = () => { R.querySelector('#qhCount').textContent = 'Заполнено: ' + inputs.filter(i => i.value.trim()).length; };
+  inputs.forEach((inp, idx) => {
+    inp.addEventListener('input', () => { check(inp); count(); });
+    // Enter переводит на следующую строку — как при вводе в таблицу
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); (inputs[idx + 1] || R.querySelector('#qhSave')).focus(); } });
+  });
+  R.querySelectorAll('[data-qh-maint]').forEach(b => b.addEventListener('click', () => {
+    if (inputs.some(i => i.value.trim()) ) { toast('warning', 'Сначала сохраните показания', 'В таблице есть несохранённые значения.'); return; }
+    m.close(); maintModal(b.dataset.qhMaint);
+  }));
+  R.querySelector('#qhSave').addEventListener('click', () => {
+    const filled = inputs.filter(i => i.value.trim());
+    if (!filled.length) { toast('info', 'Нечего сохранять', 'Не заполнено ни одного показания.'); return; }
+    const bad = filled.filter(i => !check(i));
+    if (bad.length) { bad[0].focus(); toast('warning', 'Проверьте показания', `Строк с ошибкой: ${bad.length}. Остальные не сохранены.`); return; }
+    let date = R.querySelector('#qhDate').value || todayISO();
+    if (date > todayISO()) date = todayISO();
+    const now = new Date().toISOString();
+    filled.forEach(i => {
+      const vehicleId = i.closest('.qh-row').dataset.vid;
+      DB.hours.push({ id: uid('h'), vehicleId, date, value: parse(i), source: 'manual', note: 'Групповой ввод показаний', createdAt: now });
+      recomputeHours(vehicleId);
+    });
+    saveDB();
+    m.close();
+    toast('success', 'Показания внесены', `${filled.length} ед. техники · ${fmtDate(date)}`);
+    rerender();
+  });
+  setTimeout(() => inputs[0] && inputs[0].focus(), 60);
+}
+
+/* ---------- «Начало работы»: подсказка для первого запуска ---------- */
+function onboardingState() {
+  const ob = (DB.settings && DB.settings.onboarding) || {};
+  const steps = [
+    { key: 'demo', title: 'Посмотрите программу на демо-данных', text: 'Сейчас в базе учебные записи. Когда освоитесь — удалите их одной кнопкой.',
+      done: !DB.vehicles.some(v => v.demo), btn: 'Удалить демо-данные', act: 'seed-remove' },
+    { key: 'vehicle', title: 'Поставьте на учёт свою технику', text: 'Наименование, номера, подразделение, текущие моточасы. Тип из справочника подставит регламент ТО.',
+      done: DB.vehicles.some(v => !v.demo), btn: 'Добавить технику', act: 'add-vehicle' },
+    { key: 'interval', title: 'Проверьте интервалы ТО по умолчанию', text: `Сейчас: каждые ${fmtNum(DB.settings.defaultHours, 0)} мото·ч или ${DB.settings.defaultDays} дн. От них считаются сроки для новой техники.`,
+      done: !!ob.interval, btn: 'Открыть настройки', act: 'ob-settings' },
+    { key: 'backup', title: 'Сделайте первую резервную копию', text: 'ZIP-файл с записями, фотографиями и документами. Храните его на флешке или сетевом диске.',
+      done: !!DB.lastBackupAt, btn: 'Сохранить копию', act: 'backup-export' }
+  ];
+  return { steps, left: steps.filter(s => !s.done).length, hidden: !!ob.hidden };
+}
+function renderOnboarding() {
+  const o = onboardingState();
+  if (o.hidden || !o.left) return '';
+  const next = o.steps.find(s => !s.done);
+  return `
+    <div class="f-panel ob-panel" id="obPanel">
+      <div class="f-panel-head">
+        <div><div class="f-panel-title">Начало работы</div>
+          <div class="f-hint">Выполнено ${o.steps.length - o.left} из ${o.steps.length}</div></div>
+        <button type="button" class="f-btn f-btn-sm f-btn-ghost" data-act="ob-hide">Скрыть</button>
+      </div>
+      <ol class="ob-steps">${o.steps.map((s, i) => `
+        <li class="ob-step ${s.done ? 'is-done' : ''} ${s === next ? 'is-next' : ''}">
+          <span class="ob-num" aria-hidden="true">${s.done ? '✓' : i + 1}</span>
+          <div class="ob-body"><b>${esc(s.title)}</b><span>${esc(s.text)}</span></div>
+          ${s.done ? '<span class="ob-ok">готово</span>' : `<button type="button" class="f-btn f-btn-sm ${s === next ? 'f-btn-primary' : ''}" data-act="${s.act}">${esc(s.btn)}</button>`}
+        </li>`).join('')}</ol>
+    </div>`;
+}
+function onboardingSet(key) {
+  DB.settings.onboarding = Object.assign({}, DB.settings.onboarding, { [key]: true });
+  saveDB();
+}
+
+/* ---------- Просмотр PDF (только в приложении для Windows) ---------- */
+const isPdfFile = f => /pdf/i.test((f && f.type) || '') || /\.pdf$/i.test((f && f.name) || '');
+const canViewPdf = () => !!(NATIVE() && NATIVE().openPdf);
+function openPdfOrDownload(f) {
+  const download = () => fileGet(f.id).then(r => r && r.blob ? downloadBlob(r.blob, r.name || f.name) : toast('warning', 'Файл недоступен', 'Не найден в локальном хранилище.'));
+  if (!canViewPdf() || !isPdfFile(f)) return download();
+  return NATIVE().openPdf(f.id).then(r => { if (!r || !r.ok) { toast('info', 'Просмотр недоступен', (r && r.error) || 'Файл будет скачан.'); return download(); } })
+    .catch(() => download());
+}
 
 /* =========================================================================
    28a. ПУБЛИЧНЫЙ API МОДУЛЯ — window.TST.fleet
@@ -17949,7 +18118,9 @@ function buildHelp() {
     h3('3.4 Фото и документы на технику'),
     ul(['Карточка техники → вкладка «Фото и документы». Фотографии добавляются кнопкой или перетаскиванием (на телефоне — «Снять на камеру»); снимки сжимаются до 1600 px, миниатюры хранятся отдельно. До 100 фото на единицу, у одного из них — отметка «Главное»: оно видно в шапке карточки и в списке техники.',
       'Документы на машину в целом: паспорт, формуляр, акты приёма-передачи и другие (с названием). Номер, дата, кем выдан, примечание и несколько сканов на документ (PDF, Word, Excel, изображения до 20 МБ). Документ можно учесть и без скана — по бумажному экземпляру.',
-      'Изображения открываются в просмотре со стрелками, подписью и скачиванием; PDF и прочие файлы скачиваются. Все файлы входят в резервную копию и удаляются вместе с техникой (отмена возвращает их).'])
+      'Изображения открываются в просмотре со стрелками, подписью и скачиванием; PDF и прочие файлы скачиваются. Все файлы входят в резервную копию и удаляются вместе с техникой (отмена возвращает их). В приложении для Windows PDF открывается в отдельном окне просмотра.']),
+    h3('3.5 Быстрый ввод показаний'),
+    p('Пункт управления → «Внести показания»: вся техника одним списком, новое показание вводится в строке, Enter переводит на следующую. Сохраняются только заполненные строки; показание меньше текущего не принимается — исправление вносится в карточке техники. Кнопка с ключом в строке открывает запись ТО.')
   ]);
 
   /* 4: формулы и примеры считаются движком программы */

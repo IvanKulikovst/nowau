@@ -22,5 +22,6 @@ contextBridge.exposeInMainWorld('TSTNative', {
   listSnapshots: () => call('tst:snap-list'),
   delSnapshot: id => call('tst:snap-del', id),
   openDataDir: () => call('tst:open-dir'),
+  openPdf: id => call('tst:pdf-open', id),
   chooseDataDir: () => call('tst:choose-dir')
 });

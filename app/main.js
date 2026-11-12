@@ -52,6 +52,7 @@ function registerIpc() {
   ipcMain.handle('tst:snap-list', guard(() => storage.listSnapshots()));
   ipcMain.handle('tst:snap-del', guard((e, id) => storage.delSnapshot(id)));
   ipcMain.handle('tst:open-dir', guard(() => shell.openPath(dataDir)));
+  ipcMain.handle('tst:pdf-open', guard((e, id) => openPdf(id)));
   ipcMain.handle('tst:choose-dir', guard(async () => {
     if (process.env.TST_DATA_DIR) return { ok: false, error: 'Папка задана переменной окружения' };
     const r = await dialog.showOpenDialog(win, { title: 'Папка данных «Регламент-ТС»', defaultPath: dataDir, properties: ['openDirectory', 'createDirectory'] });
@@ -65,6 +66,40 @@ function registerIpc() {
     setTimeout(() => { app.relaunch(); app.exit(0); }, 300);
     return { ok: true, dir: target, copied: !hasData };
   }));
+}
+
+/* --- просмотр PDF-вложения в отдельном окне ---
+   Вложения лежат как <id>.bin, поэтому для встроенного просмотра Chromium файл копируется
+   во временную папку с расширением .pdf. Открывается только то, что действительно PDF
+   (по сигнатуре); окно без доступа к программе, переходы и новые окна запрещены */
+const previewDir = () => path.join(app.getPath('userData'), 'preview');
+function clearPreview() { try { fs.rmSync(previewDir(), { recursive: true, force: true }); } catch (e) { /* не критично */ } }
+function openPdf(id) {
+  let rec;
+  try { rec = storage.getFile(id); } catch (e) { return { ok: false, error: 'Файл не найден' }; }
+  if (!rec || !rec.bytes) return { ok: false, error: 'Файл не найден' };
+  const buf = Buffer.from(rec.bytes);
+  if (buf.subarray(0, 5).toString('latin1') !== '%PDF-') return { ok: false, error: 'Файл не является документом PDF' };
+  fs.mkdirSync(previewDir(), { recursive: true });
+  // Имя окна просмотра — исходное имя документа (без символов, недопустимых в путях)
+  const dir = path.join(previewDir(), String(id).replace(/[^A-Za-z0-9_-]/g, ''));
+  fs.mkdirSync(dir, { recursive: true });
+  const base = String((rec.meta && rec.meta.name) || 'document').replace(/\.pdf$/i, '').replace(/[^0-9A-Za-zА-Яа-яЁё _.()-]/g, '_').slice(0, 80) || 'document';
+  const file = path.join(dir, base + '.pdf');
+  fs.writeFileSync(file, buf);
+  const fileUrl = pathToFileURL(file).href;
+  const pw = new BrowserWindow({
+    width: 1000, height: 820, parent: win || undefined, autoHideMenuBar: true, backgroundColor: '#525659',
+    title: (rec.meta && rec.meta.name) || 'Документ PDF', icon: path.join(__dirname, 'build', 'icon.png'),
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, plugins: true, spellcheck: false }
+  });
+  pw.setMenu(null);
+  pw.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  pw.webContents.on('will-navigate', (e, url) => { if (url !== fileUrl) e.preventDefault(); });
+  pw.on('page-title-updated', e => e.preventDefault());
+  pw.on('closed', () => { try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { /* уже нет */ } });
+  pw.loadURL(fileUrl);
+  return { ok: true };
 }
 
 function buildMenu() {
@@ -122,6 +157,7 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((wc, permission, cb) => cb(permission === 'media'));
   session.defaultSession.setPermissionCheckHandler((wc, permission) => permission === 'media');
   if (process.env.TST_DOWNLOAD_DIR) session.defaultSession.on('will-download', (e, item) => item.setSavePath(path.join(process.env.TST_DOWNLOAD_DIR, item.getFilename())));
+  clearPreview();
   registerIpc();
   buildMenu();
   createWindow();
